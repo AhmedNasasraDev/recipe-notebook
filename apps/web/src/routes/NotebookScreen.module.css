@@ -9,7 +9,11 @@
   padding-inline: var(--pad-card);
 }
 .title {
-  font-size: 22px;
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--c-ink);
 }
 .count {
   margin-top: 4px;

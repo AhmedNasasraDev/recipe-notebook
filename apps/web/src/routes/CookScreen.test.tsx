@@ -742,8 +742,10 @@ describe('§14 Mise en place — the stage that cannot be skipped', () => {
 
     expect(css).toMatch(/\.gateBar\s*\{[^}]*position:\s*sticky/s);
     expect(css).toMatch(/\.gateBar\s*\{[^}]*inset-block-end:\s*0/s);
-    // Opaque: the rows scroll underneath it.
-    expect(css).toMatch(/\.gateBar\s*\{[^}]*background:\s*var\(--c-ink\)/s);
+    // Opaque: the rows scroll underneath it. (The surface token changed with
+    // the design roll-out — `--c-ink` is the light application's text colour
+    // now and this screen has its own dark chocolate.)
+    expect(css).toMatch(/\.gateBar\s*\{[^}]*background:\s*var\(--c-cook-bg\)/s);
 
     // And the two things it carries are really inside it, not merely styled.
     show(CAKE);

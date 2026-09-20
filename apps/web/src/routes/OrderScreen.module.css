@@ -67,7 +67,6 @@
   font-size: var(--fs-meta-lg);
   font-weight: 600;
   color: var(--c-muted);
-  letter-spacing: 0.03em;
 }
 
 .field {
@@ -253,6 +252,9 @@
   color: var(--c-muted);
 }
 
+/* A row of underscores — the blank left for a weight nobody could compute, to
+   be filled in by hand on the printed sheet. The tracking here spaces a RULE,
+   not Hebrew letters, which is why it stays where the others went. */
 .unknown {
   color: var(--c-red);
   letter-spacing: 0.04em;

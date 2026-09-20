@@ -1,6 +1,7 @@
 /* Global base. Per §15: RTL root, tabular numerals everywhere numbers appear,
  * and pointwise LTR for the things that must read left-to-right. */
 
+@import './fonts.css';
 @import './tokens.css';
 
 *,

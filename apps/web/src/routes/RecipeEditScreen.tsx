@@ -354,12 +354,16 @@ export function RecipeEditScreen() {
           {/* The chip is decoration and is hidden from assistive tech, which
               is told the same thing properly through `aria-required` — putting
               the word inside the label would rename the field to
-              "שם המתכון חובה". */}
-          <label className={styles.label} htmlFor="r-name">
-            שם המתכון
-          </label>
-          <span className={styles.required} aria-hidden="true">
-            חובה
+              "שם המתכון חובה". The row keeps the two on one line: as a bare
+              sibling in a flex column the chip stretched the width of the
+              field and sat on top of it. */}
+          <span className={styles.labelRow}>
+            <label className={styles.label} htmlFor="r-name">
+              שם המתכון
+            </label>
+            <span className={styles.required} aria-hidden="true">
+              חובה
+            </span>
           </span>
           <input
             id="r-name"

@@ -32,7 +32,7 @@ import {
   readRecents,
   readFavorites,
 } from '../data/offlineMirror.js';
-import { categoryIcon } from '../features/recipe/categoryIcon.js';
+import { CATEGORY_ICON, ICON_STROKE } from '../shell/Icons.js';
 import { timeLabelOf } from '../features/recipe/recipeTime.js';
 import styles from './HomeScreen.module.css';
 
@@ -325,9 +325,9 @@ export function HomeScreen() {
                   <span className={styles.tileName}>
                     {/* Decoration beside the name, never instead of it, and
                         hidden from a screen reader that already reads it. */}
-                    {categoryIcon(c) && (
+                    {CATEGORY_ICON[c] && (
                       <span className={styles.tileIcon} aria-hidden="true">
-                        {categoryIcon(c)}
+                        {CATEGORY_ICON[c]?.({ width: ICON_STROKE.menu })}
                       </span>
                     )}
                     {c}

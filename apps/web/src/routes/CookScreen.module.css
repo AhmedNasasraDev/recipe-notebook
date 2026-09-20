@@ -1,17 +1,34 @@
 /* §14 Cook Mode. The one dark screen in the app.
-   §14 names the surface (#171A18, which is --c-ink) and both type sizes, and
+
+   THE DESIGN PASS WARMED IT.
+
+   The surface was #171A18 — a near-black with a green cast — and the greys on
+   it (#c9d2cc, #4a5550, #202623) were cool to match. Beside a cream-and-
+   chocolate application that read as a different product with the lights off.
+   The five values are tokens now (`--c-cook-*` in tokens.css), all of them
+   warm, and all of them measured against the surface they sit on: the body
+   text 14.45:1, the secondary text 9.89 on the screen and 8.43 on a raised
+   row. §14's own rules — the surface, the two type sizes, the 44px targets —
+   are untouched.
+   §14 named the surface #171A18 and both type sizes; the surface is
+   `--c-cook-bg` now (a dark chocolate) because `--c-ink` became the text
+   colour of a light application, and
    they are already tokens: --fs-cook-body 25px, --fs-cook-step 54px.
    Every pair below is light-on-dark, so the contrast guard in tokens.test.ts
    measures them the other way round from the rest of the app. */
 
+/* The dark screen owns the whole viewport. `min-height: 100%` resolved
+   against an ancestor that has no height of its own, so a short preparation
+   left a band of the light application showing under it — invisible while the
+   app background was near-white, a seam now that it is cream. */
 .wrap {
-  min-height: 100%;
+  min-block-size: 100dvh;
   display: flex;
   flex-direction: column;
   gap: var(--gap-between-groups);
   padding: 14px 18px 22px;
-  background: var(--c-ink);
-  color: var(--c-white);
+  background: var(--c-cook-bg);
+  color: var(--c-cook-text);
 }
 
 .head {
@@ -24,7 +41,7 @@
 .recipeName {
   font-family: var(--font-display);
   font-size: var(--fs-body-lg);
-  color: var(--c-white);
+  color: var(--c-cook-text);
   text-align: end;
   min-width: 0;
 }
@@ -35,7 +52,7 @@
   min-height: var(--hit-min);
   padding-inline: 12px;
   border-radius: var(--r-control);
-  color: var(--c-white);
+  color: var(--c-cook-text);
   font-size: var(--fs-secondary);
   text-decoration: none;
   flex: none;
@@ -70,21 +87,25 @@
   transform: translateY(-50%);
   height: 8px;
   border-radius: 999px;
-  background: #3a423d;
+  background: var(--c-cook-line);
 }
 
+/* The action colour is chocolate now, and chocolate on a chocolate screen is
+   nothing. A finished segment is caramel — 7.4:1 on this surface — and the
+   segment you are ON stays the brightest thing on the bar, so the two are
+   told apart by brightness as well as by hue. */
 .segDone::after {
-  background: var(--c-green);
+  background: var(--c-caramel);
 }
 
 .segNow::after {
-  background: var(--c-white);
+  background: var(--c-cook-text);
   height: 12px;
 }
 
 .count {
   font-size: var(--fs-secondary);
-  color: #c9d2cc;
+  color: var(--c-cook-muted);
 }
 
 /* ── Mise en place: the first stage ───────────────────────────────────────
@@ -108,26 +129,26 @@
   font-family: var(--font-display);
   font-size: var(--fs-cook-body);
   line-height: 1.2;
-  color: var(--c-white);
+  color: var(--c-cook-text);
 }
 
 .miseHelp {
   font-size: var(--fs-body-lg);
   line-height: 1.5;
-  color: #e6ebe8;
+  color: var(--c-cook-text);
 }
 
 .miseScale,
 .miseEmpty {
   font-size: var(--fs-secondary);
-  color: #c9d2cc;
+  color: var(--c-cook-muted);
   line-height: 1.6;
 }
 
 .miseDone {
   font-size: var(--fs-body-lg);
   font-weight: 600;
-  color: var(--c-white);
+  color: var(--c-cook-text);
 }
 
 .miseList {
@@ -146,31 +167,32 @@
   gap: 12px;
   min-height: 64px;
   padding: 10px 14px;
-  border: 1px solid #4a5550;
+  border: 1px solid var(--c-cook-line);
   border-radius: var(--r-card);
-  background: #202623;
-  color: var(--c-white);
+  background: var(--c-cook-raised);
+  color: var(--c-cook-text);
   cursor: pointer;
 }
 
-/* Ticked: the green the rest of the app uses for "done", and the row stays
-   fully legible — a finished line still has to be readable at a glance to
-   answer "what is left". */
+/* Ticked, and still legible: a finished line has to be readable at a glance to
+   answer "what is left". Caramel with the surface's colour on it — the app's
+   action colour is chocolate, which on this screen is nothing at all. */
 .miseRowOn {
-  border-color: var(--c-green);
-  background: var(--c-green);
+  border-color: var(--c-cook-accent);
+  background: var(--c-cook-accent);
+  color: var(--c-cook-on-accent);
 }
 
 .miseBox {
   width: 28px;
   height: 28px;
   flex: none;
-  accent-color: var(--c-green);
+  accent-color: var(--c-cook-accent);
   cursor: pointer;
 }
 
 .miseRowOn .miseBox {
-  accent-color: var(--c-white);
+  accent-color: var(--c-cook-text);
 }
 
 .miseName {
@@ -189,12 +211,12 @@
 
 .miseHint {
   font-size: var(--fs-secondary);
-  color: #c9d2cc;
+  color: var(--c-cook-muted);
   flex: none;
 }
 
 .miseRowOn .miseHint {
-  color: #e6ebe8;
+  color: var(--c-cook-text);
 }
 
 /* ── the progress line and the gate, pinned to the bottom ────────────────
@@ -205,7 +227,7 @@
    — so the answer to "can I start?" was nowhere to be seen. Both ride along
    at the bottom now.
 
-   `--c-ink` is this screen's own surface, and the bar has to be opaque
+   `--c-cook-bg` is this screen's own surface, and the bar has to be opaque
    because the rows scroll underneath it. The shadow in the same colour is a
    short fade, so a row is not sliced by a hard line. */
 .gateBar {
@@ -217,18 +239,18 @@
   flex-direction: column;
   gap: var(--gap-tight);
   padding-block: 10px;
-  background: var(--c-ink);
-  box-shadow: 0 -10px 14px 10px var(--c-ink);
+  background: var(--c-cook-bg);
+  box-shadow: 0 -10px 14px 10px var(--c-cook-bg);
 }
 
 /* The gate. Full width, 60px, and unmistakably inert until the list is done. */
 .start {
   min-height: 60px;
   padding: 12px 18px;
-  border: 1px solid var(--c-green);
+  border: 1px solid var(--c-cook-accent);
   border-radius: var(--r-control);
-  background: var(--c-green);
-  color: var(--c-white);
+  background: var(--c-cook-accent);
+  color: var(--c-cook-on-accent);
   font-family: var(--font-body);
   font-size: var(--fs-body);
   font-weight: 600;
@@ -236,9 +258,9 @@
 }
 
 .start:disabled {
-  border-color: #4a5550;
+  border-color: var(--c-cook-line);
   background: transparent;
-  color: #c9d2cc;
+  color: var(--c-cook-muted);
   opacity: 0.6;
   cursor: default;
 }
@@ -255,7 +277,7 @@
   outline: none;
 }
 .stepBox:focus-visible {
-  outline: 2px solid var(--c-white);
+  outline: 2px solid var(--c-cook-text);
   outline-offset: 6px;
   border-radius: var(--r-card);
 }
@@ -264,18 +286,18 @@
   font-family: var(--font-display);
   font-size: var(--fs-cook-step);
   line-height: 1;
-  color: #6f7c74;
+  color: var(--c-cook-muted);
 }
 
 .stepText {
   font-size: var(--fs-cook-body);
   line-height: 1.5;
-  color: var(--c-white);
+  color: var(--c-cook-text);
 }
 
 .stepMeta {
   font-size: var(--fs-secondary);
-  color: #c9d2cc;
+  color: var(--c-cook-muted);
 }
 
 .mark,
@@ -283,10 +305,10 @@
   margin-block-start: 6px;
   min-height: 56px;
   padding: 12px 18px;
-  border: 1px solid #4a5550;
+  border: 1px solid var(--c-cook-line);
   border-radius: var(--r-control);
   background: transparent;
-  color: var(--c-white);
+  color: var(--c-cook-text);
   font-family: var(--font-body);
   font-size: var(--fs-body);
   font-weight: 600;
@@ -294,17 +316,18 @@
 }
 
 .markOn {
-  border-color: var(--c-green);
-  background: var(--c-green);
+  border-color: var(--c-cook-accent);
+  background: var(--c-cook-accent);
+  color: var(--c-cook-on-accent);
 }
 
 .timerStart {
   min-height: var(--hit-min);
   padding: 10px 16px;
-  border: 1px solid #4a5550;
+  border: 1px solid var(--c-cook-line);
   border-radius: var(--r-control);
   background: transparent;
-  color: var(--c-white);
+  color: var(--c-cook-text);
   font-family: var(--font-body);
   font-size: var(--fs-secondary);
   cursor: pointer;
@@ -324,27 +347,27 @@
   align-items: center;
   gap: var(--gap-in-group);
   padding: 8px 12px;
-  border: 1px solid #4a5550;
+  border: 1px solid var(--c-cook-line);
   border-radius: var(--r-card);
-  background: #202623;
+  background: var(--c-cook-raised);
 }
 
 /* §14: "מסומנים באדום בסיום" */
 .timerDone {
   border-color: var(--c-red);
-  background: #3a1f1f;
+  background: var(--c-red-bg);
 }
 
 .timerStep {
   font-size: var(--fs-meta-lg);
-  color: #c9d2cc;
+  color: var(--c-cook-muted);
   flex: none;
 }
 
 .timerClock {
   font-size: var(--fs-body-lg);
   font-variant-numeric: tabular-nums;
-  color: var(--c-white);
+  color: var(--c-cook-text);
   flex: 1;
 }
 
@@ -357,10 +380,10 @@
 .timerBtn {
   min-height: var(--hit-compact);
   padding: 0 12px;
-  border: 1px solid #4a5550;
+  border: 1px solid var(--c-cook-line);
   border-radius: var(--r-pill);
   background: transparent;
-  color: var(--c-white);
+  color: var(--c-cook-text);
   font-family: var(--font-body);
   font-size: var(--fs-meta-lg);
   cursor: pointer;
@@ -368,7 +391,7 @@
 
 /* ── the ingredients, on demand ───────────────────────────────────────── */
 .ings {
-  border-block-start: 1px solid #3a423d;
+  border-block-start: 1px solid var(--c-cook-line);
   padding-block-start: 10px;
 }
 
@@ -377,7 +400,7 @@
   display: flex;
   align-items: center;
   font-size: var(--fs-secondary);
-  color: var(--c-white);
+  color: var(--c-cook-text);
   cursor: pointer;
 }
 
@@ -393,7 +416,7 @@
   justify-content: space-between;
   gap: var(--gap-in-group);
   font-size: var(--fs-secondary);
-  color: #e6ebe8;
+  color: var(--c-cook-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -406,10 +429,10 @@
 .navBtn {
   flex: 1;
   min-height: 52px;
-  border: 1px solid #4a5550;
+  border: 1px solid var(--c-cook-line);
   border-radius: var(--r-control);
   background: transparent;
-  color: var(--c-white);
+  color: var(--c-cook-text);
   font-family: var(--font-body);
   font-size: var(--fs-body);
   cursor: pointer;
@@ -427,8 +450,8 @@
   align-items: center;
   justify-content: center;
   border-radius: var(--r-control);
-  background: var(--c-green);
-  color: var(--c-white);
+  background: var(--c-cook-accent);
+  color: var(--c-cook-on-accent);
   font-size: var(--fs-body);
   font-weight: 600;
   text-decoration: none;
@@ -442,8 +465,8 @@
   align-items: flex-start;
   gap: var(--gap-in-group);
   padding: 22px 18px;
-  background: var(--c-ink);
-  color: var(--c-white);
+  background: var(--c-cook-bg);
+  color: var(--c-cook-text);
   font-size: var(--fs-body);
   line-height: 1.6;
 }
@@ -451,5 +474,5 @@
 .missingTitle {
   font-family: var(--font-display);
   font-size: var(--fs-screen-title);
-  color: var(--c-white);
+  color: var(--c-cook-text);
 }

@@ -1,69 +1,12 @@
 /* The recipe page and its conversion sheet. Tokens only — no raw hex here. */
 
-/* ─────────────────────────────────────────────────────────────────────────
-   THE PASTRY DRESS — ONE SCREEN, AND HOW IT IS KEPT TO ONE SCREEN
-
-   Ahmed's reference is a pâtisserie page: warm cream paper, chocolate
-   headings, a caramel hairline, and a cookbook serif. This screen wears it;
-   nothing else does, until he says so.
-
-   The mechanism is the project's own token system, used the way custom
-   properties are meant to be used: the §16 names are RE-BOUND on this page's
-   root element. Every rule in this file, and in every component rendered
-   inside the page (the pan card, the private note, the version history, the
-   conversion sheet), already reads `var(--c-paper)` and friends — so they all
-   change together, with no rule rewritten twice and no second palette to keep
-   in step. Outside `.page` the names still hold §16's values, so the notebook,
-   the groups, the plans and Cook Mode are untouched.
-
-   Two things deliberately do NOT change:
-
-   · The meaning colours. `--c-amber`, `--c-red` and the `--c-source-*` badges
-     stay as they are: amber is "system estimate" and red is "no reliable
-     data", and those are facts about a number, not decoration. (They resolve
-     at `:root`, so re-binding `--c-green` here cannot quietly recolour a
-     provenance badge.)
-   · Every measurement, control size and 44px target. This is paint.
-   ───────────────────────────────────────────────────────────────────────── */
+/*
+   The recipe page. It wore the pastry palette first, on its own root element,
+   while the rest of the application was still §16 — that re-binding is gone:
+   the palette IS the system now (`styles/tokens.css`) and a second copy of it
+   here would be the drift the token file exists to prevent.
+*/
 .page {
-  /* colour */
-  --c-app-bg: var(--c-cream);
-  --c-paper: var(--c-ivory);
-  --c-white: var(--c-ivory);
-  --c-line: var(--c-caramel);
-  --c-ink: var(--c-cocoa);
-  --c-muted: var(--c-cocoa-soft);
-  /* The action colour of this screen is chocolate, not §16's green. */
-  --c-green: var(--c-cocoa);
-  --c-green-ink: #23120c;
-  --c-green-bg: var(--c-cream-deep);
-  /*
-    `--c-sand` is a FILL on this page — the "why there is no figure" strips in
-    the costing panel and the version comparison. Caramel at full strength
-    makes those strips heavier than the numbers they explain, so the fill is
-    the deep cream and the caramel is kept for lines (`--c-line`). Measured on
-    the deep cream: chocolate 12.76:1, the secondary brown 4.76:1.
-  */
-  --c-sand: var(--c-cream-deep);
-  --c-neutral-bg: var(--c-cream-deep);
-
-  /*
-    TYPE, ONE STEP UP.
-
-    §16's scale was drawn for a dense prototype; this is a page read at arm's
-    length with wet hands, and the brief asked for no small print and no
-    letter-spaced Hebrew. Body text goes 13.5 → 15px, the secondary line
-    12.5 → 13.5, the smallest label 11.5 → 12.5, and the recipe's name
-    25 → 30px. Nothing is re-laid-out for it: these are the same tokens the
-    rules already use.
-  */
-  --fs-meta: 11.5px;
-  --fs-meta-lg: 12.5px;
-  --fs-secondary: 13.5px;
-  --fs-body: 15px;
-  --fs-body-lg: 16px;
-  --fs-recipe-title: 30px;
-
   display: flex;
   flex-direction: column;
   gap: var(--gap-between-groups);

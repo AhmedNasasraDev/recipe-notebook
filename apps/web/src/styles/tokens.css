@@ -1,65 +1,130 @@
 /* ─────────────────────────────────────────────────────────────────────────────
- * Design tokens — transcribed verbatim from
- * RECIPE_NOTEBOOK_IMPLEMENTATION_SPEC.md §16, cross-checked against README.md
- * "Design Tokens". Nothing here was invented or adjusted.
+ * Design tokens.
  *
- * HANDOFF §8: "לא לשנות את השפה העיצובית (§16) בלי סיבה מקצועית מוצדקת."
- * If a value needs to change, change it here — not at a call site.
+ * WHERE THIS CAME FROM, AND WHY IT NO LONGER MATCHES §16 VERBATIM
+ *
+ * §16 was transcribed from the handoff and left untouched for eleven stages,
+ * under HANDOFF §8: "לא לשנות את השפה העיצובית (§16) בלי סיבה מקצועית מוצדקת."
+ * The professional reason is now on the record: Ahmed asked for the product to
+ * look like a pâtisserie notebook rather than a utility — cream paper,
+ * chocolate ink, a caramel hairline, a printed-book serif — approved it on the
+ * recipe screen first, and then approved rolling it across the application.
+ *
+ * The values below are that palette. Everything structural §16 specified —
+ * the radius scale, the spacing, the 44px hit target, the phone frame, the
+ * provenance colours keyed to the engine — is unchanged.
+ *
+ * ONE PLACE. Every screen reads these names; no stylesheet re-declares them.
+ * `styles/tokens.test.ts` enforces both halves of that: the pairings have to
+ * measure 4.5:1, and no module may bind a palette name of its own.
  * ───────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* ── colour ────────────────────────────────────────────────────────────── */
-  --c-app-bg: #fbfbf9; /* רקע אפליקציה — navigation screens */
-  --c-paper: #fdfbf6; /* נייר — the recipe page and cards */
-  --c-white: #ffffff;
-  --c-outer-bg: #e9ece8; /* רקע חוץ — label and order sheets */
-  --c-line: #cdd4ce; /* מסגרת / קו מפריד */
+  /* ── the palette ───────────────────────────────────────────────────────── */
+  --c-cream: #f5ede3; /* רקע שמנת חמה */
+  --c-ivory: #fffbf6; /* כרטיסים ושדות */
+  --c-cocoa: #352019; /* כותרות, טקסט ראשי, פעולות */
+  --c-cocoa-soft: #756358; /* טקסט משני */
+  --c-caramel: #c8ab8d; /* קווים ומילויים עדינים */
+  --c-cream-deep: #f3e9dd; /* מילוי רך: מצב נבחר, הערה, דיסק */
 
-  --c-green: #1e6b4c; /* ירוק ראשי — action, confirm, exact */
-  --c-green-bg: #e2efe8; /* ירוק רקע — selected state, system notes */
-  --c-green-ink: #17543c; /* link hover, from the prototype's a:hover */
+  /* ── the names every stylesheet already reads ──────────────────────────── */
+  --c-app-bg: var(--c-cream); /* רקע אפליקציה */
+  --c-paper: var(--c-ivory); /* נייר — כרטיסים ומסך המתכון */
+  --c-white: var(--c-ivory);
+  --c-outer-bg: #efe6db; /* רקע חוץ — תווית ודף הזמנה */
+  --c-line: var(--c-caramel); /* מסגרת / קו מפריד */
 
-  --c-sand: #c4a99b; /* חום־חול — step numbers, paper frame, secondary info */
+  /*
+    THE ACTION COLOUR IS CHOCOLATE NOW.
 
-  --c-amber: #a56a0e; /* ענבר — warning, "נתון מערכת", Demo */
-  --c-amber-bg: #f6ebd6;
+    The name stays `--c-green` because it is structural — "the colour of a
+    thing you press" — and renaming it would touch every stylesheet in the
+    project for no behavioural gain. What it holds changed; what it MEANS did
+    not. Measured on both papers: 13.20:1 and 14.86:1.
+  */
+  --c-green: var(--c-cocoa);
+  --c-green-bg: var(--c-cream-deep);
+  --c-green-ink: #23120c;
 
-  --c-red: #9e362c; /* אדום — error, "הערכה גסה", finished timer */
-  --c-red-bg: #f6e3e0;
+  /*
+    MEANING KEEPS ITS OWN COLOURS.
 
-  --c-ink: #171a18; /* דיו — primary text, Cook Mode background */
-  --c-muted: #6e7a73; /* אפור טקסט משני */
-  --c-neutral-bg: #edefec; /* אפור רקע ניטרלי */
+    Success, warning and error are facts, not decoration, and a kitchen reads
+    them at a glance — so they stay a green, an amber and a red, warmed to sit
+    beside chocolate rather than beside the old grey-green. `--c-ok` is what
+    the provenance badges and the "saved" confirmations use; the action colour
+    above is deliberately NOT it, so "this is correct" and "press this" can
+    never be confused.
+  */
+  --c-ok: #2f6b4a;
+  --c-ok-bg: #e4efe7;
+
+  --c-sand: var(--c-cream-deep); /* מילוי רך (היה חום־חול) */
+
+  --c-amber: #8a5c0c; /* ענבר — אזהרה, "נתון מערכת" */
+  --c-amber-bg: #f7ead2;
+
+  --c-red: #9a3328; /* אדום — שגיאה, "הערכה גסה" */
+  --c-red-bg: #f7e2de;
+
+  --c-ink: var(--c-cocoa); /* דיו — טקסט ראשי */
+  --c-muted: var(--c-cocoa-soft); /* טקסט משני */
+  --c-neutral-bg: var(--c-cream-deep);
+
+  /* Cook Mode is the one dark screen (§14). Dark CHOCOLATE now, not near-black
+     green-grey, with its own warm neutrals so the screen reads as the same
+     application with the lights turned down. */
+  --c-cook-bg: #2a1913;
+  --c-cook-raised: #3a251d;
+  --c-cook-line: #5c443a;
+  --c-cook-text: #f6ece2;
+  --c-cook-muted: #d6c3b5;
+  /* On a dark screen the light application's action colour disappears —
+     chocolate on chocolate. A filled control in Cook Mode is caramel with the
+     surface's own colour as its text: 7.75:1, and warm. */
+  --c-cook-accent: var(--c-caramel);
+  --c-cook-on-accent: #241511;
 
   /* ── typography ───────────────────────────────────────────────────────── */
-  --font-body: 'Heebo', 'Assistant', 'Arial Hebrew', system-ui, sans-serif;
+  /* Served from this project — see fonts.css. Two faces, no more: a printed
+     book serif for headings, a humanist sans for everything worked with. */
+  --font-body: 'Assistant', 'Heebo', 'Arial Hebrew', system-ui, sans-serif;
   --font-display: 'Frank Ruhl Libre', 'Times New Roman', serif;
 
-  /* the scale actually used in the prototype, §16 */
-  --fs-label: 10px;
-  --fs-meta: 10.5px;
-  --fs-meta-lg: 11.5px;
-  --fs-secondary: 12.5px;
-  --fs-body: 13.5px;
-  --fs-body-lg: 14px;
-  --fs-screen-title: 16px;
-  --fs-recipe-title: 25px;
+  /*
+    THE SCALE, RAISED.
+
+    §16's sizes were drawn for a dense desktop prototype and shipped to a phone
+    held at arm's length in a kitchen: body text was 13.5px and the smallest
+    label 10px. Ahmed asked for the working text to be at least 16px on a
+    phone, and for no small print. The whole scale moves up together so the
+    hierarchy §16 established is kept rather than flattened.
+  */
+  --fs-label: 11px;
+  --fs-meta: 12px;
+  --fs-meta-lg: 13px;
+  --fs-secondary: 14px;
+  --fs-body: 16px;
+  --fs-body-lg: 17px;
+  --fs-screen-title: 26px;
+  --fs-recipe-title: 30px;
   --fs-cook-body: 25px;
   --fs-cook-step: 54px;
 
   /* ── radius ───────────────────────────────────────────────────────────── */
   --r-check: 7px;
-  --r-control: 10px;
-  --r-card: 11px;
-  --r-card-lg: 16px;
-  --r-sheet: 22px;
+  --r-control: 12px;
+  --r-card: 14px;
+  --r-card-lg: 18px;
+  --r-sheet: 24px;
   --r-pill: 999px;
 
   /* ── spacing ──────────────────────────────────────────────────────────── */
   --gap-tight: 6px;
-  --gap-in-group: 9px;
-  --gap-between-groups: 14px;
-  --pad-card: 14px;
+  --gap-in-group: 10px;
+  --gap-between-groups: 16px;
+  --pad-card: 16px;
 
   /* ── interaction ──────────────────────────────────────────────────────── */
   /* §15: hit targets ≥ 44px. Non-negotiable — this is a kitchen app. */
@@ -70,46 +135,18 @@
   /* §15 mobile-first: the prototype was laid out at 402×874. */
   --frame-w: 402px;
   --frame-h: 874px;
-  /* Not from §16 — added in stage 4 for requirement 14 (tablet). §16 specifies
-     the phone frame the prototype was drawn at and says nothing about a tablet,
-     so this is an addition rather than a change to a specified value. */
   --frame-w-wide: 760px;
   --frame-h-wide: 1040px;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────────
- * THE PASTRY PALETTE — declared here, applied on ONE screen.
- *
- * Ahmed asked for the recipe screen to be re-dressed in cream and chocolate,
- * and to see it before it goes anywhere else. So the five colours live here,
- * where every token in this project lives and where the contrast guard below
- * can measure them, and NOTHING in `:root` uses them: the recipe page
- * re-binds the §16 names to these values on its own root element, which
- * themes that screen and its children and leaves every other screen exactly
- * as §16 specifies.
- *
- * Measured (tokens.test.ts): cocoa on cream 13.20:1 · cocoa on ivory 14.86 ·
- * cocoa-soft on cream 4.92 · cocoa-soft on ivory 5.54 · ivory on cocoa 14.86.
- * Caramel is 1.87:1 on cream — a LINE and a FILL, never text on a light
- * surface, which is also what the brief asked for.
- * ───────────────────────────────────────────────────────────────────────── */
-:root {
-  --c-cream: #f5ede3; /* רקע שמנת חמה */
-  --c-ivory: #fffbf6; /* כרטיסים ושדות */
-  --c-cocoa: #352019; /* כותרות ופעולות ראשיות */
-  --c-cocoa-soft: #756358; /* טקסט משני */
-  --c-caramel: #c8ab8d; /* קווים והדגשות */
-  /* The warm stand-in for §16's mint "selected / soft note" fill. Chosen by
-     measurement: cocoa-soft reaches 4.76:1 on it and cocoa 12.76. */
-  --c-cream-deep: #f3e9dd;
 }
 
 /* Provenance colours, keyed to the engine's Source union so a badge can never
  * pick its own colour. Mirrors SOURCE_META in packages/engine/src/provenance.ts. */
 :root {
-  --c-source-exact: var(--c-green);
-  --c-source-personal: var(--c-green);
-  --c-source-recipe: var(--c-green);
+  /* `--c-ok`, not the action colour: "this number is exact" is a fact about
+     the number, and it must not read as "press me". */
+  --c-source-exact: var(--c-ok);
+  --c-source-personal: var(--c-ok);
+  --c-source-recipe: var(--c-ok);
   --c-source-system: var(--c-amber);
   --c-source-estimate: var(--c-red);
   --c-source-unavailable: var(--c-red);

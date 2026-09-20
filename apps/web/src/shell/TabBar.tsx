@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { ICON_STROKE, TAB_ICON } from './TabIcons.js';
+import { ICON_STROKE, TAB_ICON } from './Icons.js';
 import styles from './TabBar.module.css';
 
 /**

@@ -27,6 +27,18 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    /*
+      THE FONTS TRAVEL INSIDE THE PAGE.
+
+      The application serves its two Hebrew faces from files (better caching,
+      four small requests). The ARTIFACT is a single published HTML document
+      whose CSS is inlined into it, and a page that fetches four more files has
+      four more ways to render in a fallback serif — which is exactly the
+      problem vendoring the fonts solved. Raising the inline limit above the
+      largest face (44 KB) turns them into data: URIs inside that CSS, so the
+      published page is self-contained and asks the network for nothing at all.
+    */
+    assetsInlineLimit: 120_000,
     rollupOptions: {
       input: fileURLToPath(new URL('./app.html', import.meta.url)),
     },

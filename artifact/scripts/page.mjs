@@ -36,34 +36,19 @@ if (!js || !css) {
 const cssText = readFileSync(at(`../dist/${css}`), 'utf8');
 
 /*
-  THE FONT LINKS, PARSED AS TAGS — NOT AS LINES.
+  NO FONT LINK ANY MORE — AND THAT IS THE POINT.
 
-  The first version filtered apps/web/index.html LINE BY LINE for 'fonts.g'.
-  The stylesheet link in that file is written across four lines, so the filter
-  kept the bare `href="https://fonts.googleapis.com/..."` line out of the
-  middle of the tag. In the published page that line was no longer part of any
-  element — it was a TEXT NODE in <body>, and the artifact opened with the URL
-  printed across the top.
+  This used to lift the <link> to fonts.googleapis.com out of the product's
+  index.html and re-emit it here, with a long note about parsing it as a tag
+  rather than as lines (a stray href line once became a text node in <body>,
+  pushed the frame past the viewport and hid the tab bar).
 
-  It cost more than looks: the stray line is ~32px tall, the product's frame is
-  `height: 100dvh`, so the document became one line taller than the viewport
-  and the BOTTOM TAB BAR — the app's only navigation — was pushed out of view.
-  That is why the artifact appeared to have a single screen.
-
-  So the links are matched as whole tags, across newlines, and emitted on one
-  line each.
+  The whole class of problem is gone: the two Hebrew faces are served from the
+  project, the build inlines them into the CSS below as data: URIs, and the
+  published page makes no outward request at all. `probe.mjs` asserts that.
 */
-const productHtml = readFileSync(at('../../apps/web/index.html'), 'utf8');
-const fonts = [...productHtml.matchAll(/<link[^>]*?fonts\.g[^>]*?>/gs)]
-  .map((m) => m[0].replace(/\s+/g, ' ').trim())
-  .join('\n');
-if (!/fonts\.googleapis\.com\/css2/.test(fonts)) {
-  console.error('the product stylesheet link was not found in apps/web/index.html');
-  process.exit(1);
-}
 
 const page = `<title>מחברת מתכונים</title>
-${fonts}
 <style>
 /* ── the host page, not the product ──────────────────────────────
    Three rules and a badge. Everything else on this page is the product's own

@@ -1,166 +1,121 @@
+/* §2 screen 19 — "עוד": a menu of four, in the pastry design system. */
+
 .wrap {
   display: flex;
   flex-direction: column;
+  gap: var(--gap-between-groups);
+  padding: 22px var(--pad-card) 28px;
 }
 
-.account {
-  padding: 20px 20px 18px;
-  border-block-end: 1px solid var(--c-line);
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.accountTitle {
+.title {
   font-family: var(--font-display);
   font-size: var(--fs-screen-title);
+  font-weight: 700;
   color: var(--c-ink);
 }
 
-.email {
-  margin-block-start: 8px;
-  font-size: var(--fs-body);
-  color: var(--c-ink);
-}
-
-.note {
-  margin-block-start: 6px;
-  font-size: var(--fs-meta-lg);
+.lede {
+  font-size: var(--fs-secondary);
   color: var(--c-muted);
-  line-height: 1.6;
 }
 
-.signOut {
-  margin-block-start: 14px;
-  padding: 9px 18px;
-  border: 1px solid var(--c-line);
-  border-radius: var(--r-control);
-  background: var(--c-white);
-  font-family: var(--font-body);
-  font-size: var(--fs-secondary);
-  color: var(--c-red);
-  cursor: pointer;
-}
-.signOut:disabled {
-  opacity: 0.55;
-  cursor: default;
-}
-
-.error {
-  margin-block-start: 10px;
-  padding: 8px 10px;
-  border-radius: var(--r-card);
-  font-size: var(--fs-meta-lg);
-  color: var(--c-red);
-  background: var(--c-red-bg);
-}
-
-/* ── stage 4: personal calibrations ───────────────────────────────────── */
-.calibSection {
-  padding: 18px 20px;
-  border-block-end: 1px solid var(--c-line);
-}
-
-.calibHead {
-  margin-block-start: 14px;
-  font-family: var(--font-body);
-  font-size: var(--fs-secondary);
-  font-weight: 600;
-  color: var(--c-ink);
-}
-
-.calibList {
-  margin-block-start: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.calibItem {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--gap-in-group);
-  padding: 9px 11px;
-  border-radius: var(--r-card);
-  background: var(--c-green-bg);
-}
-
-.calibItemText {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.calibItemName {
-  font-size: var(--fs-secondary);
-  color: var(--c-green-ink);
-  font-weight: 600;
-}
-.calibItemDetail {
-  margin-block-start: 2px;
-  font-size: var(--fs-meta-lg);
-  color: var(--c-green-ink);
-  line-height: 1.5;
-  opacity: 0.9;
-}
-
-.calibRemove {
-  flex: none;
-  min-height: var(--hit-compact);
-  padding: 0 12px;
-  border: 1px solid var(--c-line);
-  border-radius: var(--r-pill);
-  background: var(--c-white);
-  color: var(--c-red);
-  font-family: var(--font-body);
-  font-size: var(--fs-meta-lg);
-}
-
-/* The link into the ingredient centre (stage 7). */
-.calibNote {
-  font-size: var(--fs-meta-lg);
-  color: var(--c-muted);
-  line-height: 1.7;
-  margin-block-end: 10px;
-}
-.linkBtn {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--hit-min);
-  padding-inline: 16px;
-  border: 1px solid var(--c-line);
-  border-radius: var(--r-control);
-  color: var(--c-green);
-  font-size: var(--fs-meta-lg);
-  font-weight: 600;
-}
-
-/* ── the menu §2 screen 19 asks for ────────────────────────────────────── */
+/* ── the four cards ──────────────────────────────────────────────────────
+   One row each: the emblem on the start side in its own soft square, the
+   name and its line in the middle, the chevron at the end. The whole row is
+   the link, so there is no small target to aim at. */
 .menu {
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
 .entry {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 16px 20px;
-  border-block-end: 1px solid var(--c-line);
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  padding: 14px var(--pad-card);
+  border: 1px solid color-mix(in srgb, var(--c-line) 50%, transparent);
+  border-radius: var(--r-card-lg);
+  background: var(--c-paper);
   color: var(--c-ink);
-  /* The whole card is the link, so the default underline would run under two
-     lines of explanation. The green title carries the affordance instead, the
-     same way a recipe card does in the notebook. */
   text-decoration: none;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--c-cocoa) 6%, transparent);
+  transition:
+    background 120ms ease,
+    transform 120ms ease;
+}
+
+/* Pressed and focused are separate states, and both are visible. */
+.entry:hover {
+  background: color-mix(in srgb, var(--c-cream-deep) 60%, var(--c-paper));
+}
+
+.entry:active {
+  transform: scale(0.994);
+  background: var(--c-cream-deep);
+}
+
+.entry:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 2px;
+}
+
+.entryIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--r-card);
+  background: var(--c-cream-deep);
+  color: var(--c-ink);
+}
+
+.entryText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .entryTitle {
-  font-family: var(--font-body);
-  font-size: var(--fs-secondary);
-  font-weight: 600;
-  color: var(--c-green);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  line-height: 1.3;
+  /* A long name wraps; the card grows with it rather than clipping. */
+  overflow-wrap: anywhere;
 }
 
 .entryBody {
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.entryChevron {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--c-muted);
+}
+
+/* ── the account line, kept and made quiet ───────────────────────────────── */
+.account {
+  padding-block-start: 4px;
+}
+
+.note {
   font-size: var(--fs-meta-lg);
   color: var(--c-muted);
   line-height: 1.7;

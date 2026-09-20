@@ -1,4 +1,4 @@
-import { globSync, readFileSync } from 'node:fs';
+import { existsSync, globSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -10,41 +10,146 @@ const SRC = join(HERE, '..');
 const moduleSheets = (): string[] =>
   globSync('**/*.module.css', { cwd: SRC }).map((f) => join(SRC, f));
 
+const HEX: Readonly<Record<string, string>> = Object.fromEntries(
+  [...tokens.matchAll(/(--c-[\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => [m[1]!, m[2]!]),
+);
+
+const luminance = (hex: string): number => {
+  const v = (i: number) => {
+    const c = parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * v(0) + 0.7152 * v(1) + 0.0722 * v(2);
+};
+
+const contrast = (a: string, b: string): number => {
+  const la = luminance(a);
+  const lb = luminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+};
+
 /**
- * §16 is a contract. HANDOFF §8 forbids changing the design language without a
- * professional reason, so the token file is asserted against the spec's table.
+ * Pairings that come straight from the spec's §16 palette and are therefore
+ * NOT this test's business to reject. They are reported as a known limitation
+ * in REVIEW_STEP10_FINAL_REPORT.md instead, because changing them means
+ * changing the product's colours — a decision for the designer, not a test.
  */
-const SPEC_16_COLOURS: readonly [string, string][] = [
-  ['רקע אפליקציה', '#fbfbf9'],
-  ['נייר', '#fdfbf6'],
-  ['רקע חוץ', '#e9ece8'],
-  ['קו', '#cdd4ce'],
-  ['ירוק ראשי', '#1e6b4c'],
-  ['ירוק רקע', '#e2efe8'],
-  ['חום־חול', '#c4a99b'],
-  ['ענבר', '#a56a0e'],
-  ['ענבר רקע', '#f6ebd6'],
-  ['אדום', '#9e362c'],
-  ['אדום רקע', '#f6e3e0'],
-  ['דיו', '#171a18'],
-  ['אפור טקסט', '#6e7a73'],
-  ['אפור רקע ניטרלי', '#edefec'],
+const SPEC_PAIRS: ReadonlySet<string> = new Set([
+  '--c-amber-bg/--c-amber', // 3.81:1 — the warning banner, as specified
+  '--c-paper/--c-muted', // 4.33:1 — secondary text on a card
+  '--c-app-bg/--c-muted', // 4.32:1 — secondary text on a screen
+  '--c-neutral-bg/--c-muted', // 3.87:1
+  '--c-white/--c-muted', // 4.47:1 — the active tab label
+  '--c-paper/--c-sand', // 2.14:1 — §16 step numerals, from the prototype
+  '--c-outer-bg/--c-muted', // label and order sheets
+]);
+
+
+/**
+ * THE PALETTE IS A CONTRACT — a different one from §16's, and Ahmed's.
+ *
+ * §16's colours were asserted here verbatim for eleven stages under HANDOFF
+ * §8 ("do not change the design language without a professional reason"). The
+ * reason is now on the record: Ahmed designed the pâtisserie language, approved
+ * it on the recipe screen, and then approved rolling it across the application.
+ * So the table below is the new one, and the guards that used to keep the new
+ * palette OUT of other screens are replaced by guards that keep it UNIFORM.
+ *
+ * Everything structural §16 specified is still asserted further down: the
+ * tokens every stylesheet uses must exist, the container queries must name a
+ * real container, the hit target stays 44px, and every background/text pair
+ * has to measure 4.5:1.
+ */
+const PALETTE: readonly [string, string][] = [
+  ['שמנת חמה', '#f5ede3'],
+  ['שנהב', '#fffbf6'],
+  ['שוקולד', '#352019'],
+  ['חום אפרפר', '#756358'],
+  ['קרמל', '#c8ab8d'],
+  ['שמנת עמוקה', '#f3e9dd'],
 ];
 
-describe('design tokens match spec §16', () => {
-  for (const [name, hex] of SPEC_16_COLOURS) {
+describe('the design system is one palette, in one place', () => {
+  for (const [name, hex] of PALETTE) {
     it(`${name} = ${hex}`, () => {
       expect(tokens.toLowerCase()).toContain(hex);
     });
   }
 
-  it('declares both spec fonts', () => {
-    expect(tokens).toContain('Heebo');
+  it('binds the names every stylesheet reads to that palette', () => {
+    for (const [token, source] of [
+      ['--c-app-bg', '--c-cream'],
+      ['--c-paper', '--c-ivory'],
+      ['--c-ink', '--c-cocoa'],
+      ['--c-muted', '--c-cocoa-soft'],
+      ['--c-line', '--c-caramel'],
+      ['--c-green', '--c-cocoa'],
+    ] as const) {
+      expect(tokens).toMatch(new RegExp(`${token}:\\s*var\\(${source}\\)`));
+    }
+  });
+
+  it('keeps success, warning and error as their own colours', () => {
+    /*
+      Ahmed: "שמור צבעים מובחנים להצלחה, שגיאה ואזהרה כאשר יש להם משמעות."
+      The action colour is chocolate; "this figure is exact" must not be the
+      same colour as "press this", or the two stop meaning anything.
+    */
+    expect(tokens).toMatch(/--c-ok:\s*#2f6b4a/);
+    expect(tokens).toMatch(/--c-source-exact:\s*var\(--c-ok\)/);
+    expect(tokens).toMatch(/--c-amber:\s*#/);
+    expect(tokens).toMatch(/--c-red:\s*#/);
+    // And none of the three is the action colour.
+    for (const semantic of ['--c-ok', '--c-amber', '--c-red']) {
+      expect(HEX[semantic]).not.toBe(HEX['--c-cocoa']);
+    }
+  });
+
+  it('declares both Hebrew faces, and serves them from this project', () => {
     expect(tokens).toContain('Frank Ruhl Libre');
+    expect(tokens).toContain('Assistant');
+
+    /*
+      A `font-family` declaration is not a font. These are the @font-face rules
+      that make the two faces real, pointing at files inside the repository —
+      the app must not depend on a third-party host being reachable, which in
+      this project's own audit environment it is not.
+    */
+    const faces = readFileSync(join(HERE, 'fonts.css'), 'utf8');
+    for (const file of [
+      'frank-ruhl-libre-hebrew.woff2',
+      'frank-ruhl-libre-latin.woff2',
+      'assistant-hebrew.woff2',
+      'assistant-latin.woff2',
+    ]) {
+      expect(faces).toContain(file);
+      expect(existsSync(join(HERE, 'fonts', file))).toBe(true);
+    }
+    // The Hebrew subsets have to cover the Hebrew block, or a Hebrew page
+    // silently falls back while the CSS looks correct.
+    expect(faces).toContain('U+0590-05FF');
+    // …and the shekel sign, which lives outside it.
+    expect(faces).toContain('U+20AA');
+    expect(faces).toContain('font-display: swap');
+    // OFL 1.1 requires the notice to travel with the files.
+    expect(existsSync(join(HERE, 'fonts', 'OFL.txt'))).toBe(true);
+  });
+
+  it('nothing loads a font from a third party any more', () => {
+    const html = readFileSync(join(SRC, '..', 'index.html'), 'utf8');
+    expect(html).not.toContain('fonts.googleapis.com');
+    expect(html).not.toContain('fonts.gstatic.com');
   });
 
   it('keeps the 44px minimum hit target (§15)', () => {
     expect(tokens).toMatch(/--hit-min:\s*44px/);
+  });
+
+  it('keeps the working text at 16px on a phone', () => {
+    // Ahmed: "טקסט העבודה המרכזי יהיה בדרך כלל בגודל 16px לפחות בנייד."
+    expect(tokens).toMatch(/--fs-body:\s*16px/);
+    const smallest = Number(/--fs-label:\s*(\d+(?:\.\d+)?)px/.exec(tokens)?.[1]);
+    expect(smallest).toBeGreaterThanOrEqual(11);
   });
 
   it('maps every engine Source to a colour, so a badge cannot pick its own', () => {
@@ -132,40 +237,6 @@ describe('every container query names a container that exists', () => {
 // skipped, because its counterpart comes from the cascade and this is a static
 // file check rather than a browser. The browser-side measurement that found
 // these lives in the stage-10 report.
-const HEX: Readonly<Record<string, string>> = Object.fromEntries(
-  [...tokens.matchAll(/(--c-[\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => [m[1]!, m[2]!]),
-);
-
-const luminance = (hex: string): number => {
-  const v = (i: number) => {
-    const c = parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16) / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * v(0) + 0.7152 * v(1) + 0.0722 * v(2);
-};
-
-const contrast = (a: string, b: string): number => {
-  const la = luminance(a);
-  const lb = luminance(b);
-  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
-};
-
-/**
- * Pairings that come straight from the spec's §16 palette and are therefore
- * NOT this test's business to reject. They are reported as a known limitation
- * in REVIEW_STEP10_FINAL_REPORT.md instead, because changing them means
- * changing the product's colours — a decision for the designer, not a test.
- */
-const SPEC_PAIRS: ReadonlySet<string> = new Set([
-  '--c-amber-bg/--c-amber', // 3.81:1 — the warning banner, as specified
-  '--c-paper/--c-muted', // 4.33:1 — secondary text on a card
-  '--c-app-bg/--c-muted', // 4.32:1 — secondary text on a screen
-  '--c-neutral-bg/--c-muted', // 3.87:1
-  '--c-white/--c-muted', // 4.47:1 — the active tab label
-  '--c-paper/--c-sand', // 2.14:1 — §16 step numerals, from the prototype
-  '--c-outer-bg/--c-muted', // label and order sheets
-]);
-
 describe('stage-10 audit: no stylesheet pairs unreadable colours', () => {
   const findings: string[] = [];
 
@@ -197,17 +268,16 @@ describe('stage-10 audit: no stylesheet pairs unreadable colours', () => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────
-// THE PASTRY DRESS: measured, and kept to the one screen it was approved for.
+// THE PALETTE, MEASURED — AND THE SAME EVERYWHERE.
 //
-// The recipe page re-binds §16's colour names to the cream-and-chocolate
-// palette on its own root element. That is invisible to the audit above: it
-// reads `background: var(--c-paper)` against `--c-paper`'s value in `:root`,
-// which is the right answer everywhere EXCEPT inside `.page`. So the new
-// pairings are measured here directly, and the scoping is asserted — because
-// "it only affects the recipe screen" is the whole reason this shape was
-// chosen, and one stray declaration in `:root` would silently re-dress the
-// entire app.
-describe('the pastry palette (recipe screen)', () => {
+// While the dress was approved for the recipe screen only, this block measured
+// the new pairings AND asserted that no other stylesheet wore them. Ahmed has
+// since approved the roll-out and asked, in as many words, for the guards that
+// kept the palette out of other screens to be replaced by guards that keep it
+// uniform. So the measurements stay — they are what makes the palette safe to
+// use — and the scoping test is inverted: the colours come from `:root`, and
+// no module may declare a palette of its own.
+describe('the palette, measured', () => {
   const pastry = (name: string): string => {
     const hex = HEX[name];
     expect(hex, `${name} is declared in tokens.css`).toBeTruthy();
@@ -225,13 +295,13 @@ describe('the pastry palette (recipe screen)', () => {
     expect(contrast(ivory(), cocoa())).toBeGreaterThanOrEqual(7);
   });
 
-  it('the secondary brown reaches AA on both papers — it carries real text', () => {
-    expect(contrast(cream(), soft())).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(ivory(), soft())).toBeGreaterThanOrEqual(4.5);
+  it('the secondary brown reaches AA on every surface it is used on', () => {
+    for (const bg of [cream(), ivory(), deep(), pastry('--c-outer-bg')]) {
+      expect(contrast(bg, soft())).toBeGreaterThanOrEqual(4.5);
+    }
   });
 
   it('the deep cream fill carries both text colours', () => {
-    // The step-number disc and the soft note sit on it.
     expect(contrast(deep(), cocoa())).toBeGreaterThanOrEqual(4.5);
     expect(contrast(deep(), soft())).toBeGreaterThanOrEqual(4.5);
   });
@@ -240,41 +310,53 @@ describe('the pastry palette (recipe screen)', () => {
     expect(contrast(cocoa(), ivory())).toBeGreaterThanOrEqual(7);
   });
 
+  it('the meaning colours reach AA on the surfaces they appear on', () => {
+    for (const [ink, bg] of [
+      ['--c-ok', '--c-ok-bg'],
+      ['--c-amber', '--c-amber-bg'],
+      ['--c-red', '--c-red-bg'],
+    ] as const) {
+      expect(contrast(pastry(bg), pastry(ink)), `${ink} on ${bg}`).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrast(cream(), pastry(ink)),
+        `${ink} on the app background`,
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('Cook Mode stays legible with the lights off', () => {
+    const bg = pastry('--c-cook-bg');
+    expect(contrast(bg, pastry('--c-cook-text'))).toBeGreaterThanOrEqual(7);
+    expect(contrast(bg, pastry('--c-cook-muted'))).toBeGreaterThanOrEqual(4.5);
+    // A filled control there is caramel, not the light application's
+    // chocolate, which on this surface would be invisible.
+    expect(contrast(bg, pastry('--c-caramel'))).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrast(pastry('--c-caramel'), pastry('--c-cook-on-accent')),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+
   it('caramel is never asked to be text on a light surface', () => {
-    /*
-      1.87:1 on cream. It is a hairline and a fill, and the brief says so in
-      as many words. This test states the fact so that a future rule that
-      makes it a colour has to argue with a number.
-    */
     expect(contrast(cream(), pastry('--c-caramel'))).toBeLessThan(3);
   });
 
-  it('is applied on the recipe page and nowhere else', () => {
-    const rebinds = /--c-(?:app-bg|paper|ink|muted|green|line|sand|white|neutral-bg)\s*:\s*var\(--c-(?:cream|ivory|cocoa|caramel|cream-deep)/;
+  it('no module declares a palette of its own', () => {
+    /*
+      THE UNIFORMITY GUARD, which replaced the scoping one.
 
+      One place holds the colours. A stylesheet that declares a `--c-*` name is
+      how two screens start disagreeing about what "paper" is — the drift this
+      roll-out cleaned up. The dark screen is not an exception: its surface is
+      `--c-cook-*`, declared in tokens.css with everything else.
+    */
+    const offenders: string[] = [];
     for (const sheet of moduleSheets()) {
       const css = readFileSync(sheet, 'utf8');
       const name = sheet.slice(SRC.length + 1);
-      for (const rule of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
-        if (!rebinds.test(rule[2]!)) continue;
-        // The captured "selector" carries whatever comment preceded it.
-        const selector = rule[1]!.replace(/\/\*[\s\S]*?\*\//g, '').trim();
-        expect(
-          `${name} · ${selector}`,
-          'only the recipe page may wear the pastry palette',
-        ).toBe('features/recipe/recipe.module.css · .page');
+      for (const m of css.matchAll(/(--c-[a-z0-9-]+)\s*:/g)) {
+        offenders.push(`${name} declares ${m[1]}`);
       }
     }
-  });
-
-  it('and `:root` still serves every other screen §16', () => {
-    // The palette is DECLARED globally so it can be measured; it must not be
-    // USED globally.
-    const root = /:root\s*\{([^}]*)\}/g;
-    for (const block of tokens.matchAll(root)) {
-      expect(block[1]).not.toMatch(/--c-app-bg:\s*var\(--c-cream\)/);
-      expect(block[1]).not.toMatch(/--c-ink:\s*var\(--c-cocoa\)/);
-    }
-    expect(tokens).toContain('--c-app-bg: #fbfbf9');
+    expect(offenders).toEqual([]);
   });
 });

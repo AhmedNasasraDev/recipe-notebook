@@ -1,6 +1,10 @@
+/* The screen's own gutter. These three had none: every child was expected to
+   carry its own, and the heading did not — which put a 26px title flush
+   against the edge of the phone once the type scale went up. */
 .page {
   display: grid;
-  gap: 14px;
+  gap: var(--gap-between-groups);
+  padding: 20px var(--pad-card) 28px;
 }
 
 .head {
@@ -12,6 +16,8 @@
   font-family: var(--font-display);
   font-size: var(--fs-screen-title);
   font-weight: 700;
+  line-height: 1.2;
+  color: var(--c-ink);
 }
 
 .lede,

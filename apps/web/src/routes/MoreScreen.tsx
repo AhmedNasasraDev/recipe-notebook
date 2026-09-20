@@ -17,6 +17,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider.js';
 import { useAppData } from '../app/AppDataProvider.js';
+import { ChevronIcon, ICON_STROKE, MENU_ICON } from '../shell/Icons.js';
 import styles from './MoreScreen.module.css';
 
 interface Entry {
@@ -25,26 +26,35 @@ interface Entry {
   body: string;
 }
 
+/*
+  THE FOUR CARDS, AND WHY THE SENTENCES GOT SHORTER.
+
+  Each entry used to carry a paragraph — the ingredient centre's ran to two
+  lines about how a price change propagates. That is true and it belongs on the
+  screen it describes, not on the menu that leads to it: a menu is read at a
+  glance to choose, and four paragraphs make choosing slower. One line each,
+  in Ahmed's own words from the design.
+*/
 const ENTRIES: readonly Entry[] = [
   {
     to: '/ingredients',
     title: 'חומרי גלם ומחירים',
-    body: 'המחיר של כל חומר גלם נמצא במקום אחד. שינוי מחיר שם מעדכן את העלות בכל המתכונים שמשתמשים בו.',
+    body: 'ניהול חומרי גלם ועדכון מחירים',
   },
   {
     to: '/plans',
     title: 'תכנון ייצור ורכש',
-    body: 'מגדירים מה מייצרים ובאיזו כמות, והמערכת מחשבת מהמתכונים כמה חומר גלם צריך, מה לקנות, כמה זה צפוי לעלות ומתי להתחיל לעבוד.',
+    body: 'תכנון כמויות ורשימת קניות',
   },
   {
     to: '/tools',
     title: 'כלי המדידה שלי',
-    body: 'גודל הכוס, הכף והכפית שלכם, והכיולים האישיים. כל המרה בין נפח למשקל נעשית לפי מה שמוגדר כאן.',
+    body: 'מידות והמרות לפי הכלים שלך',
   },
   {
     to: '/settings',
     title: 'הגדרות',
-    body: 'פרופיל, יחידות מדידה, שפה, פרטיות, שאלות הפתיחה והחשבון.',
+    body: 'פרופיל, שפה והעדפות',
   },
 ];
 
@@ -54,8 +64,46 @@ export function MoreScreen() {
 
   return (
     <div className={styles.wrap}>
-      <header className={styles.account}>
-        <h1 className={styles.accountTitle}>עוד</h1>
+      <header className={styles.head}>
+        <h1 className={styles.title}>עוד</h1>
+        <p className={styles.lede}>כל הכלים למחברת שלך</p>
+      </header>
+
+      {/*
+        Four cards, and the whole card is the link — an <a> with the title
+        inside it, so its accessible name is the destination and a tap
+        anywhere on it works. The icon and the chevron are `aria-hidden`
+        decoration; the chevron points left because the application is RTL and
+        that is the way forward.
+      */}
+      <nav className={styles.menu} aria-label="תפריט עוד">
+        {ENTRIES.map((e) => {
+          const Icon = MENU_ICON[e.to];
+          return (
+            <Link key={e.to} to={e.to} className={styles.entry}>
+              <span className={styles.entryIcon} aria-hidden="true">
+                {Icon?.({ width: ICON_STROKE.menu })}
+              </span>
+              <span className={styles.entryText}>
+                <span className={styles.entryTitle}>{e.title}</span>
+                <span className={styles.entryBody}>{e.body}</span>
+              </span>
+              <span className={styles.entryChevron} aria-hidden="true">
+                <ChevronIcon />
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/*
+        THE ACCOUNT LINE STAYS.
+
+        It is not in the design Ahmed sent, and it is the one thing on this
+        screen that answers "is my work being saved, and where?" — so it is
+        kept and made secondary rather than dropped for looking untidy.
+      */}
+      <footer className={styles.account}>
         {status === 'signed-in' && user ? (
           <p className={styles.note}>
             מחוברים כ־<span className="ltr">{user.email}</span>. ניהול החשבון
@@ -68,16 +116,7 @@ export function MoreScreen() {
               : 'לא מחוברים לחשבון.'}
           </p>
         )}
-      </header>
-
-      <nav className={styles.menu} aria-label="תפריט עוד">
-        {ENTRIES.map((e) => (
-          <Link key={e.to} to={e.to} className={styles.entry}>
-            <span className={styles.entryTitle}>{e.title}</span>
-            <span className={styles.entryBody}>{e.body}</span>
-          </Link>
-        ))}
-      </nav>
+      </footer>
     </div>
   );
 }
