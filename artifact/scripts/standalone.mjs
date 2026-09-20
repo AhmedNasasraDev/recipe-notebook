@@ -117,6 +117,18 @@ const INDEX = path.join(path.dirname(OUT), 'index.html');
 writeFileSync(INDEX, out, 'utf8');
 
 /*
+  A demo that lives at a URL is a link someone passes to a friend, not a page
+  that should turn up in a search for the product. Search engines are asked to
+  stay out; this is not protection (the link is public to whoever holds it),
+  just the difference between shared and published.
+*/
+writeFileSync(
+  path.join(path.dirname(OUT), 'robots.txt'),
+  'User-agent: *\nDisallow: /\n',
+  'utf8',
+);
+
+/*
   The build's own output goes away once it is folded in: what is left in
   `dist-demo` is the two identical documents and nothing else, so the directory
   can be handed to a static host as it stands — and nobody can open the
