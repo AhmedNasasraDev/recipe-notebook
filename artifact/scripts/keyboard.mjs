@@ -157,6 +157,128 @@ try {
     (await page.locator('#r-name-error').textContent()) ?? '',
   );
 
+  // ── the bottom bar: glyphs, names, targets, and two marks not one ──────
+  await page.goto(`${BASE}?k=${Date.now()}#/notebook`, { waitUntil: 'load' });
+  await page.waitForTimeout(1000);
+
+  const bar = await page.evaluate(() => {
+    const nav = document.querySelector('nav[aria-label="ניווט ראשי"]');
+    if (!nav) return null;
+    const links = [...nav.querySelectorAll('a')];
+    return {
+      count: links.length,
+      names: links.map((a) => a.getAttribute('aria-label')),
+      hrefs: links.map((a) => a.getAttribute('href')),
+      titles: links.map((a) => a.getAttribute('title')),
+      // Ahmed asked for 48×48 on every one of them.
+      boxes: links.map((a) => {
+        const r = a.getBoundingClientRect();
+        return { w: Math.round(r.width), h: Math.round(r.height) };
+      }),
+      /*
+        NOT `textContent` — that counts words that are not drawn.
+
+        The first version of this check read the bar's text and failed on a
+        bar that is entirely glyphs, because the desktop tooltip is IN the DOM
+        at every width and merely `display: none` on a phone. What "no label
+        is drawn" means is a computed style, so that is what is measured.
+      */
+      drawnText: [...nav.querySelectorAll('a > span')]
+        .filter((el) => getComputedStyle(el).display !== 'none' && (el.textContent ?? '').trim())
+        .map((el) => (el.textContent ?? '').trim())
+        .join(' '),
+      current: links.filter((a) => a.getAttribute('aria-current') === 'page').length,
+      strokes: links.map((a) => Number(a.querySelector('svg')?.getAttribute('stroke-width'))),
+      // The second mark: the active glyph sits on a filled pill.
+      fills: links.map((a) => {
+        const g = a.querySelector('span');
+        return g ? getComputedStyle(g).backgroundColor : '';
+      }),
+      barBottom: Math.round(nav.getBoundingClientRect().bottom),
+      viewport: document.documentElement.clientHeight,
+    };
+  });
+
+  check('the bar has the four §2 destinations, in order', bar?.hrefs.join(' ') === '/home /notebook /groups /more', bar?.hrefs.join(' ') ?? 'no bar');
+  check('each one keeps its Hebrew name for a screen reader', bar?.names.join(' ') === 'בית מחברת קבוצות עוד', bar?.names.join(' ') ?? '');
+  check('and a tooltip on a pointer', bar?.titles.every((t) => t && t.length > 0) === true);
+  check('no label is drawn on a phone — the bar is glyphs', bar?.drawnText === '', `«${bar?.drawnText}»`);
+  check(
+    'every tap target is at least 48×48',
+    bar?.boxes.every((b) => b.w >= 48 && b.h >= 48) === true,
+    bar?.boxes.map((b) => `${b.w}×${b.h}`).join(' ') ?? '',
+  );
+  check('exactly one tab says it is the current page', bar?.current === 1);
+  check(
+    'the current tab is marked twice: a heavier glyph AND a filled pill',
+    bar?.strokes.filter((w) => w > 2).length === 1 &&
+      bar?.fills.filter((f) => f && f !== 'rgba(0, 0, 0, 0)').length === 1,
+    `strokes ${bar?.strokes.join('/')} · fills ${bar?.fills.filter((f) => f && f !== 'rgba(0, 0, 0, 0)').length}`,
+  );
+  check(
+    'the bar sits at the bottom edge and hides nothing',
+    (bar?.barBottom ?? 0) <= (bar?.viewport ?? 0) + 1,
+    `${bar?.barBottom} of ${bar?.viewport}`,
+  );
+
+  // Every destination really answers.
+  for (const [href, expected] of [
+    ['/home', '/home'],
+    ['/groups', '/groups'],
+    ['/more', '/more'],
+    ['/notebook', '/notebook'],
+  ]) {
+    await page.click(`nav[aria-label="ניווט ראשי"] a[href="${href}"]`);
+    await page.waitForTimeout(500);
+    const at = await page.evaluate(() => window.location.hash.replace(/^#/, ''));
+    check(`the ${href} tab navigates`, at === expected, at);
+  }
+
+  // Keyboard: the bar's links take focus and show it.
+  await page.evaluate(() => {
+    const a = document.querySelector('nav[aria-label="ניווט ראשי"] a[href="/groups"]');
+    a?.focus();
+  });
+  const barFocus = await focused(page);
+  check('a tab takes keyboard focus and shows a ring', barFocus?.ring === true, barFocus?.name ?? '—');
+
+  // ── and on a desktop, the name appears on hover AND on keyboard focus ──
+  const wide = await browser.newContext({ viewport: { width: 1280, height: 860 } });
+  const deskPage = await wide.newPage();
+  await deskPage.route('**/*', (r) =>
+    r.request().url().startsWith('http://127.0.0.1:8153') ? r.continue() : r.abort(),
+  );
+  await deskPage.goto(`${BASE}?k=${Date.now()}#/notebook`, { waitUntil: 'load' });
+  await deskPage.waitForTimeout(1000);
+
+  const tipOf = () =>
+    deskPage.evaluate(() => {
+      const a = document.querySelector('nav[aria-label="ניווט ראשי"] a[href="/groups"]');
+      const tip = [...(a?.querySelectorAll('span') ?? [])].find(
+        (s) => (s.textContent ?? '').trim() === 'קבוצות',
+      );
+      if (!tip) return null;
+      const cs = getComputedStyle(tip);
+      return { display: cs.display, opacity: Number(cs.opacity), hidden: tip.getAttribute('aria-hidden') };
+    });
+
+  const atRest = await tipOf();
+  check('on a desktop the tooltip exists but stays out of the way', atRest?.display !== 'none' && atRest?.opacity === 0, JSON.stringify(atRest));
+  await deskPage.hover('nav[aria-label="ניווט ראשי"] a[href="/groups"]');
+  await deskPage.waitForTimeout(250);
+  check('it appears on hover', (await tipOf())?.opacity === 1);
+  await deskPage.mouse.move(10, 10);
+  await deskPage.waitForTimeout(250);
+  await deskPage.evaluate(() => {
+    document.querySelector('nav[aria-label="ניווט ראשי"] a[href="/groups"]')?.focus();
+  });
+  await deskPage.keyboard.press('Shift+Tab');
+  await deskPage.keyboard.press('Tab');
+  await deskPage.waitForTimeout(250);
+  check('and on keyboard focus, which `title` alone never does', (await tipOf())?.opacity === 1);
+  check('the tooltip is hidden from assistive tech — the name is on the link', atRest?.hidden === 'true');
+  await wide.close();
+
   check('no page error in the whole run', errors.length === 0, errors.slice(0, 2).join(' | '));
   await ctx.close();
 } finally {

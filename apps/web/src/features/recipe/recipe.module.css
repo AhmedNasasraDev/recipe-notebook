@@ -1,10 +1,73 @@
 /* The recipe page and its conversion sheet. Tokens only — no raw hex here. */
 
+/* ─────────────────────────────────────────────────────────────────────────
+   THE PASTRY DRESS — ONE SCREEN, AND HOW IT IS KEPT TO ONE SCREEN
+
+   Ahmed's reference is a pâtisserie page: warm cream paper, chocolate
+   headings, a caramel hairline, and a cookbook serif. This screen wears it;
+   nothing else does, until he says so.
+
+   The mechanism is the project's own token system, used the way custom
+   properties are meant to be used: the §16 names are RE-BOUND on this page's
+   root element. Every rule in this file, and in every component rendered
+   inside the page (the pan card, the private note, the version history, the
+   conversion sheet), already reads `var(--c-paper)` and friends — so they all
+   change together, with no rule rewritten twice and no second palette to keep
+   in step. Outside `.page` the names still hold §16's values, so the notebook,
+   the groups, the plans and Cook Mode are untouched.
+
+   Two things deliberately do NOT change:
+
+   · The meaning colours. `--c-amber`, `--c-red` and the `--c-source-*` badges
+     stay as they are: amber is "system estimate" and red is "no reliable
+     data", and those are facts about a number, not decoration. (They resolve
+     at `:root`, so re-binding `--c-green` here cannot quietly recolour a
+     provenance badge.)
+   · Every measurement, control size and 44px target. This is paint.
+   ───────────────────────────────────────────────────────────────────────── */
 .page {
+  /* colour */
+  --c-app-bg: var(--c-cream);
+  --c-paper: var(--c-ivory);
+  --c-white: var(--c-ivory);
+  --c-line: var(--c-caramel);
+  --c-ink: var(--c-cocoa);
+  --c-muted: var(--c-cocoa-soft);
+  /* The action colour of this screen is chocolate, not §16's green. */
+  --c-green: var(--c-cocoa);
+  --c-green-ink: #23120c;
+  --c-green-bg: var(--c-cream-deep);
+  /*
+    `--c-sand` is a FILL on this page — the "why there is no figure" strips in
+    the costing panel and the version comparison. Caramel at full strength
+    makes those strips heavier than the numbers they explain, so the fill is
+    the deep cream and the caramel is kept for lines (`--c-line`). Measured on
+    the deep cream: chocolate 12.76:1, the secondary brown 4.76:1.
+  */
+  --c-sand: var(--c-cream-deep);
+  --c-neutral-bg: var(--c-cream-deep);
+
+  /*
+    TYPE, ONE STEP UP.
+
+    §16's scale was drawn for a dense prototype; this is a page read at arm's
+    length with wet hands, and the brief asked for no small print and no
+    letter-spaced Hebrew. Body text goes 13.5 → 15px, the secondary line
+    12.5 → 13.5, the smallest label 11.5 → 12.5, and the recipe's name
+    25 → 30px. Nothing is re-laid-out for it: these are the same tokens the
+    rules already use.
+  */
+  --fs-meta: 11.5px;
+  --fs-meta-lg: 12.5px;
+  --fs-secondary: 13.5px;
+  --fs-body: 15px;
+  --fs-body-lg: 16px;
+  --fs-recipe-title: 30px;
+
   display: flex;
   flex-direction: column;
-  gap: var(--gap-in-group);
-  padding: 12px var(--pad-card) 28px;
+  gap: var(--gap-between-groups);
+  padding: 12px var(--pad-card) 32px;
   background: var(--c-app-bg);
 }
 
@@ -34,12 +97,19 @@
   padding-block: 4px;
 }
 .title {
+  font-family: var(--font-display);
   font-size: var(--fs-recipe-title);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--c-ink);
+  /* A long name wraps; it is never cut. */
+  overflow-wrap: anywhere;
 }
 .meta {
-  margin-top: 6px;
+  margin-top: 8px;
   font-size: var(--fs-secondary);
   color: var(--c-muted);
+  line-height: 1.6;
 }
 .lockedNote {
   margin-top: 6px;
@@ -53,20 +123,35 @@
 
 .card {
   background: var(--c-paper);
-  border: 1px solid var(--c-line);
+  /* The caramel hairline at full strength is a stripe; at 55% it is the edge
+     of a page. */
+  border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
   border-radius: var(--r-card-lg);
-  padding: var(--pad-card);
+  padding: 16px var(--pad-card);
   display: flex;
   flex-direction: column;
   gap: var(--gap-in-group);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--c-cocoa) 6%, transparent);
 }
 
+/*
+  A SECTION HEADING THAT LOOKS LIKE A COOKBOOK'S.
+
+  It was 11.5px of grey body text with 0.03em of letter-spacing — which in
+  Hebrew prises the letters of a word apart rather than making it elegant. It
+  is the display serif now (Frank Ruhl Libre, already the project's Hebrew
+  display face), at a size that can be read across a counter, in chocolate,
+  with a short caramel rule under it instead of spacing tricks.
+*/
 .cardTitle {
-  font-family: var(--font-body);
-  font-size: var(--fs-meta-lg);
-  font-weight: 400;
-  letter-spacing: 0.03em;
-  color: var(--c-muted);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.3;
+  color: var(--c-ink);
+  padding-block-end: 8px;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 45%, transparent);
 }
 
 .cardHeadRow {
@@ -167,7 +252,7 @@
   display: flex;
   align-items: center;
   gap: var(--gap-in-group);
-  padding: 10px 0;
+  padding: 12px 0;
   min-height: var(--hit-min);
   text-align: start;
   border: 0;
@@ -181,12 +266,15 @@
 .qty,
 .qtyMissing {
   flex: none;
-  min-width: 84px;
+  min-width: 88px;
   display: flex;
   flex-direction: column;
   gap: 1px;
   font-size: var(--fs-body-lg);
-  font-weight: 500;
+  font-weight: 600;
+  /* Quantities line up in a column and are read as numbers, not as words. */
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
 }
 .qtyMissing {
   color: var(--c-red);
@@ -203,6 +291,12 @@
   flex-direction: column;
   gap: 2px;
   font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--c-ink);
+  /* A long ingredient name wraps inside its row rather than pushing the
+     quantity off the screen. */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .ingNote {
   font-size: var(--fs-meta-lg);
@@ -216,10 +310,15 @@
 
 .convertHint {
   /* stage-10 audit: was --c-sand, 2.14:1, on an affordance. Green is the
-     action colour (§16) and measures 6.22:1 here. */
+     action colour (§16) and measures 6.22:1 there.
+
+     The design pass moved it to the secondary brown ON THIS SCREEN — 5.54:1
+     on ivory, still comfortably AA. The reason is repetition: this word sits
+     on every ingredient row, and in the action colour eight of them shouted
+     as loudly as the recipe's own name. */
   flex: none;
   font-size: var(--fs-meta-lg);
-  color: var(--c-green);
+  color: var(--c-muted);
 }
 
 .unresolvedSummary {
@@ -297,18 +396,35 @@
 .steps {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-between-groups);
+  gap: 18px;
 }
 .step {
   display: flex;
-  gap: var(--gap-in-group);
+  gap: 12px;
+  align-items: flex-start;
 }
+/*
+  THE STEP NUMBER IS A NUMBER, SO IT HAS TO BE READABLE.
+
+  It was the display serif in `--c-sand` — 2.14:1 on paper, carried since the
+  prototype as a documented §16 exception. Caramel on cream is no better
+  (1.87:1), and the brief is explicit that light beige is not for anything
+  that matters. So the numeral keeps the serif and the warmth, and gets a
+  filled disc to sit on: chocolate on the deep cream, measured 12.76:1.
+*/
 .stepNum {
   flex: none;
+  display: grid;
+  place-items: center;
+  inline-size: 30px;
+  block-size: 30px;
+  border-radius: 50%;
+  background: var(--c-green-bg);
   font-family: var(--font-display);
-  font-size: 20px;
-  color: var(--c-sand);
-  min-width: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
 }
 .stepBody {
   flex: 1;
@@ -318,7 +434,9 @@
 }
 .stepText {
   font-size: var(--fs-body);
-  line-height: 1.6;
+  line-height: 1.75;
+  color: var(--c-ink);
+  overflow-wrap: anywhere;
 }
 .stepMeta {
   font-size: var(--fs-meta-lg);
@@ -639,18 +757,26 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--gap-in-group);
-  padding: 0 var(--pad-card);
+  padding: 0;
 }
+/* One of these is a <Link> and the others are <button>s — without this the
+   link sits against the edge of its pill with a global underline under it,
+   while the buttons beside it are centred and clean. */
 .actionBtn,
 .actionBtnDanger {
   flex: 1 1 auto;
   min-height: var(--hit-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   padding: 0 16px;
-  border-radius: var(--r-control);
+  border-radius: var(--r-pill);
   border: 1px solid var(--c-line);
-  background: var(--c-white);
+  background: var(--c-paper);
   font-family: var(--font-body);
   font-size: var(--fs-secondary);
+  font-weight: 600;
 }
 .actionBtn {
   color: var(--c-ink);
@@ -669,7 +795,7 @@
    §7 asks for a confirmation that says what will be lost, and a native confirm
    cannot name the recipe or list its children. */
 .confirmBox {
-  margin: 0 var(--pad-card);
+  margin: 0;
   padding: 13px 15px;
   border-radius: var(--r-card);
   background: var(--c-red-bg);
@@ -1169,20 +1295,29 @@
 }
 
 /* ── §14 the way into Cook Mode ─────────────────────────────────────────── */
+/* The one filled control on the page: chocolate, the width of the column, and
+   the only thing shaped like a pill — there is never a question about which
+   button starts the work. `--c-ivory` on `--c-cocoa` measures 14.86:1. */
 .cookBtn {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
-  margin-block-end: var(--gap-between-groups);
-  margin-inline: var(--pad-card);
-  border-radius: var(--r-control);
+  min-height: 54px;
+  margin-block-end: 0;
+  margin-inline: 0;
+  border-radius: var(--r-pill);
   background: var(--c-ink);
-  color: var(--c-white);
+  color: var(--c-ivory);
   font-family: var(--font-body);
-  font-size: var(--fs-body);
+  font-size: var(--fs-body-lg);
   font-weight: 600;
   text-decoration: none;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--c-cocoa) 18%, transparent);
+}
+
+.cookBtn:hover {
+  background: var(--c-green-ink);
+  color: var(--c-ivory);
 }
 
 /* ── §2 screens 8 and 9: the print outputs ───────────────────────────────── */
@@ -1191,8 +1326,8 @@
 .printRow {
   display: flex;
   gap: var(--gap-in-group);
-  margin-block-end: var(--gap-between-groups);
-  margin-inline: var(--pad-card);
+  margin-block-end: 0;
+  margin-inline: 0;
 }
 
 .printLink {
@@ -1215,11 +1350,14 @@
    formula, allergens, versions). Both are <details>: the browser's own
    disclosure, so the keyboard and the screen reader already know it, and the
    summary says what is inside rather than "עוד". */
+/* One column: `.page` pads its own sides, so nothing inside adds a second
+   inset — which is what used to make the cook button and these panels
+   narrower than the cards above them. */
 .more,
 .proDetails {
-  margin-inline: var(--pad-card);
-  border: 1px solid var(--c-line);
-  border-radius: var(--r-card);
+  margin-inline: 0;
+  border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+  border-radius: var(--r-card-lg);
   background: var(--c-paper);
 }
 
@@ -1229,10 +1367,10 @@
   align-items: center;
   min-height: var(--hit-min);
   padding-inline: var(--pad-card);
-  font-family: var(--font-body);
-  font-size: var(--fs-secondary);
+  font-family: var(--font-display);
+  font-size: 16px;
   font-weight: 600;
-  color: var(--c-green);
+  color: var(--c-ink);
   cursor: pointer;
 }
 
@@ -1274,7 +1412,7 @@
 
 /* "נשמר" on arrival from the editor. Green, with words — never colour alone. */
 .savedNotice {
-  margin-inline: var(--pad-card);
+  margin-inline: 0;
   padding: 9px 12px;
   border-radius: var(--r-card);
   background: var(--c-green-bg);

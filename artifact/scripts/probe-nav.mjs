@@ -117,7 +117,14 @@ try {
     ['עוד', '/more'],
     ['מחברת', '/notebook'],
   ]) {
-    await page.locator('nav[aria-label="ניווט ראשי"] a', { hasText: label }).first().click();
+    /*
+      Selected by ADDRESS, not by text. The bar is glyphs now: the Hebrew name
+      is the link's `aria-label`, and the only text inside it is the desktop
+      tooltip, which is `display: none` at this width. Matching on that text
+      happened to work — Playwright's `hasText` reads `textContent` and does
+      not care that it is hidden — and "happened to work" is not a selector.
+    */
+    await page.locator(`nav[aria-label="ניווט ראשי"] a[href="${expected}"]`).first().click();
     await page.waitForTimeout(400);
     const at = await page.evaluate(() => window.__route);
     check(`tab "${label}" navigates`, at === expected, `${at}`);

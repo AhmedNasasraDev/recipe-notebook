@@ -1,42 +1,141 @@
+/*
+  THE BOTTOM BAR — ICONS ONLY, IN THE CREAM-AND-CHOCOLATE DRESS.
+
+  WHAT CHANGED AND WHAT DID NOT
+
+  The four destinations, their order and their addresses are exactly what §2
+  specifies; only the label's PRESENTATION moved, from a caption under the
+  glyph to the link's accessible name (see TabBar.tsx). Nothing about the
+  navigation itself was touched.
+
+  The colours are the pastry tokens, used directly rather than by re-binding
+  §16's names — the bar sits outside the recipe page, so a re-binding here
+  would be the leak the guard in `styles/tokens.test.ts` exists to catch.
+  Measured: chocolate on ivory 14.86:1, the secondary brown on ivory 5.54:1.
+
+  THE ACTIVE TAB IS MARKED TWICE, NEVER BY COLOUR ALONE
+
+    1. a soft rounded fill behind the glyph (`--c-cream-deep`)
+    2. the glyph itself is drawn at a heavier stroke — 2.3 against 1.6 — which
+       is a property of the icon set, so all four change together
+
+  Colour is the third cue, not the only one.
+*/
+
 .bar {
   flex: none;
   display: flex;
-  border-top: 1px solid var(--c-line);
-  background: var(--c-white);
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  justify-content: space-around;
+  align-items: stretch;
+  gap: 2px;
+  padding: 6px 8px;
+  /* The phone's own bottom inset, so the bar clears the home indicator and
+     never sits on top of what it is navigating. */
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid color-mix(in srgb, var(--c-caramel) 55%, transparent);
+  background: var(--c-ivory);
 }
 
 .tab {
   flex: 1;
-  min-height: var(--hit-min);
+  /* Ahmed asked for 48×48 — above the project's own 44px floor, and this is a
+     control pressed with a thumb while holding a bowl. */
+  min-height: 48px;
+  min-width: 48px;
   border: 0;
   background: transparent;
-  font-size: var(--fs-secondary);
-  color: var(--c-muted);
+  color: var(--c-cocoa-soft);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 2px;
   text-decoration: none;
+  border-radius: 14px;
+  position: relative;
+}
+
+/* The glyph's own box: the rounded fill of the active tab is drawn on THIS,
+   so the tap target stays 48px while the marker stays a neat pill. */
+.glyph {
+  display: grid;
+  place-items: center;
+  inline-size: 46px;
+  block-size: 34px;
+  border-radius: var(--r-pill);
+  color: inherit;
 }
 
 .active {
-  color: var(--c-green);
-  font-weight: 600;
+  color: var(--c-cocoa);
+}
+
+.active .glyph {
+  background: var(--c-cream-deep);
+}
+
+/* Keyboard focus is its own state, and it is visible on both the rest and the
+   active tab. */
+.tab:focus-visible {
+  outline: 2px solid var(--c-cocoa);
+  outline-offset: -3px;
 }
 
 /*
-  STAGE-10 AUDIT FIX. A pending tab's label was `--c-sand` on white: 2.21:1
-  measured, on a NAVIGATION CONTROL. `--c-muted` is the app's own secondary-text
-  colour and measures 4.47:1 here — the same treatment every other secondary
-  label in the product gets, instead of a fill colour used as text.
+  THE TOOLTIP — POINTER AND KEYBOARD.
+
+  `title` covers a mouse; it never appears on focus, which is exactly the case
+  a keyboard user is in. So the name is also drawn here, above the bar, on
+  hover AND on `:focus-visible`, and only where there is a real pointer and
+  room for it — on a phone the label would cover the screen it belongs to.
 */
-.pending {
-  color: var(--c-muted);
+.tip {
+  display: none;
 }
 
-.pendingHint {
-  font-size: var(--fs-label);
-  color: var(--c-muted);
+@media (min-width: 700px) {
+  .tip {
+    display: block;
+    position: absolute;
+    inset-block-end: calc(100% + 6px);
+    inset-inline-start: 50%;
+    transform: translateX(50%);
+    padding: 4px 10px;
+    border-radius: var(--r-pill);
+    background: var(--c-cocoa);
+    color: var(--c-ivory);
+    font-size: var(--fs-meta-lg);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+
+  .tab:hover .tip,
+  .tab:focus-visible .tip {
+    opacity: 1;
+  }
+}
+
+/*
+  A TAB THAT IS NOT BUILT YET.
+
+  Nothing is, today — all four lead somewhere — and the caption that used to
+  say "בהכנה" went with the labels. The state is kept rather than deleted,
+  because §2 will grow: the name carries the words (TabBar.tsx) and this is
+  the mark a sighted user sees, which is a shape and a position rather than a
+  colour.
+*/
+.pending {
+  color: var(--c-cocoa-soft);
+}
+
+.pendingDot {
+  position: absolute;
+  inset-block-start: 6px;
+  inset-inline-end: 12px;
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: var(--c-caramel);
 }

@@ -2,20 +2,26 @@
 
 .card {
   background: var(--c-paper);
-  border: 1px solid var(--c-line);
+  border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
   border-radius: var(--r-card-lg);
-  padding: var(--pad-card);
+  padding: 16px var(--pad-card);
   display: flex;
   flex-direction: column;
   gap: var(--gap-in-group);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--c-cocoa) 6%, transparent);
 }
 
+/* The same cookbook heading the recipe page's sections use — this card is
+   rendered inside `.page`, so it inherits that screen's palette and type. */
 .title {
-  font-family: var(--font-body);
-  font-size: var(--fs-meta-lg);
-  font-weight: 400;
-  letter-spacing: 0.03em;
-  color: var(--c-muted);
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.3;
+  color: var(--c-ink);
+  padding-block-end: 8px;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 45%, transparent);
 }
 
 .note,
@@ -57,8 +63,15 @@
 
 .frame {
   /* aspect-ratio is set inline from the stored dimensions, so the box is
-     reserved before the signed URL resolves and the page does not reflow. */
+     reserved before the signed URL resolves and the page does not reflow.
+
+     A BALANCED HEIGHT: a portrait photograph of a cake is taller than the
+     phone, and the brief asked that the picture not push the quantities off
+     the screen. The box keeps the photograph's own proportions until they
+     reach 260px and then crops, which is the difference between a recipe page
+     with a photograph on it and a photograph with a recipe underneath. */
   inline-size: 100%;
+  max-block-size: 260px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -88,18 +101,40 @@
   line-height: 1.6;
 }
 
+/*
+  THE EMPTY STATE IS A FRAME, NOT A BUTTON FLOATING IN A CARD.
+
+  The brief: when a recipe has no photograph, show something clean and
+  designed, and never a stock cake that is not this recipe's. So it is an
+  empty plate — a dashed caramel frame with the one action centred in it —
+  which reads as "a picture goes here" and says nothing untrue about the
+  recipe. Once there IS a photograph the button goes back to being a quiet
+  control under it (`.grid ~ .addBtn`).
+*/
 .addBtn {
-  align-self: flex-start;
-  display: inline-flex;
+  align-self: stretch;
+  display: flex;
   align-items: center;
-  min-height: var(--hit-min);
+  justify-content: center;
+  min-height: 108px;
   padding-inline: 16px;
-  border: 1px solid var(--c-green);
-  border-radius: var(--r-control);
-  background: var(--c-white);
-  color: var(--c-green);
-  font-size: var(--fs-secondary);
+  border: 1px dashed var(--c-line);
+  border-radius: var(--r-card);
+  background: color-mix(in srgb, var(--c-line) 12%, transparent);
+  color: var(--c-ink);
+  font-size: var(--fs-body);
+  font-weight: 600;
   cursor: pointer;
+}
+
+/* There is already a photograph on the page: the control steps back. */
+.grid ~ .addBtn {
+  align-self: flex-start;
+  min-height: var(--hit-min);
+  border-style: solid;
+  border-radius: var(--r-pill);
+  background: var(--c-paper);
+  font-size: var(--fs-secondary);
 }
 
 .removeBtn {

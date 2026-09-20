@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { ICON_STROKE, TAB_ICON } from './TabIcons.js';
 import styles from './TabBar.module.css';
 
 /**
@@ -74,10 +75,31 @@ export function TabBar() {
           ]
             .filter(Boolean)
             .join(' ')}
+          /*
+            THE NAME LIVES HERE NOW.
+
+            The label came off the bar and moved onto the link: `aria-label`
+            is the accessible name, `title` is the browser's own tooltip on a
+            pointer, and `.tip` below is the one that also appears on keyboard
+            focus — which `title` never does. A tab that is not built says so
+            in the name rather than in a caption nobody can see.
+          */
+          aria-label={tab.ready ? tab.label : `${tab.label} — בהכנה`}
+          title={tab.ready ? tab.label : `${tab.label} — בהכנה`}
           aria-current={current === tab.to ? 'page' : undefined}
         >
-          <span>{tab.label}</span>
-          {!tab.ready && <span className={styles.pendingHint}>בהכנה</span>}
+          <span className={styles.glyph}>
+            {TAB_ICON[tab.to]?.({
+              width: current === tab.to ? ICON_STROKE.active : ICON_STROKE.rest,
+            })}
+          </span>
+          {/* Desktop only, and hidden from assistive tech: the accessible name
+              above already says this, and saying it twice is worse than not
+              showing it at all. */}
+          <span className={styles.tip} aria-hidden="true">
+            {tab.label}
+          </span>
+          {!tab.ready && <span className={styles.pendingDot} aria-hidden="true" />}
         </NavLink>
       ))}
     </nav>

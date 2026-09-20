@@ -195,3 +195,86 @@ describe('stage-10 audit: no stylesheet pairs unreadable colours', () => {
     expect(findings).toEqual([]);
   });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// THE PASTRY DRESS: measured, and kept to the one screen it was approved for.
+//
+// The recipe page re-binds §16's colour names to the cream-and-chocolate
+// palette on its own root element. That is invisible to the audit above: it
+// reads `background: var(--c-paper)` against `--c-paper`'s value in `:root`,
+// which is the right answer everywhere EXCEPT inside `.page`. So the new
+// pairings are measured here directly, and the scoping is asserted — because
+// "it only affects the recipe screen" is the whole reason this shape was
+// chosen, and one stray declaration in `:root` would silently re-dress the
+// entire app.
+describe('the pastry palette (recipe screen)', () => {
+  const pastry = (name: string): string => {
+    const hex = HEX[name];
+    expect(hex, `${name} is declared in tokens.css`).toBeTruthy();
+    return hex!;
+  };
+
+  const cream = () => pastry('--c-cream');
+  const ivory = () => pastry('--c-ivory');
+  const cocoa = () => pastry('--c-cocoa');
+  const soft = () => pastry('--c-cocoa-soft');
+  const deep = () => pastry('--c-cream-deep');
+
+  it('chocolate reads on both papers, with room to spare', () => {
+    expect(contrast(cream(), cocoa())).toBeGreaterThanOrEqual(7);
+    expect(contrast(ivory(), cocoa())).toBeGreaterThanOrEqual(7);
+  });
+
+  it('the secondary brown reaches AA on both papers — it carries real text', () => {
+    expect(contrast(cream(), soft())).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(ivory(), soft())).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('the deep cream fill carries both text colours', () => {
+    // The step-number disc and the soft note sit on it.
+    expect(contrast(deep(), cocoa())).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(deep(), soft())).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('ivory reads on chocolate, which is the primary button', () => {
+    expect(contrast(cocoa(), ivory())).toBeGreaterThanOrEqual(7);
+  });
+
+  it('caramel is never asked to be text on a light surface', () => {
+    /*
+      1.87:1 on cream. It is a hairline and a fill, and the brief says so in
+      as many words. This test states the fact so that a future rule that
+      makes it a colour has to argue with a number.
+    */
+    expect(contrast(cream(), pastry('--c-caramel'))).toBeLessThan(3);
+  });
+
+  it('is applied on the recipe page and nowhere else', () => {
+    const rebinds = /--c-(?:app-bg|paper|ink|muted|green|line|sand|white|neutral-bg)\s*:\s*var\(--c-(?:cream|ivory|cocoa|caramel|cream-deep)/;
+
+    for (const sheet of moduleSheets()) {
+      const css = readFileSync(sheet, 'utf8');
+      const name = sheet.slice(SRC.length + 1);
+      for (const rule of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+        if (!rebinds.test(rule[2]!)) continue;
+        // The captured "selector" carries whatever comment preceded it.
+        const selector = rule[1]!.replace(/\/\*[\s\S]*?\*\//g, '').trim();
+        expect(
+          `${name} · ${selector}`,
+          'only the recipe page may wear the pastry palette',
+        ).toBe('features/recipe/recipe.module.css · .page');
+      }
+    }
+  });
+
+  it('and `:root` still serves every other screen §16', () => {
+    // The palette is DECLARED globally so it can be measured; it must not be
+    // USED globally.
+    const root = /:root\s*\{([^}]*)\}/g;
+    for (const block of tokens.matchAll(root)) {
+      expect(block[1]).not.toMatch(/--c-app-bg:\s*var\(--c-cream\)/);
+      expect(block[1]).not.toMatch(/--c-ink:\s*var\(--c-cocoa\)/);
+    }
+    expect(tokens).toContain('--c-app-bg: #fbfbf9');
+  });
+});

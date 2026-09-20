@@ -100,10 +100,18 @@ describe('the three states before a photo can be shown', () => {
 });
 
 describe('the empty state', () => {
+  /*
+    THE DESIGN PASS CHANGED WHAT "EMPTY" LOOKS LIKE.
+
+    It used to be a sentence above the ingredients saying the recipe has no
+    photograph, on every such recipe, every time. It is the frame itself now —
+    the invitation is where the picture would be — so what is pinned is that
+    the invitation is there and the sentence is not.
+  */
   it('invites a photo when the recipe is the account’s own', async () => {
     show({ images: [] });
-    expect(await screen.findByText(/אין עוד תמונות למתכון הזה/)).toBeInTheDocument();
-    expect(screen.getByText('הוספת תמונה')).toBeInTheDocument();
+    expect(await screen.findByText('הוספת תמונה')).toBeInTheDocument();
+    expect(screen.queryByText(/אין עוד תמונות/)).not.toBeInTheDocument();
   });
 
   it('just states the fact on a recipe the account cannot edit', async () => {
@@ -118,7 +126,7 @@ describe('adding', () => {
     const user = userEvent.setup();
     const seen: (File | Blob)[] = [];
     const { add } = show({ images: [], onAdd: (f) => seen.push(f) });
-    await screen.findByText(/אין עוד תמונות/);
+    await screen.findByText('הוספת תמונה');
 
     await user.upload(screen.getByLabelText<HTMLInputElement>(/הוספת תמונה/), pick());
     await waitFor(() => expect(add).toHaveBeenCalledOnce());
@@ -131,7 +139,7 @@ describe('adding', () => {
     // The repository turns a conversion failure into a sentence a baker can
     // act on; the gallery must show THAT, not a generic line.
     show({ images: [], addRejects: 'גם אחרי דחיסה התמונה נשארה גדולה מהמותר.' });
-    await screen.findByText(/אין עוד תמונות/);
+    await screen.findByText('הוספת תמונה');
 
     await user.upload(screen.getByLabelText<HTMLInputElement>(/הוספת תמונה/), pick());
     expect(await screen.findByRole('alert')).toHaveTextContent(/גם אחרי דחיסה/);
@@ -143,7 +151,7 @@ describe('adding', () => {
     // again still fires a change event. Without that, a failed upload can only
     // be retried with a different file.
     const { add } = show({ images: [], addRejects: 'נכשל' });
-    await screen.findByText(/אין עוד תמונות/);
+    await screen.findByText('הוספת תמונה');
     const input = screen.getByLabelText<HTMLInputElement>(/הוספת תמונה/);
 
     await user.upload(input, pick());
@@ -216,13 +224,13 @@ describe('removing', () => {
 describe('what the screen tells the user about the upload', () => {
   it('says the location data is stripped, because that is the surprising part', async () => {
     show({ images: [] });
-    await screen.findByText(/אין עוד תמונות/);
+    await screen.findByText('הוספת תמונה');
     expect(screen.getByText(/המקום שבו צולמה — נמחקים/)).toBeInTheDocument();
   });
 
   it('says where the photo is stored and who can see it', async () => {
     show({ images: [] });
-    await screen.findByText(/אין עוד תמונות/);
+    await screen.findByText('הוספת תמונה');
     expect(screen.getByText(/אחסון פרטי/)).toBeInTheDocument();
   });
 

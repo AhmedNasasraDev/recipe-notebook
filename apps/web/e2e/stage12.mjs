@@ -120,10 +120,17 @@ try {
   check('the app boots and the onboarding can be completed', booted !== null);
 
   // ── the tab bar no longer lies in either direction ─────────────────────
-  const pending = await page.locator('nav[aria-label="ניווט ראשי"]').getByText('בהכנה').count();
+  /*
+    The bar carries glyphs and the names live in `aria-label`, so "pending" is
+    now a word in a name rather than a caption under an icon. Both are checked:
+    no caption anywhere, and no name that ends in "בהכנה".
+  */
+  const pending =
+    (await page.locator('nav[aria-label="ניווט ראשי"]').getByText('בהכנה').count()) +
+    (await page.locator('nav[aria-label="ניווט ראשי"] a[aria-label$="בהכנה"]').count());
   check('no tab is marked "בהכנה" any more', pending === 0, `${pending} found`);
 
-  const groupsTab = page.locator('nav[aria-label="ניווט ראשי"] a', { hasText: 'קבוצות' });
+  const groupsTab = page.locator('nav[aria-label="ניווט ראשי"] a[href="/groups"]');
   check('the groups tab is a real link', (await groupsTab.count()) === 1);
   await groupsTab.first().click();
   await page.waitForTimeout(700);

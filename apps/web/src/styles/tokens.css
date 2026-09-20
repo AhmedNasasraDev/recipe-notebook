@@ -77,6 +77,33 @@
   --frame-h-wide: 1040px;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+ * THE PASTRY PALETTE — declared here, applied on ONE screen.
+ *
+ * Ahmed asked for the recipe screen to be re-dressed in cream and chocolate,
+ * and to see it before it goes anywhere else. So the five colours live here,
+ * where every token in this project lives and where the contrast guard below
+ * can measure them, and NOTHING in `:root` uses them: the recipe page
+ * re-binds the §16 names to these values on its own root element, which
+ * themes that screen and its children and leaves every other screen exactly
+ * as §16 specifies.
+ *
+ * Measured (tokens.test.ts): cocoa on cream 13.20:1 · cocoa on ivory 14.86 ·
+ * cocoa-soft on cream 4.92 · cocoa-soft on ivory 5.54 · ivory on cocoa 14.86.
+ * Caramel is 1.87:1 on cream — a LINE and a FILL, never text on a light
+ * surface, which is also what the brief asked for.
+ * ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --c-cream: #f5ede3; /* רקע שמנת חמה */
+  --c-ivory: #fffbf6; /* כרטיסים ושדות */
+  --c-cocoa: #352019; /* כותרות ופעולות ראשיות */
+  --c-cocoa-soft: #756358; /* טקסט משני */
+  --c-caramel: #c8ab8d; /* קווים והדגשות */
+  /* The warm stand-in for §16's mint "selected / soft note" fill. Chosen by
+     measurement: cocoa-soft reaches 4.76:1 on it and cocoa 12.76. */
+  --c-cream-deep: #f3e9dd;
+}
+
 /* Provenance colours, keyed to the engine's Source union so a badge can never
  * pick its own colour. Mirrors SOURCE_META in packages/engine/src/provenance.ts. */
 :root {

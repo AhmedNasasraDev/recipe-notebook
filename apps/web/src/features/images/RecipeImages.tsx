@@ -155,11 +155,17 @@ export function RecipeImages({
       <h2 className={styles.title}>תמונות</h2>
 
       {images.length === 0 ? (
-        <p className={styles.note}>
-          {showAdd
-            ? 'אין עוד תמונות למתכון הזה. תמונה של התוצאה עוזרת כשחוזרים אליו אחרי חודשים.'
-            : 'אין תמונות למתכון הזה.'}
-        </p>
+        /*
+          NO PHOTOGRAPH: AN EMPTY PLATE, NOT A PARAGRAPH.
+
+          A recipe with no photograph used to explain, in two lines above the
+          ingredients, that it has no photograph — on every such recipe, every
+          time it was opened. The dashed frame below says the same thing in
+          the place where the picture would be, and the action is inside it.
+          A reader who cannot add one gets the sentence, because for them the
+          frame would be a button they cannot press.
+        */
+        showAdd ? null : <p className={styles.note}>אין תמונות למתכון הזה.</p>
       ) : (
         <ul className={styles.grid}>
           {images.map((image) => {
