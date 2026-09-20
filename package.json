@@ -16,6 +16,8 @@
     "seed:check": "node supabase/scripts/generate-density-seed.mjs --check",
     "schema:check": "node supabase/scripts/check-types-against-schema.mjs",
     "e2e:build": "cd apps/web && VITE_SUPABASE_URL= VITE_SUPABASE_ANON_KEY= vite build --outDir dist-demo --emptyOutDir",
+    "demo": "vite build --config artifact/vite.demo.config.ts && node artifact/scripts/standalone.mjs",
+    "demo:check": "node artifact/scripts/demo-check.mjs",
     "e2e": "npm run e2e:build && node apps/web/e2e/stage4.mjs && node apps/web/e2e/stage5.mjs && node apps/web/e2e/stage12.mjs && node apps/web/e2e/stage14.mjs",
     "e2e:stage5": "npm run e2e:build && node apps/web/e2e/stage5.mjs",
     "roundtrip:emit": "vite-node supabase/scripts/mapper-roundtrip.mts -- --emit",

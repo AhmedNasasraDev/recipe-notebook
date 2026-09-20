@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <meta
+      name="description"
+      content="מחברת מתכונים — גרסת ניסוי עם נתוני דוגמה. רצה כולה בדפדפן, בלי חשבון ובלי שרת."
+    />
+    <title>מחברת מתכונים — גרסת ניסוי</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: #f7f5ef;
+      }
+      #root {
+        min-height: 100%;
+      }
+      /* Shown only until the bundle runs — and if it never does (a browser too
+         old for ES modules), this is what the person reads instead of a blank
+         page. */
+      .boot {
+        display: flex;
+        min-height: 100dvh;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        font: 16px/1.6 'Arial Hebrew', Arial, sans-serif;
+        color: #292d29;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="boot">
+        מחברת מתכונים — גרסת ניסוי. אם המסך נשאר כך, הדפדפן הזה אינו תומך
+        בהפעלת הקובץ; נסו דפדפן עדכני (Chrome, Edge, Safari או Firefox).
+      </div>
+    </div>
+    <script type="module" src="./viewer/demo.tsx"></script>
+  </body>
+</html>

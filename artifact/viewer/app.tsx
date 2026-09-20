@@ -38,42 +38,13 @@
 
 import { StrictMode, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-  MemoryRouter,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-} from 'react-router-dom';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 
 import { AuthProvider } from '../../apps/web/src/auth/AuthProvider.js';
 import { AppDataProvider } from '../../apps/web/src/app/AppDataProvider.js';
-import { OnboardingGate } from '../../apps/web/src/app/OnboardingGate.js';
-import { AppShell } from '../../apps/web/src/shell/AppShell.js';
-import { OnboardingScreen } from '../../apps/web/src/routes/OnboardingScreen.js';
-import { NotebookScreen } from '../../apps/web/src/routes/NotebookScreen.js';
-import { RecipeScreen } from '../../apps/web/src/routes/RecipeScreen.js';
-import { RecipeEditScreen } from '../../apps/web/src/routes/RecipeEditScreen.js';
-import { IngredientsScreen } from '../../apps/web/src/routes/IngredientsScreen.js';
-import { PlansScreen } from '../../apps/web/src/routes/PlansScreen.js';
-import { PlanScreen } from '../../apps/web/src/routes/PlanScreen.js';
-import { MoreScreen } from '../../apps/web/src/routes/MoreScreen.js';
-import { CookScreen } from '../../apps/web/src/routes/CookScreen.js';
-import { LabelScreen } from '../../apps/web/src/routes/LabelScreen.js';
-import { OrderScreen } from '../../apps/web/src/routes/OrderScreen.js';
-import { PasteScreen } from '../../apps/web/src/routes/PasteScreen.js';
-import { HomeScreen } from '../../apps/web/src/routes/HomeScreen.js';
-import { SettingsScreen } from '../../apps/web/src/routes/SettingsScreen.js';
-import { ToolsScreen } from '../../apps/web/src/routes/ToolsScreen.js';
-import { GroupsScreen } from '../../apps/web/src/routes/GroupsScreen.js';
-import { GroupScreen } from '../../apps/web/src/routes/GroupScreen.js';
-import { PermsScreen } from '../../apps/web/src/routes/PermsScreen.js';
-import { GroupRecipeScreen } from '../../apps/web/src/routes/GroupRecipeScreen.js';
-import { JoinScreen } from '../../apps/web/src/routes/JoinScreen.js';
-import { AuthScreen } from '../../apps/web/src/routes/AuthScreen.js';
 
-import { createViewerRepository } from './fixtures.js';
+import { AppRoutes } from './routes.js';
+import { createViewerRepository, setSelfDisplayName } from './fixtures.js';
 import { SimUserBar, useActiveSimUser } from './SimUserBar.js';
 import '../../apps/web/src/styles/tokens.css';
 import '../../apps/web/src/styles/global.css';
@@ -176,6 +147,11 @@ function InspectorBridge() {
 
 const initialPath = window.location.hash.replace(/^#/, '') || '/notebook';
 
+/* The audit viewer is the owner's own page, and the rosters say so. The name
+   lives here rather than in the fixture, so the shareable demo — which builds
+   from the same fixture and never runs this line — does not carry it. */
+setSelfDisplayName('אחמד נסאסרה');
+
 /*
   ONE MORE VIEWER-ONLY SEAM, AND IT IS THE SAME ONE THE TESTS USE
 
@@ -197,68 +173,7 @@ function Viewer() {
         <AppDataProvider repository={repository} userId={activeUserId}>
           <InspectorBridge />
           <SimUserBar />
-          <Routes>
-            <Route path="/onboarding" element={<OnboardingScreen />} />
-            <Route
-              element={
-                <OnboardingGate>
-                  <AppShell />
-                </OnboardingGate>
-              }
-            >
-              <Route path="/notebook" element={<NotebookScreen />} />
-              <Route path="/paste" element={<PasteScreen />} />
-              <Route path="/recipe/new" element={<RecipeEditScreen />} />
-              <Route path="/recipe/:recipeId/edit" element={<RecipeEditScreen />} />
-              <Route path="/recipe/:recipeId" element={<RecipeScreen />} />
-              <Route path="/home" element={<HomeScreen />} />
-              <Route path="/groups" element={<GroupsScreen />} />
-              <Route path="/group/:groupId" element={<GroupScreen />} />
-              <Route path="/group/:groupId/perms" element={<PermsScreen />} />
-              <Route path="/group/:groupId/item/:itemId" element={<GroupRecipeScreen />} />
-              <Route path="/ingredients" element={<IngredientsScreen />} />
-              <Route path="/plans" element={<PlansScreen />} />
-              <Route path="/plan/:planId" element={<PlanScreen />} />
-              <Route path="/more" element={<MoreScreen />} />
-              <Route path="/settings" element={<SettingsScreen />} />
-              <Route path="/tools" element={<ToolsScreen />} />
-            </Route>
-            <Route
-              path="/recipe/:recipeId/cook"
-              element={
-                <OnboardingGate>
-                  <CookScreen />
-                </OnboardingGate>
-              }
-            />
-            <Route
-              path="/recipe/:recipeId/label"
-              element={
-                <OnboardingGate>
-                  <LabelScreen />
-                </OnboardingGate>
-              }
-            />
-            <Route
-              path="/recipe/:recipeId/order"
-              element={
-                <OnboardingGate>
-                  <OrderScreen />
-                </OnboardingGate>
-              }
-            />
-            <Route
-              path="/join/:token"
-              element={
-                <OnboardingGate>
-                  <JoinScreen />
-                </OnboardingGate>
-              }
-            />
-            {/* VIEWER ONLY — not a product route. See the header. */}
-            <Route path="/__inspector/auth" element={<AuthScreen />} />
-            <Route path="*" element={<Navigate to="/notebook" replace />} />
-          </Routes>
+          <AppRoutes authPreview />
         </AppDataProvider>
       </AuthProvider>
     </MemoryRouter>

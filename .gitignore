@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# The packed demo: a built artifact, rebuilt by `npm run demo`.
+dist-demo/
 
 # Local Supabase configuration. Never committed - see apps/web/.env.example.
 .env.local

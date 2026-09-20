@@ -165,6 +165,16 @@ const roster = (over: Partial<GroupMember> & { userId: string }): GroupMember =>
 /** The account the viewer is signed in as, as far as the screens can tell. */
 export const VIEWER_USER_ID = 'viewer-me';
 
+/*
+  WHOSE ACCOUNT THE FIXTURE IS ACTING AS.
+
+  A neutral name by default, because the same fixture feeds the shareable demo
+  — a file that goes to other people should not carry the owner's name in it,
+  and a build that never calls `setSelfDisplayName` never contains it. The
+  audit viewer, which is the owner's own page, sets his name at boot.
+*/
+export const SELF_NAME = 'שף לדוגמה';
+
 const STUDENT_GROUP: FakeGroupSeed = {
   id: 'group-course',
   name: 'קורס קונדיטוריה — מחזור ב׳',
@@ -175,7 +185,7 @@ const STUDENT_GROUP: FakeGroupSeed = {
   // A STUDENT here: this is the half of §10 that has no teaching controls.
   myRole: 'member',
   roster: [
-    roster({ userId: VIEWER_USER_ID, displayName: 'אחמד נסאסרה' }),
+    roster({ userId: VIEWER_USER_ID, displayName: SELF_NAME }),
     roster({ userId: 'u-teacher', displayName: 'רונן אלמוג', role: 'owner', rank: 4 }),
     roster({ userId: 'u-noa', displayName: 'נועה בר־אור' }),
     roster({ userId: 'u-itay', displayName: '' }),
@@ -243,7 +253,7 @@ const STAFF_GROUP: FakeGroupSeed = {
   // OWNER here: every staff control in §10 is reachable from this group.
   myRole: 'owner',
   roster: [
-    roster({ userId: VIEWER_USER_ID, displayName: 'אחמד נסאסרה', role: 'owner', rank: 4 }),
+    roster({ userId: VIEWER_USER_ID, displayName: SELF_NAME, role: 'owner', rank: 4 }),
     roster({ userId: 'u-dana', displayName: 'דנה לוי', role: 'instructor', rank: 2 }),
     roster({ userId: 'u-yossi', displayName: 'יוסי אברהם' }),
   ],
@@ -520,6 +530,16 @@ let calib: readonly Calibration[] = [];
 let prefs: MeasurementPrefs | null = { ...defaultPrefs('pro'), done: true };
 let images: RecipeImage[] = [];
 const objectUrls = new Map<string, string>();
+
+/**
+ * Renames the acting account across every roster in the simulated world.
+ *
+ * Called by the audit viewer, which shows the owner's own notebook. The demo
+ * does not call it, so its bundle carries no name but the neutral one.
+ */
+export function setSelfDisplayName(name: string): void {
+  simUpdateProfile(VIEWER_USER_ID, { displayName: name.trim() });
+}
 
 export function createViewerRepository(activeUserId: string = VIEWER_USER_ID): Repository {
   const demo = createLocalDemoRepository();
