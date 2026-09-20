@@ -26,7 +26,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--gap-between-groups);
-  padding: 14px 18px 22px;
+  /*
+    A CENTRED WORKING COLUMN ON A BIG SCREEN.
+
+    Looked at on a desktop: the weighing rows were 1,770px wide, so the eye
+    travelled the whole monitor between "חמאה" and "250 גר'". The surface stays
+    full-bleed — a kitchen screen should own the display — and the CONTENT is
+    capped at 720 and centred by the padding, which is one declaration instead
+    of a wrapper element.
+  */
+  padding-block: 14px 22px;
+  padding-inline: max(18px, calc((100% - 720px) / 2));
   background: var(--c-cook-bg);
   color: var(--c-cook-text);
 }

@@ -208,14 +208,23 @@
   color: var(--c-ink);
 }
 
+/* Quieter than it was. "הסרה" appears on every row of the plan, and as a
+   filled red block it shouted louder than the quantities the screen is for —
+   on a desktop, four of them at once. The colour still says "destructive"; it
+   no longer says it in a raised voice. */
 .danger {
   min-height: var(--hit-compact);
   padding: 0 14px;
-  background: var(--c-red-bg);
+  background: transparent;
   color: var(--c-red);
-  border-color: var(--c-red);
-  font-size: var(--fs-meta);
+  border-color: color-mix(in srgb, var(--c-red) 45%, transparent);
+  font-size: var(--fs-meta-lg);
   justify-self: start;
+}
+
+.danger:hover {
+  background: var(--c-red-bg);
+  border-color: var(--c-red);
 }
 
 .primary:disabled,

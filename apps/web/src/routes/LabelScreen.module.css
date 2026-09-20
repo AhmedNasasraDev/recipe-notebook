@@ -204,7 +204,11 @@
   display: flex;
 }
 
+/* An action the width of an action. Left to its own devices it became a
+   760px-wide chocolate bar on a tablet and wider still on a desktop. */
 .printBtn {
+  max-inline-size: 320px;
+  margin-inline: auto;
   flex: 1;
   min-height: 48px;
   border: 0;

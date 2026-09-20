@@ -43,8 +43,21 @@ export function AppShell() {
             <span className={styles.bannerText}>{backendNote}</span>
           </p>
         )}
+        {/*
+          THE READING COLUMN.
+
+          On a phone the frame is the column. On a tablet and a desktop the
+          frame grows to 760 and every row inside it stretches with it: a menu
+          card's chevron ends up a hand's width from the name it belongs to,
+          and an ingredient's "המר" sits at the far edge of the screen from the
+          ingredient. The column caps the content and centres it — which is
+          also a sane measure for a line of Hebrew — while the scroller, the
+          banner and the tab bar keep the full width of the frame.
+        */}
         <main className={`${styles.content} hideScrollbar`}>
-          <Outlet />
+          <div className={styles.column}>
+            <Outlet />
+          </div>
         </main>
         <TabBar />
       </div>

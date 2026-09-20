@@ -82,8 +82,11 @@
   color: var(--c-ink);
 }
 
+/* Capped: on a desktop these stretched to 840px for a customer's name, which
+   reads as a form that does not know what it is asking for. */
 .input {
   flex: 1;
+  max-inline-size: 360px;
   min-height: var(--hit-min);
   min-inline-size: 0;
   padding: 9px 10px;
@@ -335,7 +338,10 @@
   display: flex;
 }
 
+/* Same as the label sheet: an action, not a banner across the page. */
 .printBtn {
+  max-inline-size: 320px;
+  margin-inline: auto;
   flex: 1;
   min-height: 48px;
   border: 0;

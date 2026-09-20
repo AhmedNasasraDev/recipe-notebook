@@ -59,6 +59,14 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* See AppShell.tsx. 640 is the widest a single column of cards reads as one
+   thing rather than as two edges; below that the column is simply the frame. */
+.column {
+  inline-size: 100%;
+  max-inline-size: 640px;
+  margin-inline: auto;
+}
+
 .banner {
   flex: none;
   display: flex;

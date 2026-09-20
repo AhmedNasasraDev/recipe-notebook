@@ -178,10 +178,18 @@ describe('favourites and recents, on this device', () => {
     view.unmount();
 
     app('/home');
+    /*
+      TWO effects feed this screen — the last-opened card and the recents list
+      — and the list leaves out whatever the card is already showing. So the
+      assertion waits for the CARD first: reading the list while the card is
+      still resolving found the bread in both places, which is the screen
+      mid-flight rather than the screen being wrong. (This is what made the
+      test flaky under a loaded suite while passing on its own.)
+    */
+    await screen.findByText('הפתיחה האחרונה במכשיר הזה');
     const recents = await screen.findByLabelText('נפתחו לאחרונה');
     expect(recents).toHaveTextContent('עוגת שוקולד');
-    // Not repeated: it is already the card above.
-    expect(recents).not.toHaveTextContent('לחם כפרי');
+    await waitFor(() => expect(recents).not.toHaveTextContent('לחם כפרי'));
   });
 });
 

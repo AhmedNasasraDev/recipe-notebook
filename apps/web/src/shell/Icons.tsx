@@ -200,12 +200,17 @@ function BowlIcon({ width }: IconProps) {
   );
 }
 
-/** גנאשים ורטבים · שוקולד — a chocolate bar */
-function ChocolateIcon({ width }: IconProps) {
+/** גנאשים ורטבים · שוקולד — a drop */
+function DropIcon({ width }: IconProps) {
+  /*
+    This was a chocolate bar — a rounded rectangle with a cross through it —
+    and at 26px on a category tile it read as a spreadsheet. A drop says
+    ganache and sauce at any size, and has no other reading.
+  */
   return (
     <svg {...base(width)}>
-      <rect x="5.4" y="4.6" width="13.2" height="14.8" rx="2" />
-      <path d="M11.9 4.6v14.8M5.4 9.6h13.2M5.4 14.4h13.2" />
+      <path d="M12 3.4c3.7 4.5 5.6 7.6 5.6 10.1a5.6 5.6 0 1 1-11.2 0c0-2.5 1.9-5.6 5.6-10.1z" />
+      <path d="M9.2 13.8a2.9 2.9 0 0 0 2.2 3.4" />
     </svg>
   );
 }
@@ -228,8 +233,8 @@ export const CATEGORY_ICON: Readonly<Record<string, (p: IconProps) => JSX.Elemen
   מאפים: LoafIcon,
   'קרמים ומילויים': BowlIcon,
   ממרחים: BowlIcon,
-  'גנאשים ורטבים': ChocolateIcon,
-  שוקולד: ChocolateIcon,
+  'גנאשים ורטבים': DropIcon,
+  שוקולד: DropIcon,
   'עוגות ועוגיות': CakeIcon,
   קינוחים: CakeIcon,
 };
