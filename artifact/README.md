@@ -27,6 +27,7 @@ was asked for separately). `git log -1 --stat` is the check.
 | `scripts/probe-shell.mjs` | the published page gives the app the whole screen: nothing leaks into `<body>`, no page scroll, all four tabs on screen. |
 | `scripts/probe-chat.mjs` | holds a conversation: write, switch person, reply, announce, delete, edit, switch back — 36 checks. |
 | `scripts/walk.mjs` | clicks every control on every screen and reports the ones that change nothing. |
+| `scripts/keyboard.mjs` | Tab, the focus ring, Enter on a `<summary>`, and the editor's `aria-required` / `aria-invalid` / `aria-describedby` — 11 checks. |
 
 ## Rebuild and re-verify
 
@@ -40,6 +41,7 @@ node artifact/scripts/probe-inspector.mjs              # 27 checks on the page i
 node artifact/scripts/probe-shell.mjs                  # 15 checks: the app gets the whole screen
 node artifact/scripts/probe-chat.mjs                   # 36 checks: a conversation between members
 node artifact/scripts/walk.mjs                         # every control on every screen
+node artifact/scripts/keyboard.mjs                     # 11 checks: keyboard, focus, ARIA
 npx tsc -p artifact                                    # the viewer typechecks
 ```
 

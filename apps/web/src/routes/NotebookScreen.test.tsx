@@ -27,17 +27,36 @@ describe('§2 the notebook', () => {
     expect(screen.getByText('נוסחה מאושרת')).toBeInTheDocument();
   });
 
-  it('shows cost per kilo for a pro profile', async () => {
+  /*
+    UX PASS: A CARD CARRIES NO PRODUCTION DATA — IN EITHER PROFILE.
+
+    These two tests used to pin the opposite for `pro`: the card showed ₪45.6
+    per kilo. A card answers "is this the recipe I want?", and cost is an
+    answer to a different question, on the recipe's own page where there is
+    room to say what it includes. The cost itself did not move — the recipe
+    screen's own tests still pin it — only its place in the list.
+  */
+  it('keeps production data off the cards, in either profile', async () => {
     render(true);
     await screen.findByText('גנאש שוקולד מריר 64%');
-    // from the engine: ₪45.6 per kilo
-    expect(screen.getByText(/₪45.6/)).toBeInTheDocument();
+    expect(screen.queryByText(/₪/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/לק"ג/)).not.toBeInTheDocument();
   });
 
   it('hides cost for a home profile (§3)', async () => {
     render(false);
     await screen.findByText('גנאש שוקולד מריר 64%');
     expect(screen.queryByText(/₪/)).not.toBeInTheDocument();
+  });
+
+  it('shows what the card is for: name, category, yield and the time it takes', async () => {
+    render();
+    const card = (await screen.findByText('בריוש נאנטר')).closest('a')!;
+    expect(card).toHaveTextContent('בצקים');
+    // The yield still comes from the engine, not from the stored field.
+    expect(card.textContent).toMatch(/גר'|ק"ג|יח'/);
+    // The demo brioche's steps add up, so the card says how long it takes.
+    expect(card.textContent).toMatch(/דק'|שע'/);
   });
 
   it('searches name, tag and ingredient', async () => {
@@ -122,10 +141,34 @@ describe('stage-10 audit: the card costs what the recipe page costs', () => {
     },
   ];
 
-  it('shows the cost per kilo that comes from the ingredient centre', async () => {
-    // The defect this pins: the list used to compute from the recipe's OWN row
-    // prices only, so a recipe priced centrally — the documented normal case —
-    // showed no cost on its card while its page showed ₪6/kg.
+  /*
+    The stage-10 defect was that the list computed from the recipe's OWN row
+    prices only, so a recipe priced centrally — the documented normal case —
+    showed no cost on its card while its page showed ₪6/kg. The UX pass took
+    cost off the card entirely, which is a stronger guarantee than the one
+    these tests made: two numbers that are never both printed cannot disagree.
+
+    What is still worth pinning is that the card prints NO money at all, with a
+    catalogue and without one, so cost cannot creep back into the list by
+    accident; and that the yield — which the card does print, and which the
+    same computation produces — is the recipe's own.
+  */
+  it('prints no money on a card, whether the material is priced or not', async () => {
+    for (const catalog of [priced, []]) {
+      const view = renderRoute(<NotebookScreen />, {
+        repository: fakeRepository({
+          prefs: { ...defaultPrefs('pro'), done: true },
+          recipes: inherited,
+          catalog,
+        }),
+      });
+      const card = await screen.findByText('לחם לבן');
+      expect(card.closest('a')!).not.toHaveTextContent('₪');
+      view.unmount();
+    }
+  });
+
+  it('still shows the yield the engine computes', async () => {
     renderRoute(<NotebookScreen />, {
       repository: fakeRepository({
         prefs: { ...defaultPrefs('pro'), done: true },
@@ -134,20 +177,7 @@ describe('stage-10 audit: the card costs what the recipe page costs', () => {
       }),
     });
     const card = await screen.findByText('לחם לבן');
-    const row = card.closest('a')!;
-    expect(row).toHaveTextContent('₪6');
-    expect(row).toHaveTextContent('לק"ג');
-  });
-
-  it('shows no cost when nothing prices the material, rather than ₪0', async () => {
-    renderRoute(<NotebookScreen />, {
-      repository: fakeRepository({
-        prefs: { ...defaultPrefs('pro'), done: true },
-        recipes: inherited,
-        catalog: [],
-      }),
-    });
-    const card = await screen.findByText('לחם לבן');
-    expect(card.closest('a')!).not.toHaveTextContent('₪');
+    // 2 units × 500 g — the stored yield, printed as the engine returns it.
+    expect(card.closest('a')!).toHaveTextContent("2 יח'");
   });
 });

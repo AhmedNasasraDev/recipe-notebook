@@ -137,3 +137,22 @@
   background: var(--c-white);
   color: var(--c-muted);
 }
+
+/* The upload's small print, behind a summary that says what it answers. */
+.hintBox {
+  margin-block-start: 4px;
+}
+
+.hintSummary {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-compact);
+  font-size: var(--fs-meta-lg);
+  color: var(--c-green);
+  cursor: pointer;
+}
+
+.hintSummary:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}

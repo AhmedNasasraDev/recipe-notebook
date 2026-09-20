@@ -525,3 +525,105 @@
   font-size: var(--fs-meta-lg);
   line-height: 1.55;
 }
+
+/* ── UX pass ─────────────────────────────────────────────────────────────
+   The form is four numbered steps now. The number is decoration beside a
+   heading that says the same thing in words, so it is `aria-hidden`. */
+.stepNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 22px;
+  block-size: 22px;
+  margin-inline-end: 8px;
+  border-radius: 50%;
+  background: var(--c-green);
+  color: var(--c-white);
+  font-size: var(--fs-meta);
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+/* "חובה" beside the label — a word, not a red asterisk that has to be
+   decoded, and not colour on its own. */
+.required {
+  margin-inline-start: 6px;
+  padding: 1px 7px;
+  border-radius: var(--r-pill);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+}
+
+/* The message beside the field it is about. */
+.fieldError {
+  margin-block-start: 5px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-red);
+  line-height: 1.5;
+}
+
+/* Step 4, the professional panel. */
+.proDetails {
+  margin-inline: var(--pad-card);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card-lg);
+  background: var(--c-paper);
+}
+
+.proSummary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--hit-min);
+  padding-inline: var(--pad-card);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.proSummary:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: -2px;
+}
+
+.proHint {
+  margin-inline-start: auto;
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+.proBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding-block-end: 12px;
+}
+
+.proBody > * {
+  margin-inline: 0;
+}
+
+/* The save bar rides along the bottom of the form. */
+.saveBar {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-block: 10px;
+  background: var(--c-app-bg);
+  box-shadow: 0 -10px 14px 10px var(--c-app-bg);
+}
+
+.saveWhy {
+  padding-inline: var(--pad-card);
+  font-size: var(--fs-meta-lg);
+  color: var(--c-amber);
+  line-height: 1.5;
+}

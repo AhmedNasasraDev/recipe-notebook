@@ -59,6 +59,15 @@ function linked(): FakeDb {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+/*
+  UX PASS: "שכפול" and "מחיקה" moved under the recipe page's "עוד פעולות"
+  panel — occasional actions, off the first screenful, one tap away. Opening
+  it is what a user now does, so the flows do it too.
+*/
+async function openMore(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByText('עוד פעולות'));
+}
+
 describe('requirements 1-3 — the delete is refused, and the screen says why', () => {
   it('refuses, and names the recipe that is holding it', async () => {
     const user = userEvent.setup();
@@ -68,6 +77,7 @@ describe('requirements 1-3 — the delete is refused, and the screen says why', 
     render(<AppUnderTest client={p.client} route="/recipe/base" />);
     await screen.findByRole('heading', { name: 'גנאש בסיס' });
 
+    await openMore(user);
     await user.click(screen.getByRole('button', { name: 'מחיקת גנאש בסיס' }));
     const dialog = await screen.findByRole('alertdialog');
 
@@ -91,6 +101,7 @@ describe('requirements 1-3 — the delete is refused, and the screen says why', 
 
     render(<AppUnderTest client={p.client} route="/recipe/base" />);
     await screen.findByRole('heading', { name: 'גנאש בסיס' });
+    await openMore(user);
     await user.click(screen.getByRole('button', { name: 'מחיקת גנאש בסיס' }));
 
     const dialog = await screen.findByRole('alertdialog');
@@ -112,6 +123,7 @@ describe('requirements 1-3 — the delete is refused, and the screen says why', 
 
     render(<AppUnderTest client={p.client} route="/recipe/base" />);
     await screen.findByRole('heading', { name: 'גנאש בסיס' });
+    await openMore(user);
     await user.click(screen.getByRole('button', { name: 'מחיקת גנאש בסיס' }));
 
     const dialog = await screen.findByRole('alertdialog');
@@ -127,6 +139,7 @@ describe('requirements 1-3 — the delete is refused, and the screen says why', 
 
     render(<AppUnderTest client={p.client} route="/recipe/lonely" />);
     await screen.findByRole('heading', { name: 'לחם פשוט' });
+    await openMore(user);
     await user.click(screen.getByRole('button', { name: 'מחיקת לחם פשוט' }));
 
     const dialog = await screen.findByRole('alertdialog');
@@ -150,6 +163,7 @@ describe('requirement 4 — once the dependency is gone, the delete works', () =
     // ── blocked to begin with
     let view = render(<AppUnderTest client={p.client} route="/recipe/base" />);
     await screen.findByRole('heading', { name: 'גנאש בסיס' });
+    await openMore(user);
     await user.click(screen.getByRole('button', { name: 'מחיקת גנאש בסיס' }));
     expect(await screen.findByText(/אי אפשר למחוק/)).toBeInTheDocument();
     view.unmount();
@@ -166,6 +180,7 @@ describe('requirement 4 — once the dependency is gone, the delete works', () =
     // ── and now it deletes
     view = render(<AppUnderTest client={p.client} route="/recipe/base" />);
     await screen.findByRole('heading', { name: 'גנאש בסיס' });
+    await openMore(user);
     await user.click(screen.getByRole('button', { name: 'מחיקת גנאש בסיס' }));
     const dialog = await screen.findByRole('alertdialog');
     expect(dialog).toHaveTextContent('למחוק את');
@@ -275,6 +290,7 @@ describe('a dependency added by another tab between the check and the delete', (
     await screen.findByRole('heading', { name: 'גנאש בסיס' });
 
     // The screen loaded with NO dependents, so it offers the ordinary confirm.
+    await openMore(user);
     await user.click(screen.getByRole('button', { name: 'מחיקת גנאש בסיס' }));
     let dialog = await screen.findByRole('alertdialog');
     expect(dialog).toHaveTextContent('למחוק את');

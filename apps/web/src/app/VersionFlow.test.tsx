@@ -79,6 +79,7 @@ describe('requirements 1 and 2 — a version is taken before an update', () => {
     // A "V1" describing a recipe that did not exist a moment ago would be a
     // fiction, and it would put an empty state in the history.
     expect(db['recipe_versions']).toHaveLength(0);
+    await user.click(await screen.findByText('פרטים מקצועיים'));
     expect(await screen.findByText(/אין עוד היסטוריה/)).toBeInTheDocument();
   }, 30_000);
 
@@ -165,6 +166,18 @@ describe('requirements 1 and 2 — a version is taken before an update', () => {
   }, 30_000);
 });
 
+/*
+  UX PASS: the version history moved INSIDE "פרטים מקצועיים".
+
+  It is not a thing a cook standing at a bowl reads, so it sits with the food
+  cost and the formula in the one collapsed panel, and the panel renders its
+  contents only while it is open. Every test that looks at the history opens it
+  first — which is also what a user now does.
+*/
+async function openPro(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByText('פרטים מקצועיים'));
+}
+
 // ───────────────────────────────────────────────────────────────────────────
 describe('requirements 3-7 — the history, viewing, and restoring', () => {
   /** Saves one edit through the UI, leaving V1 = the 420 g state. */
@@ -177,6 +190,7 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
     await user.type(screen.getByLabelText('כמות של מים'), '450');
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'לחם כוסמין' });
+    await openPro(user);
     return { db, p, view };
   }
 
@@ -240,6 +254,9 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'לחם כוסמין' });
     expect(db['ingredients']!.find((i) => i['name'] === 'מים')!['qty']).toBe(480);
+
+    // Back on a freshly mounted recipe page, so the panel is closed again.
+    await openPro(user);
 
     // reach past V2 to the oldest version
     await user.click(await screen.findByRole('button', { name: 'שחזור גרסה V1' }));
@@ -361,7 +378,7 @@ describe('requirements 11-17 — linking a sub-recipe from the editor', () => {
     expect(filling).toHaveTextContent("150 גר'");
 
     // 600 g flour + 150 g of ganache = 750 g, from the one engine.
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
     const yieldRow = (await screen.findByText('תשואה תאורטית')).closest('div')!;
     expect(yieldRow).toHaveTextContent("750 גר'");
 

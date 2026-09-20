@@ -319,7 +319,7 @@ describe('the null-versus-zero rule is explained where the user meets it', () =>
     const user = userEvent.setup();
     renderNew();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
-    await user.click(screen.getByRole('button', { name: 'תשואה ותמחור' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
     expect(
       screen.getByText(/שדה ריק פירושו .*לפי החישוב.*אפס פירושו שנמדדה תשואה של אפס/s),
     ).toBeInTheDocument();
@@ -450,7 +450,7 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
-    await user.click(screen.getByRole('button', { name: 'תשואה ותמחור' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
     await user.type(screen.getByLabelText('משקל לפני אפייה, גרם'), '1000');
     await user.type(screen.getByLabelText('משקל אחרי אפייה, גרם'), '880');
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
@@ -465,7 +465,7 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     const saved: Recipe[] = [];
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
-    await user.click(screen.getByRole('button', { name: 'תשואה ותמחור' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
 
     await waitFor(() => expect(saved).toHaveLength(1));
@@ -478,7 +478,7 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     const saved: Recipe[] = [];
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
-    await user.click(screen.getByRole('button', { name: 'תשואה ותמחור' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
 
     // Hidden until the recipe is declared a dough, because the water
     // temperature is meaningless without the four inputs.
@@ -505,6 +505,8 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    // The pan lives in step 4, "פרטים מקצועיים", which is collapsed.
+    await user.click(screen.getByText('פרטים מקצועיים'));
     await user.selectOptions(screen.getByLabelText('סוג התבנית של המתכון'), 'round');
     expect(screen.queryByLabelText('מידת GN')).not.toBeInTheDocument();
     await user.type(screen.getByLabelText('קוטר, ס"מ'), '20');
@@ -521,6 +523,8 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    // The pan lives in step 4, "פרטים מקצועיים", which is collapsed.
+    await user.click(screen.getByText('פרטים מקצועיים'));
     await user.selectOptions(screen.getByLabelText('סוג התבנית של המתכון'), 'round');
     expect(screen.getByText(/נבחר סוג תבנית בלי מידות/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
@@ -537,6 +541,7 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    await user.click(screen.getByText('פרטים מקצועיים'));
     await user.type(screen.getByLabelText('הקפאה'), 'עד חודש, בקירור ספירלי');
     await user.type(screen.getByLabelText('הפשרה'), 'לילה בקירור');
     await user.type(screen.getByLabelText('אלרגנים להוספה ידנית'), 'שומשום, סויה');
@@ -563,8 +568,10 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
       manualAllergens: ['שומשום'],
       pan: { kind: 'rect', width: 20, length: 30, height: 5 },
     } as unknown as Recipe;
+    const user = userEvent.setup();
     renderEdit(full);
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await user.click(screen.getByText('פרטים מקצועיים'));
 
     expect(screen.getByLabelText('הקפאה')).toHaveValue('עד חודש');
     expect(screen.getByLabelText('אלרגנים להוספה ידנית')).toHaveValue('שומשום');

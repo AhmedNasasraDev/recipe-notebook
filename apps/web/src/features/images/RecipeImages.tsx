@@ -157,7 +157,7 @@ export function RecipeImages({
       {images.length === 0 ? (
         <p className={styles.note}>
           {showAdd
-            ? 'אין עוד תמונות למתכון הזה. תמונה של התוצאה עוזרת יותר מכל תיאור — במיוחד כשחוזרים למתכון אחרי חודשים.'
+            ? 'אין עוד תמונות למתכון הזה. תמונה של התוצאה עוזרת כשחוזרים אליו אחרי חודשים.'
             : 'אין תמונות למתכון הזה.'}
         </p>
       ) : (
@@ -257,12 +257,24 @@ export function RecipeImages({
               }}
             />
           </label>
-          <p className={styles.hint}>
-            התמונה מומרת ל־WebP ומוקטנת ל־{MAX_EDGE} פיקסלים בצד הארוך לפני
-            ההעלאה, ונתוני הצילום — כולל המקום שבו צולמה — נמחקים בתהליך. היא
-            נשמרת באחסון פרטי ונגישה רק לחשבון שלכם, ולחברי קבוצה רק אם המתכון
-            הזה שייך לקבוצה.
-          </p>
+          {/*
+            UX PASS: the same words, one tap in.
+
+            This is real information — what happens to the file, and what
+            happens to the location stored inside it — so it is not shortened
+            and not removed. But it was four lines of small print sitting at
+            the top of every recipe page, on the screen a cook opens to read
+            quantities, and the summary below says plainly what it answers.
+          */}
+          <details className={styles.hintBox}>
+            <summary className={styles.hintSummary}>מה קורה לתמונה שמעלים?</summary>
+            <p className={styles.hint}>
+              התמונה מומרת ל־WebP ומוקטנת ל־{MAX_EDGE} פיקסלים בצד הארוך לפני
+              ההעלאה, ונתוני הצילום — כולל המקום שבו צולמה — נמחקים בתהליך. היא
+              נשמרת באחסון פרטי ונגישה רק לחשבון שלכם, ולחברי קבוצה רק אם המתכון
+              הזה שייך לקבוצה.
+            </p>
+          </details>
         </>
       )}
 

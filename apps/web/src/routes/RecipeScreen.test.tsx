@@ -180,7 +180,7 @@ describe('§3 progressive disclosure', () => {
     await screen.findByRole('heading', { name: 'בריוש נאנטר' });
 
     expect(screen.queryByText('עלות ותמחור')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
     expect(screen.getByText('תשואה ופחת')).toBeInTheDocument();
     expect(screen.getByText('עלות ותמחור')).toBeInTheDocument();
     // §13: baker's formula appears only when there is flour
@@ -198,7 +198,7 @@ describe('§3 progressive disclosure', () => {
       }),
     });
     await screen.findByRole('heading', { name: 'בריוש נאנטר' });
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
     expect(screen.getByText('תשואה ופחת')).toBeInTheDocument();
     expect(screen.queryByText('עלות ותמחור')).not.toBeInTheDocument();
   });
@@ -272,7 +272,7 @@ describe('requirement 8 — a partial calculation is never shown as a whole one'
     const user = userEvent.setup();
     renderRecipe('weighed', { recipes: [ALL_WEIGHED] });
     await screen.findByRole('heading', { name: ALL_WEIGHED.name! });
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
     expect(screen.queryByText('חלקי')).not.toBeInTheDocument();
   });
 
@@ -289,7 +289,7 @@ describe('requirement 8 — a partial calculation is never shown as a whole one'
     const user = userEvent.setup();
     renderRecipe('cupcake', { recipes: [CUP_CAKE] });
     await screen.findByRole('heading', { name: CUP_CAKE.name! });
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
 
     const costRow = screen.getByText('עלות חומרי גלם').closest('div')!;
     expect(within(costRow).getByText('חלקי')).toBeInTheDocument();
@@ -301,7 +301,7 @@ describe('requirement 8 — a partial calculation is never shown as a whole one'
     const user = userEvent.setup();
     renderRecipe('cupcake', { recipes: [CUP_CAKE] });
     await screen.findByRole('heading', { name: CUP_CAKE.name! });
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
     const fcRow = screen.getByText('יעד פוד קוסט').closest('div')!;
     expect(within(fcRow).queryByText('חלקי')).not.toBeInTheDocument();
   });
@@ -318,7 +318,7 @@ describe('requirement 8 — a partial calculation is never shown as a whole one'
     const user = userEvent.setup();
     renderRecipe('nothing', { recipes: [NONE_WEIGHED] });
     await screen.findByRole('heading', { name: NONE_WEIGHED.name! });
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
 
     // A cost of ₪0.00 would read as "this recipe is free", which is the exact
     // failure mode requirement 8 exists to prevent.
@@ -376,7 +376,7 @@ describe('a fully weighed recipe with no prices has no cost, not a cost of zero'
     const user = userEvent.setup();
     renderRecipe('unpriced', { recipes: [UNPRICED] });
     await screen.findByRole('heading', { name: UNPRICED.name! });
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
 
     const costRow = screen.getByText('עלות חומרי גלם').closest('div')!;
     expect(within(costRow).getByText('—')).toBeInTheDocument();
@@ -387,7 +387,7 @@ describe('a fully weighed recipe with no prices has no cost, not a cost of zero'
     const user = userEvent.setup();
     renderRecipe('unpriced', { recipes: [UNPRICED] });
     await screen.findByRole('heading', { name: UNPRICED.name! });
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
 
     const notice = screen.getByLabelText('שלמות התמחור');
     expect(notice).toHaveTextContent('לא הוזנו מחירים לאף רכיב');
@@ -400,7 +400,7 @@ describe('a fully weighed recipe with no prices has no cost, not a cost of zero'
     await screen.findByRole('heading', { name: UNPRICED.name! });
     // The mass axis is independent: it must NOT be dragged down with the cost.
     expect(screen.queryByLabelText('שלמות החישוב')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
     const yieldRow = screen.getByText('תשואה תאורטית').closest('div')!;
     expect(within(yieldRow).getByText('1 ק"ג')).toBeInTheDocument();
   });
@@ -411,7 +411,7 @@ describe('a partly priced recipe says so and marks the cost', () => {
     const user = userEvent.setup();
     renderRecipe('halfpriced', { recipes: [HALF_PRICED] });
     await screen.findByRole('heading', { name: HALF_PRICED.name! });
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
 
     const notice = screen.getByLabelText('שלמות התמחור');
     expect(notice).toHaveTextContent('רכיב אחד');
@@ -423,7 +423,7 @@ describe('a partly priced recipe says so and marks the cost', () => {
     const user = userEvent.setup();
     renderRecipe('halfpriced', { recipes: [HALF_PRICED] });
     await screen.findByRole('heading', { name: HALF_PRICED.name! });
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
 
     const costRow = screen.getByText('עלות חומרי גלם').closest('div')!;
     expect(within(costRow).getByText(/₪/)).toBeInTheDocument();
@@ -436,7 +436,7 @@ describe('an explicit price of zero is a price', () => {
     const user = userEvent.setup();
     renderRecipe('weighed', { recipes: [ALL_WEIGHED] });
     await screen.findByRole('heading', { name: ALL_WEIGHED.name! });
-    await user.click(screen.getByRole('button', { name: 'נתוני ייצור ועלויות' }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
     expect(screen.queryByLabelText('שלמות התמחור')).not.toBeInTheDocument();
     expect(screen.queryByText('חלקי')).not.toBeInTheDocument();
   });
@@ -501,7 +501,7 @@ describe('stage-11: פחת is a measurement, and says so when it is missing', ()
     const user = userEvent.setup();
     renderRecipe(recipe.id, { recipes: [recipe] });
     await screen.findByRole('heading', { name: recipe.name as string });
-    await user.click(screen.getByRole('button', { name: /נתוני ייצור ועלויות/ }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
   };
 
   it('says the batch was not weighed instead of printing a loss of zero', async () => {
@@ -614,7 +614,7 @@ describe('stage-11: the page follows a price change without being remounted', ()
 
     // 1 kg of rye at ₪4/kg.
     await screen.findByRole('heading', { name: 'לחם שיפון' });
-    await user.click(screen.getByRole('button', { name: /נתוני ייצור ועלויות/ }));
+    await user.click(screen.getByText('פרטים מקצועיים'));
     // `getAllBy`: ₪4 is both the batch cost and the cost per kilo here, one
     // kilo being the whole recipe.
     expect(screen.getAllByText('₪4').length).toBeGreaterThan(0);
@@ -641,10 +641,27 @@ describe('stage-11: the page follows a price change without being remounted', ()
   to whoever is weighing. These tests are about the link, not about the sheet —
   OrderScreen.test.tsx holds the other end.
 */
+/*
+  UX PASS: BOTH SHEETS MOVED UNDER "עוד פעולות".
+
+  They are occasional — a label is printed once, an order sheet when there is
+  an order — and they were two of the six controls between the recipe's name
+  and its ingredients. Nothing about them changed except where they are, which
+  these tests now say out loud by opening the panel first. What each link
+  CARRIES (the scale, or deliberately nothing) is still pinned exactly as it
+  was, because that is the part that is easy to break.
+*/
+async function openMore(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByText('עוד פעולות'));
+  return screen.getByRole('group', { name: 'פלטים להדפסה' });
+}
+
 describe('§2 the way to the label and the order sheet', () => {
   it('offers both, on any profile', async () => {
+    const user = userEvent.setup();
     renderRecipe('brioche');
-    const group = await screen.findByRole('group', { name: 'פלטים להדפסה' });
+    await screen.findByRole('heading', { name: 'בריוש נאנטר' });
+    const group = await openMore(user);
     expect(within(group).getByRole('link', { name: 'תווית מוצר' })).toHaveAttribute(
       'href',
       '/recipe/brioche/label',
@@ -653,8 +670,10 @@ describe('§2 the way to the label and the order sheet', () => {
   });
 
   it('links to the order sheet with no scale while nothing is scaled', async () => {
+    const user = userEvent.setup();
     renderRecipe('brioche');
-    const group = await screen.findByRole('group', { name: 'פלטים להדפסה' });
+    await screen.findByRole('heading', { name: 'בריוש נאנטר' });
+    const group = await openMore(user);
     // A bare URL means "as written", which is clearer than "?mode=recipe".
     expect(within(group).getByRole('link', { name: 'דף הזמנה' })).toHaveAttribute(
       'href',
@@ -670,7 +689,7 @@ describe('§2 the way to the label and the order sheet', () => {
     await user.click(screen.getByRole('button', { name: 'יחידות' }));
     await user.type(screen.getByLabelText('מספר יחידות'), '36');
 
-    const group = screen.getByRole('group', { name: 'פלטים להדפסה' });
+    const group = await openMore(user);
     await waitFor(() =>
       expect(within(group).getByRole('link', { name: 'דף הזמנה' })).toHaveAttribute(
         'href',
@@ -687,7 +706,7 @@ describe('§2 the way to the label and the order sheet', () => {
     // An empty box in "יחידות" mode is not a scale of any kind, and a link
     // saying ?mode=units&v= would be a promise about nothing.
     await user.click(screen.getByRole('button', { name: 'יחידות' }));
-    const group = screen.getByRole('group', { name: 'פלטים להדפסה' });
+    const group = await openMore(user);
     expect(within(group).getByRole('link', { name: 'דף הזמנה' })).toHaveAttribute(
       'href',
       '/recipe/brioche/order',
@@ -727,6 +746,9 @@ describe('§2 the way to the label and the order sheet', () => {
       ),
     );
 
+    // "שכפול" now lives under "עוד פעולות" (UX pass); the defect it exercises
+    // — a scale surviving into a different recipe — is unchanged.
+    await user.click(screen.getByText('עוד פעולות'));
     await user.click(screen.getByRole('button', { name: /^שכפול/ }));
     await screen.findByRole('heading', { name: /עותק/ });
 

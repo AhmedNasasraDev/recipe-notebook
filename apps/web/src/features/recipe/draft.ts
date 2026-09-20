@@ -345,7 +345,7 @@ export function draftFromRecipe(recipe: Recipe): RecipeDraft {
  * partial-calculation notice already says so. A row with neither is a leftover
  * blank from the form and is dropped on save.
  */
-const isBlankIngredient = (i: IngredientDraft): boolean =>
+export const isBlankIngredient = (i: IngredientDraft): boolean =>
   i.name.trim() === '' && i.qty.trim() === '';
 
 const isBlankStep = (s: StepDraft): boolean =>

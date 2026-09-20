@@ -136,6 +136,10 @@ try {
   // ── requirements 3-7: the history panel, on a real recipe page ──────────
   await page.goto('http://127.0.0.1:8124/recipe/brioche-choc', { waitUntil: 'load' });
   await page.waitForTimeout(700);
+  // UX pass: the history sits inside "פרטים מקצועיים", which is collapsed and
+  // does not render its contents until it is opened.
+  await page.getByText('פרטים מקצועיים').click();
+  await page.waitForTimeout(250);
 
   const history = page.locator('section[aria-label="היסטוריית גרסאות"]');
   check('the recipe page renders the version-history panel', (await history.count()) > 0);
@@ -295,6 +299,11 @@ try {
   //                                     cannot perform
   await page.goto('http://127.0.0.1:8124/recipe/ganache', { waitUntil: 'load' });
   await page.waitForTimeout(700);
+  // UX pass: מחיקה is under "עוד פעולות" now — off the first screenful, and
+  // one tap away. What is checked below is unchanged: that a read-only build
+  // offers it DISABLED rather than pretending it can delete.
+  await page.getByText('עוד פעולות').click();
+  await page.waitForTimeout(250);
 
   const delBtn = page.getByRole('button', { name: /^מחיקת/ }).first();
   check('the recipe page offers a delete control', (await delBtn.count()) > 0);
@@ -360,6 +369,8 @@ try {
 
   await tPage.goto('http://127.0.0.1:8124/recipe/brioche-choc', { waitUntil: 'load' });
   await tPage.waitForTimeout(700);
+  await tPage.getByText('פרטים מקצועיים').click();
+  await tPage.waitForTimeout(250);
   const tHistory = tPage.locator('section[aria-label="היסטוריית גרסאות"]');
   check('the history panel renders on a tablet too', (await tHistory.count()) > 0);
   await tPage.screenshot({ path: `${OUT}/12-versions-tablet.png`, fullPage: true });
@@ -433,7 +444,7 @@ try {
   // percentage must be withheld WITH a reason.
   await page.goto('http://127.0.0.1:8124/recipe/brioche', { waitUntil: 'load' });
   await page.waitForTimeout(700);
-  await page.getByRole('button', { name: 'נתוני ייצור ועלויות' }).click();
+  await page.getByText('פרטים מקצועיים').click();
   await page.waitForTimeout(400);
 
   const fc = page.locator('[aria-label="פוד קוסט"]');

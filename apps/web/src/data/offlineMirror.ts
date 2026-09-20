@@ -24,6 +24,8 @@ const KEY = {
   recipeIndex: 'rn.recipeIndex.v1',
   cookProgress: (recipeId: string) => `rn.cook.v1.${recipeId}`,
   lastOpened: 'rn.lastOpened.v1',
+  recents: 'rn.recents.v1',
+  favorites: 'rn.favorites.v1',
 } as const;
 
 async function safeGet<T>(key: string): Promise<T | null> {
@@ -149,6 +151,74 @@ export const readLastOpened = (): Promise<string | null> =>
 export const writeLastOpened = (recipeId: string): Promise<boolean> =>
   safeSet(KEY.lastOpened, recipeId);
 
+// ── recently opened, and favourites (UX pass) ──────────────────────────────
+//
+// WHY THESE LIVE HERE AND NOT IN THE DATABASE
+//
+// The home screen asks for two lists: the recipes opened lately, and the ones
+// marked as favourites. Neither needs a column, and adding one would be the
+// expensive answer: a `last_opened` write on every view (see the note above),
+// and a `favorite` column plus a migration and an RLS review for a star that
+// only decorates a list. Both are decisions about THIS DEVICE — the kitchen
+// tablet's recents are not the pastry chef's phone's — and both ride on the
+// mirror that already exists, are already wiped on sign-out, and already
+// tolerate a browser that refuses storage.
+//
+// The cost is stated where the user sees it: the home screen says these are
+// this device's. If they ever have to follow an account, that is a schema
+// change to ask for, not one to make quietly.
+
+/** How many recently-opened recipes are kept. Enough for one morning's work. */
+const RECENTS_MAX = 8;
+
+export const readRecents = async (): Promise<string[]> =>
+  (await safeGet<string[]>(KEY.recents)) ?? [];
+
+/**
+ * Records that a recipe was opened: it goes to the front, any earlier visit to
+ * the same recipe is removed rather than repeated, and the list is capped.
+ * Also keeps `lastOpened` — the two answer different questions and the home
+ * screen shows both.
+ */
+export async function noteRecipeOpened(recipeId: string): Promise<void> {
+  await safeSet(KEY.lastOpened, recipeId);
+  const list = await readRecents();
+  const next = [recipeId, ...list.filter((id) => id !== recipeId)].slice(0, RECENTS_MAX);
+  await safeSet(KEY.recents, next);
+}
+
+/**
+ * Drops a deleted recipe from this device's short lists.
+ *
+ * Without it the home screen keeps offering a recipe that is gone — it would
+ * be filtered out (the lists are resolved against the notebook) but the id
+ * would sit in storage for ever, and the "recents" list would be shorter than
+ * it looks. Also takes the cached copy and any cooking progress: there is
+ * nothing left to cook.
+ */
+export async function forgetRecipeLocally(recipeId: string): Promise<void> {
+  const [recents, favorites] = await Promise.all([readRecents(), readFavorites()]);
+  await Promise.all([
+    safeSet(KEY.recents, recents.filter((id) => id !== recipeId)),
+    safeSet(KEY.favorites, favorites.filter((id) => id !== recipeId)),
+    safeDel(KEY.recipe(recipeId)),
+    safeDel(KEY.cookProgress(recipeId)),
+  ]);
+}
+
+export const readFavorites = async (): Promise<string[]> =>
+  (await safeGet<string[]>(KEY.favorites)) ?? [];
+
+/** Adds or removes a favourite and returns the list as it now stands. */
+export async function toggleFavorite(recipeId: string): Promise<string[]> {
+  const list = await readFavorites();
+  const next = list.includes(recipeId)
+    ? list.filter((id) => id !== recipeId)
+    : [recipeId, ...list];
+  await safeSet(KEY.favorites, next);
+  return next;
+}
+
 /**
  * Wipes the whole mirror.
  *
@@ -177,6 +247,8 @@ export async function clearMirror(): Promise<void> {
     safeDel(KEY.calibrations),
     safeDel(KEY.recipeIndex),
     safeDel(KEY.lastOpened),
+    safeDel(KEY.recents),
+    safeDel(KEY.favorites),
     ...index.flatMap((r) => [safeDel(KEY.recipe(r.id)), safeDel(KEY.cookProgress(r.id))]),
   ]);
 }

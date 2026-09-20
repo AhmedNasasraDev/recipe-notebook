@@ -45,6 +45,15 @@ beforeEach(() => {
 });
 
 // ───────────────────────────────────────────────────────────────────────────
+/*
+  UX PASS: "שכפול" and "מחיקה" moved under the recipe page's "עוד פעולות"
+  panel — occasional actions, off the first screenful, one tap away. Opening
+  it is what a user now does, so the flows do it too.
+*/
+async function openMore(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByText('עוד פעולות'));
+}
+
 describe('the whole route, end to end', () => {
   it('signs in, onboards, creates, saves, reloads, edits, duplicates, deletes', async () => {
     const user = userEvent.setup();
@@ -146,6 +155,7 @@ describe('the whole route, end to end', () => {
     expect(screen.getByText('מלח')).toBeInTheDocument();
 
     // ── 11. duplicate
+    await openMore(user);
     await user.click(screen.getByRole('button', { name: 'שכפול לחם כוסמין' }));
     expect(
       await screen.findByRole('heading', { name: 'לחם כוסמין (עותק)' }),
@@ -161,6 +171,7 @@ describe('the whole route, end to end', () => {
     expect(db['ingredients']!.filter((i) => i['recipe_id'] === savedId)).toHaveLength(3);
 
     // ── 12. delete the copy, with the confirmation
+    await openMore(user);
     await user.click(screen.getByRole('button', { name: 'מחיקת לחם כוסמין (עותק)' }));
     const confirm = await screen.findByRole('alertdialog', { name: 'אישור מחיקת מתכון' });
     expect(confirm).toHaveTextContent('יימחקו גם הרכיבים');
@@ -196,6 +207,7 @@ describe('the delete confirmation (requirement 7)', () => {
     render(<AppUnderTest client={p.client} route="/recipe/r1" />);
     await screen.findByRole('heading', { name: 'חלה של אחמד' });
 
+    await openMore(user);
     await user.click(screen.getByRole('button', { name: 'מחיקת חלה של אחמד' }));
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
     expect(db['recipes']).toHaveLength(1);
@@ -211,6 +223,7 @@ describe('the delete confirmation (requirement 7)', () => {
     render(<AppUnderTest client={p.client} route="/recipe/r1" />);
     await screen.findByRole('heading', { name: 'חלה של אחמד' });
 
+    await openMore(user);
     await user.click(screen.getByRole('button', { name: 'מחיקת חלה של אחמד' }));
     const dialog = await screen.findByRole('alertdialog');
     expect(dialog).toHaveTextContent('חלה של אחמד');

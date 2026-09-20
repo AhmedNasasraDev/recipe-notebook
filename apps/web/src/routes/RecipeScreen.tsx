@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   compute,
   formatGrams,
@@ -28,7 +28,12 @@ import { VersionHistory } from '../features/recipe/VersionHistory.js';
 import { PanCard } from '../features/recipe/PanCard.js';
 import { PrivateNote } from '../features/recipe/PrivateNote.js';
 import { RecipeImages } from '../features/images/RecipeImages.js';
-import { writeLastOpened } from '../data/offlineMirror.js';
+import {
+  forgetRecipeLocally,
+  noteRecipeOpened,
+  readFavorites,
+  toggleFavorite,
+} from '../data/offlineMirror.js';
 import { RecipeInUseError, type StoredVersion } from '../data/repository.js';
 import styles from '../features/recipe/recipe.module.css';
 
@@ -78,6 +83,7 @@ const PLACEHOLDER: Record<ScaleMode, string> = {
 export function RecipeScreen() {
   const { recipeId } = useParams<{ recipeId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     recipes,
     prefs,
@@ -124,14 +130,62 @@ export function RecipeScreen() {
     `view` is deliberately NOT reset: §5.4's grams/home/as-written choice is a
     preference about how to read a recipe, not a fact about which recipe it is.
   */
+  /*
+    The professional block is rendered only while it is open — the same
+    guarantee the old toggle gave. A <details> keeps its content in the DOM
+    when it is closed, which on a recipe page means ~200 elements of food cost,
+    yield, formula and version history built on every view, on a phone, for a
+    panel most openings never look at.
+  */
+  const [showPro, setShowPro] = useState(false);
+  /* Same for "עוד פעולות": what is closed is not built, and a delete button
+     that is not on the page cannot be reached by accident. */
+  const [showMore, setShowMore] = useState(false);
+
+  /* Where "התאמה" in the pan card sends the screen: the card it changes. */
+  const scaleRef = useRef<HTMLElement | null>(null);
+
   const [scaleFor, setScaleFor] = useState(recipeId);
   if (scaleFor !== recipeId) {
     setScaleFor(recipeId);
     setScaleMode('recipe');
     setScaleValue('');
     setScaleIngredient('');
+    // The two panels close with it, for the same reason and in the same
+    // breath: arriving at a recipe should show that recipe as it is, not the
+    // previous one's opened drawers. (This screen stays MOUNTED across
+    // recipes — same route pattern — so nothing else would close them.)
+    setShowPro(false);
+    setShowMore(false);
   }
-  const [showProduction, setShowProduction] = useState(false);
+  /*
+    UX PASS: the favourite is device-local (see `offlineMirror.ts`). `null`
+    until the mirror answers, so the star does not flash "not a favourite" over
+    a recipe that is one.
+  */
+  const [favorite, setFavorite] = useState(false);
+  /*
+    "נשמר" — shown once, on arrival from the editor, and cleared from the
+    history entry immediately so that a reload or a back-and-forward does not
+    announce a save that happened ten minutes ago.
+  */
+  const navState = location.state as { saved?: 'created' | 'updated' } | null;
+  const [savedNotice, setSavedNotice] = useState<'created' | 'updated' | null>(
+    navState?.saved ?? null,
+  );
+  useEffect(() => {
+    if (navState?.saved) {
+      navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+    }
+    // Runs for the arrival only: `navState` is read from the entry this screen
+    // was mounted with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (savedNotice === null) return;
+    const t = setTimeout(() => setSavedNotice(null), 6000);
+    return () => clearTimeout(t);
+  }, [savedNotice]);
   const [convertIngredient, setConvertIngredient] = useState<IngredientLike | null>(null);
   const [calibrateFor, setCalibrateFor] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -177,11 +231,32 @@ export function RecipeScreen() {
     };
   }, [recipeId, recipesUsing]);
 
-  // §2 screen 2: the home screen's "המשך מאיפה שעצרת" reads this. Device
-  // storage, not the account — see the comment on `writeLastOpened`.
+  // §2 screen 2: the home screen's "המשך מאיפה שעצרת" reads this, and the UX
+  // pass added the short "נפתחו לאחרונה" list beside it. Device storage, not
+  // the account — see the comment on `noteRecipeOpened`.
   useEffect(() => {
-    if (recipeId) void writeLastOpened(recipeId);
+    if (recipeId) void noteRecipeOpened(recipeId);
   }, [recipeId]);
+
+  useEffect(() => {
+    if (!recipeId) return;
+    let cancelled = false;
+    void readFavorites().then((list) => {
+      if (!cancelled) setFavorite(list.includes(recipeId));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [recipeId]);
+
+  const onToggleFavorite = async () => {
+    if (!recipeId) return;
+    // Optimistic, and then corrected by what the store actually holds — a
+    // browser that refuses storage must not leave a star that lies.
+    setFavorite((v) => !v);
+    const list = await toggleFavorite(recipeId);
+    setFavorite(list.includes(recipeId));
+  };
 
   // §8: the account's own note for this recipe. `null` until it is known, so
   // the box does not flash empty over text that is on its way.
@@ -344,6 +419,8 @@ export function RecipeScreen() {
     setActionBusy('delete');
     try {
       await deleteRecipe(recipe.id);
+      // A deleted recipe must not linger in the device's own short lists.
+      await forgetRecipeLocally(recipe.id);
       navigate('/notebook', { replace: true });
     } catch (e) {
       if (e instanceof RecipeInUseError) {
@@ -425,7 +502,35 @@ export function RecipeScreen() {
         {recipe.locked && <p className={styles.lockedNote}>נוסחה מאושרת לייצור</p>}
       </header>
 
+      {savedNotice && (
+        <p className={styles.savedNotice} role="status">
+          {savedNotice === 'created' ? 'המתכון נשמר במחברת.' : 'השינויים נשמרו.'}
+        </p>
+      )}
+
       <CalcNotice state={calc} />
+
+      {/*
+        ── §5 photographs ────────────────────────────────────────────────
+        On the recipe page rather than in the edit form: an upload happens
+        immediately, and an immediate action inside a form whose promise is
+        "nothing happens until you save" means cancelling the edit leaves the
+        photo behind. RecipeImages.tsx has the longer version.
+
+        `canEdit` is ownership, not the profile: a member reading a group
+        recipe may see its photos and may not add to them, which is what
+        migration 0029's storage policies enforce anyway.
+      */}
+      <RecipeImages
+        recipeId={recipe.id}
+        canWrite={capabilities.canWrite}
+        canEdit={!recipe.group_id}
+        list={listRecipeImages}
+        add={addRecipeImage}
+        remove={removeRecipeImage}
+        sign={signedImageUrl}
+      />
+
 
       {/*
         §14 Cook Mode. Its own row above the edit actions and not inside them:
@@ -443,35 +548,196 @@ export function RecipeScreen() {
         </Link>
       )}
 
+      {/* ── §6 scaling ─────────────────────────────────────────────────── */}
+      <section className={styles.card} ref={scaleRef}>
+        <h2 className={styles.cardTitle}>כמה להכין?</h2>
+        <div className={styles.tabs} role="group" aria-label="מצב שינוי כמויות">
+          {SCALE_TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={scaleMode === t.id ? styles.tabOn : styles.tab}
+              onClick={() => {
+                setScaleMode(t.id);
+                setScaleValue('');
+              }}
+              aria-pressed={scaleMode === t.id}
+              {...(t.srLabel ? { 'aria-label': t.srLabel } : {})}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {scaleMode !== 'recipe' && (
+          <div className={styles.scaleInputs}>
+            <label className="visuallyHidden" htmlFor="scale-value">
+              {PLACEHOLDER[scaleMode]}
+            </label>
+            <input
+              id="scale-value"
+              className={styles.input}
+              inputMode="decimal"
+              value={scaleValue}
+              onChange={(e) => setScaleValue(e.target.value)}
+              placeholder={PLACEHOLDER[scaleMode]}
+            />
+            {scaleMode === 'stock' && (
+              <select
+                className={styles.select}
+                value={scaleIngredient}
+                onChange={(e) => setScaleIngredient(e.target.value)}
+                aria-label="לפי איזה רכיב"
+              >
+                <option value="">בחרו רכיב</option>
+                {baseline.rows
+                  .filter((r) => r.g !== null)
+                  .map((r) => (
+                    <option key={r.ing.id} value={r.ing.id}>
+                      {r.ing.name}
+                    </option>
+                  ))}
+              </select>
+            )}
+          </div>
+        )}
+
+        <p className={styles.scaleSummary}>
+          {factor === 1 ? 'כמו במתכון' : <>מקדם ×<span className="ltr">{factor.toFixed(2)}</span></>}
+          {' · '}
+          <span className="ltr">{derived(formatGrams(computed.actualYield))}</span>
+          {computed.unitsActual > 0 && (
+            <>
+              {' · '}
+              <span className="ltr">{Math.round(computed.unitsActual)}</span> יחידות
+            </>
+          )}
+        </p>
+        {computed.unitsWarn && (
+          <p className={styles.warn}>⚠ היחידות בפועל חורגות ביותר מ-5% מהיעד</p>
+        )}
+        {/* §6: the original is never overwritten. Say it, don't imply it. */}
+        <p className={styles.calcNote}>
+          שינוי הכמויות כאן הוא חישוב בלבד. המתכון המקורי לא משתנה.
+        </p>
+      </section>
+
+      {/* ── §5.4 ingredient table ──────────────────────────────────────── */}
+      <section className={styles.card}>
+        <div className={styles.cardHeadRow}>
+          <h2 className={styles.cardTitle}>רכיבים</h2>
+          <div className={styles.tabsSmall} role="group" aria-label="תצוגת יחידות">
+            {VIEW_TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className={view === t.id ? styles.tabSmallOn : styles.tabSmall}
+                onClick={() => setView(t.id)}
+                aria-pressed={view === t.id}
+                {...(t.srLabel ? { 'aria-label': t.srLabel } : {})}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {view !== 'orig' && (
+          <p className={styles.viewNote}>
+            {view === 'g'
+              ? 'תצוגה בגרמים. המתכון המקורי לא השתנה.'
+              : 'תצוגה בכלי המדידה שלכם. רכיב שאין לו נתון אמין נשאר בגרמים ומסומן ככזה.'}
+          </p>
+        )}
+
+        <ul className={styles.ingredients}>
+          {computed.rows.map((row) => {
+            const { text, hint } = label(row);
+            const unresolved = row.g === null;
+            return (
+              <li key={row.ing.id ?? row.ing.name}>
+                <button
+                  type="button"
+                  className={styles.ingRow}
+                  onClick={() => setConvertIngredient(row.ing)}
+                >
+                  <span className={unresolved ? styles.qtyMissing : styles.qty}>
+                    <span className="ltr">{text}</span>
+                    {hint && <span className={styles.qtyHint}>{hint}</span>}
+                  </span>
+                  <span className={styles.ingName}>
+                    {row.ing.name}
+                    {row.ing.note && <span className={styles.ingNote}>{row.ing.note}</span>}
+                    {unresolved && (
+                      <span className={styles.ingUnresolved}>{row.provenance.why}</span>
+                    )}
+                  </span>
+                  {!unresolved && row.provenance.source !== 'exact' && (
+                    <SourceBadge provenance={row.provenance} />
+                  )}
+                  <span className={styles.convertHint}>המר</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        {computed.unresolved.length > 0 && (
+          <p className={styles.unresolvedSummary}>
+            {computed.unresolved.length === 1
+              ? 'רכיב אחד לא נכנס לסך המשקל ולעלות, כי אין לו נתון צפיפות אמין.'
+              : `${computed.unresolved.length} רכיבים לא נכנסו לסך המשקל ולעלות, כי אין להם נתון צפיפות אמין.`}
+          </p>
+        )}
+      </section>
+
+      {/* ── steps ──────────────────────────────────────────────────────── */}
+      <section className={styles.card}>
+        <h2 className={styles.cardTitle}>אופן ההכנה</h2>
+        <ol className={styles.steps}>
+          {(recipe.steps ?? []).map((s, i) => (
+            <li key={s.id ?? i} className={styles.step}>
+              <span className={styles.stepNum} aria-hidden="true">
+                {i + 1}
+              </span>
+              <span className={styles.stepBody}>
+                <span className={styles.stepText}>{s.text}</span>
+                {(s.temp || s.minutes) && (
+                  <span className={styles.stepMeta}>
+                    {s.temp && <span className="ltr">{s.temp}°C</span>}
+                    {s.temp && s.minutes ? ' · ' : ''}
+                    {s.minutes && <span className="ltr">{s.minutes} דקות</span>}
+                  </span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {recipe.notes && <p className={styles.recipeNote}>{recipe.notes}</p>}
+
+      {/* ── §8 the personal note ───────────────────────────────────────── */}
+      <PrivateNote
+        recipeId={recipe.id}
+        initial={note}
+        canWrite={capabilities.canWrite}
+        onSave={(body) => savePrivateNote(recipe.id, body)}
+      />
+
       {/*
-        ── §2 screens 8 and 9: the two things this recipe can become on paper ──
+        ── the actions, sorted by how often a kitchen needs them ──────────
 
-        The order link carries the CURRENT "כמה להכין" setting in its query
-        string, because that is the whole point of an order sheet: the
-        quantities for this order, not the quantities as written. It is in the
-        URL rather than in router state so that reloading or re-printing the
-        sheet gives the same page, and so the link can be sent to whoever is
-        doing the weighing. OrderScreen rebuilds the factor with the same
-        `scaleFactor()` used here.
+        UX PASS. Six controls used to sit between the recipe's name and its
+        ingredients: מצב הכנה, תווית מוצר, דף הזמנה, עריכה, שכפול, מחיקה. Two
+        of them are daily (start cooking, fix a quantity), one is a star, and
+        three are occasional — and a delete button does not belong at eye level
+        next to the thing you press with flour on your hands.
 
-        Neither is gated by profile. §3 is explicit: "הפרופיל קובע ברירות מחדל
-        ורמת חשיפה ראשונית בלבד. הוא אינו נועל שום פיצ'ר." What `pro` does
-        control — the cost line and the baker's percentages — is gated inside
-        the sheet itself.
+        So: "מצב הכנה" is above, on its own. Here are the two that are pressed
+        often, and everything else is one tap away under "עוד פעולות" —
+        present, labelled, and not competing.
       */}
-      <div className={styles.printRow} role="group" aria-label="פלטים להדפסה">
-        <Link to={`/recipe/${recipe.id}/label`} className={styles.printLink}>
-          תווית מוצר
-        </Link>
-        <Link
-          to={`/recipe/${recipe.id}/order${scaleSearch}`}
-          className={styles.printLink}
-        >
-          דף הזמנה
-        </Link>
-      </div>
-
-      {/* ── stage 4: edit / duplicate / delete ─────────────────────────── */}
       <div className={styles.actionRow} role="group" aria-label="פעולות על המתכון">
         <Link
           to={`/recipe/${recipe.id}/edit`}
@@ -482,29 +748,323 @@ export function RecipeScreen() {
         </Link>
         <button
           type="button"
-          className={styles.actionBtn}
-          onClick={() => void onDuplicate()}
-          disabled={actionBusy !== null || !capabilities.canWrite}
-          aria-label={`שכפול ${recipe.name}`}
+          className={favorite ? styles.actionBtnOn : styles.actionBtn}
+          onClick={() => void onToggleFavorite()}
+          aria-pressed={favorite}
         >
-          {actionBusy === 'copy' ? 'משכפל…' : 'שכפול'}
-        </button>
-        <button
-          type="button"
-          className={styles.actionBtnDanger}
-          onClick={() => setConfirmDelete(true)}
-          disabled={actionBusy !== null || !capabilities.canWrite}
-          aria-label={`מחיקת ${recipe.name}`}
-        >
-          מחיקה
+          {favorite ? '★ במועדפים' : '☆ הוספה למועדפים'}
         </button>
       </div>
+
+      <details
+        className={styles.more}
+        open={showMore}
+        onToggle={(e) => setShowMore(e.currentTarget.open)}
+      >
+        <summary className={styles.moreSummary}>עוד פעולות</summary>
+        {showMore && (
+        <div className={styles.moreBody}>
+
+        {/*
+          ── §2 screens 8 and 9: the two things this recipe can become on paper ──
+
+          The order link carries the CURRENT "כמה להכין" setting in its query
+          string, because that is the whole point of an order sheet: the
+          quantities for this order, not the quantities as written. It is in the
+          URL rather than in router state so that reloading or re-printing the
+          sheet gives the same page, and so the link can be sent to whoever is
+          doing the weighing. OrderScreen rebuilds the factor with the same
+          `scaleFactor()` used here.
+
+          Neither is gated by profile. §3 is explicit: "הפרופיל קובע ברירות מחדל
+          ורמת חשיפה ראשונית בלבד. הוא אינו נועל שום פיצ'ר." What `pro` does
+          control — the cost line and the baker's percentages — is gated inside
+          the sheet itself.
+        */}
+        <div className={styles.printRow} role="group" aria-label="פלטים להדפסה">
+          <Link to={`/recipe/${recipe.id}/label`} className={styles.printLink}>
+            תווית מוצר
+          </Link>
+          <Link
+            to={`/recipe/${recipe.id}/order${scaleSearch}`}
+            className={styles.printLink}
+          >
+            דף הזמנה
+          </Link>
+        </div>
+
+          <div className={styles.actionRow} role="group" aria-label="פעולות נוספות">
+            <button
+              type="button"
+              className={styles.actionBtn}
+              onClick={() => void onDuplicate()}
+              disabled={actionBusy !== null || !capabilities.canWrite}
+              aria-label={`שכפול ${recipe.name}`}
+            >
+              {actionBusy === 'copy' ? 'משכפל…' : 'שכפול'}
+            </button>
+            <button
+              type="button"
+              className={styles.actionBtnDanger}
+              onClick={() => setConfirmDelete(true)}
+              disabled={actionBusy !== null || !capabilities.canWrite}
+              aria-label={`מחיקת ${recipe.name}`}
+            >
+              מחיקה
+            </button>
+          </div>
+        </div>
+        )}
+      </details>
+
+      {/*
+        ── "פרטים מקצועיים" ───────────────────────────────────────────────
+
+        Everything a professional needs and a cook standing at a bowl does not:
+        the food cost, the yield and the loss, the baker's formula, the
+        allergens and the version history. Nothing was removed and nothing was
+        gated by profile (§3 forbids that) — it is all one summary away, and
+        the summary says what is inside it.
+      */}
+      <details
+        className={styles.proDetails}
+        open={showPro}
+        onToggle={(e) => setShowPro(e.currentTarget.open)}
+      >
+        <summary className={styles.proSummary}>פרטים מקצועיים</summary>
+        {showPro && (
+        <div className={styles.proBody}>
+          {/*
+            ── §7 the pan ──────────────────────────────────────────────
+
+            It used to sit straight after the scale card, because that is what
+            it drives: "התאמה" sets weight scaling at the adapted yield, which
+            is §7's "ההתאמה קובעת מצב סקיילינג משקל — כלומר חישוב, לא דריסה".
+
+            The UX pass moved it in here. Adapting a formula from the tin it
+            was written for to the tin you own is a professional tool, and as
+            a card of its own it stood between "כמה להכין?" and the
+            ingredients — in the middle of the path a cook walks. The
+            behaviour is unchanged, and because the scale card it drives is
+            now above rather than below, "התאמה" scrolls it back into view so
+            the effect of the press is seen and not just trusted.
+          */}
+          <PanCard
+            recipePan={recipe.pan ?? null}
+            baselineYield={baseline.actualYield}
+            onAdapt={(grams) => {
+              setScaleMode('weight');
+              setScaleValue(String(Math.round(grams)));
+              scaleRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }}
+          />
+
+        {/* ── §13 production data ─────────────────────────────────────────
+            Inside "פרטים מקצועיים" now, and no longer behind a second button of
+            its own: a disclosure inside a disclosure made the user open two
+            things to read one number. */}
+        <section className={styles.card}>
+            <div className={styles.prodBlocks}>
+              {/* ── stage-7 requirement 4: food cost ─────────────────────── */}
+              <section className={styles.fcBlock} aria-label="פוד קוסט">
+                <h3 className={styles.fcTitle}>פוד קוסט</h3>
+                <dl className={styles.fcGrid}>
+                  <div className={styles.fcRow}>
+                    <dt>עלות חומרי הגלם</dt>
+                    <dd className="ltr">{money(fc.cost)}</dd>
+                  </div>
+                  <div className={styles.fcRow}>
+                    <dt>עלות לק&quot;ג</dt>
+                    <dd className="ltr">{money(fc.costPerKg)}</dd>
+                  </div>
+                  <div className={styles.fcRow}>
+                    <dt>עלות ליחידה</dt>
+                    <dd className="ltr">{money(fc.costPerUnit)}</dd>
+                  </div>
+                  <div className={styles.fcRow}>
+                    <dt>מחיר מכירה</dt>
+                    <dd className="ltr">{money(fc.salePrice)}</dd>
+                  </div>
+                  <div className={`${styles.fcRow} ${styles.fcHeadline}`}>
+                    <dt>אחוז פוד קוסט</dt>
+                    <dd className="ltr" aria-label="אחוז פוד קוסט">
+                      {fc.percent === null ? '—' : `${fc.percent.toFixed(1)}%`}
+                    </dd>
+                  </div>
+                </dl>
+
+                {/*
+                  A dash with no explanation reads as a bug. Requirement 4 says
+                  not to show a food cost when an input is unknown, and this is
+                  the other half of that: saying WHICH input.
+                */}
+                {fc.why && (
+                  <p className={styles.fcWhy} role="status" aria-label="למה אין אחוז פוד קוסט">
+                    {fc.why}
+                  </p>
+                )}
+
+                {toPrice.length > 0 && (
+                  <p className={styles.fcTodo}>
+                    חסר מחיר ל: {toPrice.map((m) => m.name).join(' · ')}.{' '}
+                    <Link to="/ingredients">להזין מחיר במרכז חומרי הגלם</Link>
+                  </p>
+                )}
+              </section>
+
+              {/* ── stage-8 requirements E, F, G ──────────────────────────── */}
+              <section className={styles.fcBlock}>
+                <CostingPanel breakdown={breakdown} profit={profit} target={targets} />
+              </section>
+
+              {/*
+                Every figure in these three blocks is a sum over the ingredient
+                rows, so `partial` marks all of them at once rather than each
+                call site having to remember (requirement 8). The two rows that
+                are not sums — the food-cost target and the water temperature —
+                are excluded below.
+              */}
+              <ProdBlock
+                title="תשואה ופחת"
+                partial={calc.partialFigures}
+                items={[
+                  ['תשואה תאורטית', derived(formatGrams(computed.theoretical))],
+                  ['תשואה מעשית', derived(formatGrams(computed.actualYield))],
+                  /*
+                    STAGE-11 FIX, the project's own null-vs-zero rule applied to
+                    the two rows that broke it. `prodLoss` is 0 when nobody
+                    measured the actual yield, and `bakeLoss` is 0 when nobody
+                    weighed the batch before and after — and both were printed as
+                    "0.0%", which tells a baker there was no loss. There is a
+                    difference between "no loss" and "not measured", and the row
+                    now says which, exactly as the two rows below it already did.
+                  */
+                  [
+                    'פחת ייצור',
+                    recipe.yieldActual === null ||
+                    recipe.yieldActual === undefined ||
+                    recipe.yieldActual === ''
+                      ? '— לא נמדדה תשואה בפועל'
+                      : derived(`${computed.prodLoss.toFixed(1)}%`),
+                  ],
+                  [
+                    'פחת אפייה',
+                    weighedForLoss
+                      ? derived(`${computed.bakeLoss.toFixed(1)}%`)
+                      : '— לא נשקל לפני ואחרי',
+                  ],
+                  [
+                    'משקל לשקילה ליחידה',
+                    computed.scaleWeight ? derived(formatGrams(computed.scaleWeight)) : '—',
+                  ],
+                  [
+                    'יחידות בפועל',
+                    computed.unitsActual ? derived(computed.unitsActual.toFixed(1)) : '—',
+                  ],
+                ]}
+              />
+              {pro && (
+                <>
+                  {calc.costSummary && (
+                    <p
+                      className={
+                        calc.costLevel === 'none' ? styles.calcNoneBox : styles.unresolvedSummary
+                      }
+                      role="status"
+                      aria-label="שלמות התמחור"
+                    >
+                      {calc.costSummary}
+                      {calc.costLevel === 'partial' && calc.unpricedNames.length > 0 && (
+                        <> חסר מחיר עבור: {calc.unpricedNames.join(' · ')}</>
+                      )}
+                    </p>
+                  )}
+                  <ProdBlock
+                    title="עלות ותמחור"
+                    partial={calc.partialFigures || calc.costLevel === 'partial'}
+                    exact={['יעד פוד קוסט']}
+                    items={[
+                      ['עלות חומרי גלם', priced(formatNis(computed.cost))],
+                      [
+                        'עלות ליחידה',
+                        computed.costPerUnit ? priced(formatNis(computed.costPerUnit)) : '—',
+                      ],
+                      ['עלות לק"ג', priced(formatNis(computed.costPerKg))],
+                      ['יעד פוד קוסט', `${recipe.targetFC ?? 0}%`],
+                      [
+                        'מחיר מכירה לפני מע"מ',
+                        computed.price ? priced(formatNis(computed.price)) : '—',
+                      ],
+                    ]}
+                  />
+                </>
+              )}
+              {computed.flour > 0 && (
+                <ProdBlock
+                  title="נוסחה"
+                  partial={calc.partialFigures}
+                  exact={["טמפ' מים מחושבת"]}
+                  items={[
+                    ['סך קמח', derived(formatGrams(computed.flour))],
+                    ['סך נוזלים', derived(formatGrams(computed.liquid))],
+                    ['הידרציה', derived(`${computed.hydration.toFixed(1)}%`)],
+                    ['הידרציה נטו, מים בפועל', derived(`${computed.trueHydration.toFixed(1)}%`)],
+                    ...(computed.waterTemp !== null
+                      ? ([['טמפ\' מים מחושבת', `${Math.round(computed.waterTemp)}°C`]] as [
+                          string,
+                          string,
+                        ][])
+                      : []),
+                  ]}
+                />
+              )}
+              {computed.warnings.length > 0 && (
+                <div className={styles.warningsBox}>
+                  <h3 className={styles.warningsTitle}>הנחות שנעשו בחישוב</h3>
+                  <ul>
+                    {computed.warnings.map((w) => (
+                      <li key={w}>· {w}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+        </section>
+
+
+        <p className={styles.allergens}>
+          {computed.allergens.length ? `מכיל: ${computed.allergens.join(' · ')}` : 'לא זוהו אלרגנים'}
+        </p>
+
+        {/* ── §9 version history ─────────────────────────────────────────── */}
+        <VersionHistory
+          versions={versions}
+          recipe={recipe}
+          recipes={recipes}
+          prefs={prefs}
+          canRestore={capabilities.canWrite && recipe.locked !== true}
+          lockedReason={
+            recipe.locked === true
+              ? 'המתכון מסומן כנוסחה מאושרת לייצור, ולכן שחזור חסום עד ביטול הנעילה (§9).'
+              : !capabilities.canWrite
+                ? 'אין כרגע חיבור, ולכן אי אפשר לשחזר.'
+                : null
+          }
+          busyId={restoreBusy}
+          error={versionError}
+          onRestore={(v) => void onRestore(v)}
+        />
+
+        </div>
+        )}
+      </details>
 
       {actionError && (
         <p className={styles.confirmBox} role="alert">
           {actionError}
         </p>
       )}
+
 
       {confirmDelete && (
         <div
@@ -584,423 +1144,6 @@ export function RecipeScreen() {
           )}
         </div>
       )}
-
-
-      {/* ── §6 scaling ─────────────────────────────────────────────────── */}
-      <section className={styles.card}>
-        <h2 className={styles.cardTitle}>כמה להכין</h2>
-        <div className={styles.tabs} role="group" aria-label="מצב שינוי כמויות">
-          {SCALE_TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className={scaleMode === t.id ? styles.tabOn : styles.tab}
-              onClick={() => {
-                setScaleMode(t.id);
-                setScaleValue('');
-              }}
-              aria-pressed={scaleMode === t.id}
-              {...(t.srLabel ? { 'aria-label': t.srLabel } : {})}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {scaleMode !== 'recipe' && (
-          <div className={styles.scaleInputs}>
-            <label className="visuallyHidden" htmlFor="scale-value">
-              {PLACEHOLDER[scaleMode]}
-            </label>
-            <input
-              id="scale-value"
-              className={styles.input}
-              inputMode="decimal"
-              value={scaleValue}
-              onChange={(e) => setScaleValue(e.target.value)}
-              placeholder={PLACEHOLDER[scaleMode]}
-            />
-            {scaleMode === 'stock' && (
-              <select
-                className={styles.select}
-                value={scaleIngredient}
-                onChange={(e) => setScaleIngredient(e.target.value)}
-                aria-label="לפי איזה רכיב"
-              >
-                <option value="">בחרו רכיב</option>
-                {baseline.rows
-                  .filter((r) => r.g !== null)
-                  .map((r) => (
-                    <option key={r.ing.id} value={r.ing.id}>
-                      {r.ing.name}
-                    </option>
-                  ))}
-              </select>
-            )}
-          </div>
-        )}
-
-        <p className={styles.scaleSummary}>
-          {factor === 1 ? 'כמו במתכון' : <>מקדם ×<span className="ltr">{factor.toFixed(2)}</span></>}
-          {' · '}
-          <span className="ltr">{derived(formatGrams(computed.actualYield))}</span>
-          {computed.unitsActual > 0 && (
-            <>
-              {' · '}
-              <span className="ltr">{Math.round(computed.unitsActual)}</span> יחידות
-            </>
-          )}
-        </p>
-        {computed.unitsWarn && (
-          <p className={styles.warn}>⚠ היחידות בפועל חורגות ביותר מ-5% מהיעד</p>
-        )}
-        {/* §6: the original is never overwritten. Say it, don't imply it. */}
-        <p className={styles.calcNote}>
-          שינוי הכמויות כאן הוא חישוב בלבד. המתכון המקורי לא משתנה.
-        </p>
-      </section>
-
-      {/*
-        ── §7 the pan ────────────────────────────────────────────────────
-        Placed straight after scaling because that is what it drives: pressing
-        "התאמה" sets weight scaling at the adapted yield, which is §7's
-        "ההתאמה קובעת מצב סקיילינג משקל — כלומר חישוב, לא דריסה".
-      */}
-      <PanCard
-        recipePan={recipe.pan ?? null}
-        baselineYield={baseline.actualYield}
-        onAdapt={(grams) => {
-          setScaleMode('weight');
-          setScaleValue(String(Math.round(grams)));
-        }}
-      />
-
-      {/*
-        ── §5 photographs ────────────────────────────────────────────────
-        On the recipe page rather than in the edit form: an upload happens
-        immediately, and an immediate action inside a form whose promise is
-        "nothing happens until you save" means cancelling the edit leaves the
-        photo behind. RecipeImages.tsx has the longer version.
-
-        `canEdit` is ownership, not the profile: a member reading a group
-        recipe may see its photos and may not add to them, which is what
-        migration 0029's storage policies enforce anyway.
-      */}
-      <RecipeImages
-        recipeId={recipe.id}
-        canWrite={capabilities.canWrite}
-        canEdit={!recipe.group_id}
-        list={listRecipeImages}
-        add={addRecipeImage}
-        remove={removeRecipeImage}
-        sign={signedImageUrl}
-      />
-
-      {/* ── §8 the personal note ───────────────────────────────────────── */}
-      <PrivateNote
-        recipeId={recipe.id}
-        initial={note}
-        canWrite={capabilities.canWrite}
-        onSave={(body) => savePrivateNote(recipe.id, body)}
-      />
-
-      {/* ── §5.4 ingredient table ──────────────────────────────────────── */}
-      <section className={styles.card}>
-        <div className={styles.cardHeadRow}>
-          <h2 className={styles.cardTitle}>רכיבים</h2>
-          <div className={styles.tabsSmall} role="group" aria-label="תצוגת יחידות">
-            {VIEW_TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                className={view === t.id ? styles.tabSmallOn : styles.tabSmall}
-                onClick={() => setView(t.id)}
-                aria-pressed={view === t.id}
-                {...(t.srLabel ? { 'aria-label': t.srLabel } : {})}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {view !== 'orig' && (
-          <p className={styles.viewNote}>
-            {view === 'g'
-              ? 'תצוגה בגרמים. המתכון המקורי לא השתנה.'
-              : 'תצוגה בכלי המדידה שלכם. רכיב שאין לו נתון אמין נשאר בגרמים ומסומן ככזה.'}
-          </p>
-        )}
-
-        <ul className={styles.ingredients}>
-          {computed.rows.map((row) => {
-            const { text, hint } = label(row);
-            const unresolved = row.g === null;
-            return (
-              <li key={row.ing.id ?? row.ing.name}>
-                <button
-                  type="button"
-                  className={styles.ingRow}
-                  onClick={() => setConvertIngredient(row.ing)}
-                >
-                  <span className={unresolved ? styles.qtyMissing : styles.qty}>
-                    <span className="ltr">{text}</span>
-                    {hint && <span className={styles.qtyHint}>{hint}</span>}
-                  </span>
-                  <span className={styles.ingName}>
-                    {row.ing.name}
-                    {row.ing.note && <span className={styles.ingNote}>{row.ing.note}</span>}
-                    {unresolved && (
-                      <span className={styles.ingUnresolved}>{row.provenance.why}</span>
-                    )}
-                  </span>
-                  {!unresolved && row.provenance.source !== 'exact' && (
-                    <SourceBadge provenance={row.provenance} />
-                  )}
-                  <span className={styles.convertHint}>המר</span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-
-        {computed.unresolved.length > 0 && (
-          <p className={styles.unresolvedSummary}>
-            {computed.unresolved.length === 1
-              ? 'רכיב אחד לא נכנס לסך המשקל ולעלות, כי אין לו נתון צפיפות אמין.'
-              : `${computed.unresolved.length} רכיבים לא נכנסו לסך המשקל ולעלות, כי אין להם נתון צפיפות אמין.`}
-          </p>
-        )}
-      </section>
-
-      {/* ── §13 production data, behind the disclosure toggle (§3) ─────── */}
-      <section className={styles.card}>
-        <button
-          type="button"
-          className={styles.disclosure}
-          onClick={() => setShowProduction((v) => !v)}
-          aria-expanded={showProduction}
-        >
-          {showProduction ? 'סגירת נתוני ייצור' : 'נתוני ייצור ועלויות'}
-        </button>
-
-        {showProduction && (
-          <div className={styles.prodBlocks}>
-            {/* ── stage-7 requirement 4: food cost ─────────────────────── */}
-            <section className={styles.fcBlock} aria-label="פוד קוסט">
-              <h3 className={styles.fcTitle}>פוד קוסט</h3>
-              <dl className={styles.fcGrid}>
-                <div className={styles.fcRow}>
-                  <dt>עלות חומרי הגלם</dt>
-                  <dd className="ltr">{money(fc.cost)}</dd>
-                </div>
-                <div className={styles.fcRow}>
-                  <dt>עלות לק&quot;ג</dt>
-                  <dd className="ltr">{money(fc.costPerKg)}</dd>
-                </div>
-                <div className={styles.fcRow}>
-                  <dt>עלות ליחידה</dt>
-                  <dd className="ltr">{money(fc.costPerUnit)}</dd>
-                </div>
-                <div className={styles.fcRow}>
-                  <dt>מחיר מכירה</dt>
-                  <dd className="ltr">{money(fc.salePrice)}</dd>
-                </div>
-                <div className={`${styles.fcRow} ${styles.fcHeadline}`}>
-                  <dt>אחוז פוד קוסט</dt>
-                  <dd className="ltr" aria-label="אחוז פוד קוסט">
-                    {fc.percent === null ? '—' : `${fc.percent.toFixed(1)}%`}
-                  </dd>
-                </div>
-              </dl>
-
-              {/*
-                A dash with no explanation reads as a bug. Requirement 4 says
-                not to show a food cost when an input is unknown, and this is
-                the other half of that: saying WHICH input.
-              */}
-              {fc.why && (
-                <p className={styles.fcWhy} role="status" aria-label="למה אין אחוז פוד קוסט">
-                  {fc.why}
-                </p>
-              )}
-
-              {toPrice.length > 0 && (
-                <p className={styles.fcTodo}>
-                  חסר מחיר ל: {toPrice.map((m) => m.name).join(' · ')}.{' '}
-                  <Link to="/ingredients">להזין מחיר במרכז חומרי הגלם</Link>
-                </p>
-              )}
-            </section>
-
-            {/* ── stage-8 requirements E, F, G ──────────────────────────── */}
-            <section className={styles.fcBlock}>
-              <CostingPanel breakdown={breakdown} profit={profit} target={targets} />
-            </section>
-
-            {/*
-              Every figure in these three blocks is a sum over the ingredient
-              rows, so `partial` marks all of them at once rather than each
-              call site having to remember (requirement 8). The two rows that
-              are not sums — the food-cost target and the water temperature —
-              are excluded below.
-            */}
-            <ProdBlock
-              title="תשואה ופחת"
-              partial={calc.partialFigures}
-              items={[
-                ['תשואה תאורטית', derived(formatGrams(computed.theoretical))],
-                ['תשואה מעשית', derived(formatGrams(computed.actualYield))],
-                /*
-                  STAGE-11 FIX, the project's own null-vs-zero rule applied to
-                  the two rows that broke it. `prodLoss` is 0 when nobody
-                  measured the actual yield, and `bakeLoss` is 0 when nobody
-                  weighed the batch before and after — and both were printed as
-                  "0.0%", which tells a baker there was no loss. There is a
-                  difference between "no loss" and "not measured", and the row
-                  now says which, exactly as the two rows below it already did.
-                */
-                [
-                  'פחת ייצור',
-                  recipe.yieldActual === null ||
-                  recipe.yieldActual === undefined ||
-                  recipe.yieldActual === ''
-                    ? '— לא נמדדה תשואה בפועל'
-                    : derived(`${computed.prodLoss.toFixed(1)}%`),
-                ],
-                [
-                  'פחת אפייה',
-                  weighedForLoss
-                    ? derived(`${computed.bakeLoss.toFixed(1)}%`)
-                    : '— לא נשקל לפני ואחרי',
-                ],
-                [
-                  'משקל לשקילה ליחידה',
-                  computed.scaleWeight ? derived(formatGrams(computed.scaleWeight)) : '—',
-                ],
-                [
-                  'יחידות בפועל',
-                  computed.unitsActual ? derived(computed.unitsActual.toFixed(1)) : '—',
-                ],
-              ]}
-            />
-            {pro && (
-              <>
-                {calc.costSummary && (
-                  <p
-                    className={
-                      calc.costLevel === 'none' ? styles.calcNoneBox : styles.unresolvedSummary
-                    }
-                    role="status"
-                    aria-label="שלמות התמחור"
-                  >
-                    {calc.costSummary}
-                    {calc.costLevel === 'partial' && calc.unpricedNames.length > 0 && (
-                      <> חסר מחיר עבור: {calc.unpricedNames.join(' · ')}</>
-                    )}
-                  </p>
-                )}
-                <ProdBlock
-                  title="עלות ותמחור"
-                  partial={calc.partialFigures || calc.costLevel === 'partial'}
-                  exact={['יעד פוד קוסט']}
-                  items={[
-                    ['עלות חומרי גלם', priced(formatNis(computed.cost))],
-                    [
-                      'עלות ליחידה',
-                      computed.costPerUnit ? priced(formatNis(computed.costPerUnit)) : '—',
-                    ],
-                    ['עלות לק"ג', priced(formatNis(computed.costPerKg))],
-                    ['יעד פוד קוסט', `${recipe.targetFC ?? 0}%`],
-                    [
-                      'מחיר מכירה לפני מע"מ',
-                      computed.price ? priced(formatNis(computed.price)) : '—',
-                    ],
-                  ]}
-                />
-              </>
-            )}
-            {computed.flour > 0 && (
-              <ProdBlock
-                title="נוסחה"
-                partial={calc.partialFigures}
-                exact={["טמפ' מים מחושבת"]}
-                items={[
-                  ['סך קמח', derived(formatGrams(computed.flour))],
-                  ['סך נוזלים', derived(formatGrams(computed.liquid))],
-                  ['הידרציה', derived(`${computed.hydration.toFixed(1)}%`)],
-                  ['הידרציה נטו, מים בפועל', derived(`${computed.trueHydration.toFixed(1)}%`)],
-                  ...(computed.waterTemp !== null
-                    ? ([['טמפ\' מים מחושבת', `${Math.round(computed.waterTemp)}°C`]] as [
-                        string,
-                        string,
-                      ][])
-                    : []),
-                ]}
-              />
-            )}
-            {computed.warnings.length > 0 && (
-              <div className={styles.warningsBox}>
-                <h3 className={styles.warningsTitle}>הנחות שנעשו בחישוב</h3>
-                <ul>
-                  {computed.warnings.map((w) => (
-                    <li key={w}>· {w}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-      </section>
-
-      {/* ── §9 version history ─────────────────────────────────────────── */}
-      <VersionHistory
-        versions={versions}
-        recipe={recipe}
-        recipes={recipes}
-        prefs={prefs}
-        canRestore={capabilities.canWrite && recipe.locked !== true}
-        lockedReason={
-          recipe.locked === true
-            ? 'המתכון מסומן כנוסחה מאושרת לייצור, ולכן שחזור חסום עד ביטול הנעילה (§9).'
-            : !capabilities.canWrite
-              ? 'אין כרגע חיבור, ולכן אי אפשר לשחזר.'
-              : null
-        }
-        busyId={restoreBusy}
-        error={versionError}
-        onRestore={(v) => void onRestore(v)}
-      />
-
-      {/* ── steps ──────────────────────────────────────────────────────── */}
-      <section className={styles.card}>
-        <h2 className={styles.cardTitle}>אופן ההכנה</h2>
-        <ol className={styles.steps}>
-          {(recipe.steps ?? []).map((s, i) => (
-            <li key={s.id ?? i} className={styles.step}>
-              <span className={styles.stepNum} aria-hidden="true">
-                {i + 1}
-              </span>
-              <span className={styles.stepBody}>
-                <span className={styles.stepText}>{s.text}</span>
-                {(s.temp || s.minutes) && (
-                  <span className={styles.stepMeta}>
-                    {s.temp && <span className="ltr">{s.temp}°C</span>}
-                    {s.temp && s.minutes ? ' · ' : ''}
-                    {s.minutes && <span className="ltr">{s.minutes} דקות</span>}
-                  </span>
-                )}
-              </span>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {recipe.notes && <p className={styles.recipeNote}>{recipe.notes}</p>}
-
-      <p className={styles.allergens}>
-        {computed.allergens.length ? `מכיל: ${computed.allergens.join(' · ')}` : 'לא זוהו אלרגנים'}
-      </p>
 
       {convertIngredient && (
         <ConvertSheet

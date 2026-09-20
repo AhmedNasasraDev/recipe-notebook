@@ -1208,3 +1208,77 @@
   font-size: var(--fs-secondary);
   text-decoration: none;
 }
+
+/* ── UX pass: the two disclosures ────────────────────────────────────────
+   "עוד פעולות" holds what is occasional (print, duplicate, delete) and
+   "פרטים מקצועיים" holds what is professional (food cost, yield and loss, the
+   formula, allergens, versions). Both are <details>: the browser's own
+   disclosure, so the keyboard and the screen reader already know it, and the
+   summary says what is inside rather than "עוד". */
+.more,
+.proDetails {
+  margin-inline: var(--pad-card);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-paper);
+}
+
+.moreSummary,
+.proSummary {
+  display: flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  padding-inline: var(--pad-card);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  color: var(--c-green);
+  cursor: pointer;
+}
+
+.moreSummary:focus-visible,
+.proSummary:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: -2px;
+}
+
+.moreBody,
+.proBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding-block-end: 12px;
+}
+
+/* The rows inside carry their own side padding, so the body does not add more
+   of it — otherwise a card inside a card inside a details drifts inward. */
+.moreBody > *,
+.proBody > * {
+  margin-inline: 0;
+}
+
+/* A favourite that is on. Not colour alone: the star is filled and the word
+   changes with it ("במועדפים" / "הוספה למועדפים"), and the button carries
+   aria-pressed. */
+.actionBtnOn {
+  flex: 1 1 auto;
+  min-height: var(--hit-min);
+  padding: 0 16px;
+  border-radius: var(--r-control);
+  border: 1px solid var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+}
+
+/* "נשמר" on arrival from the editor. Green, with words — never colour alone. */
+.savedNotice {
+  margin-inline: var(--pad-card);
+  padding: 9px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+}

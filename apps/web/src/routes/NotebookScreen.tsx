@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { compute, formatGrams, formatNis, type Computed } from '@recipe-notebook/engine';
+import { compute, formatGrams, type Computed } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
+import { timeLabelOf } from '../features/recipe/recipeTime.js';
 import styles from './NotebookScreen.module.css';
 
 /**
@@ -15,7 +16,6 @@ import styles from './NotebookScreen.module.css';
  */
 export function NotebookScreen() {
   const { recipes, categories, prefs, capabilities, catalog } = useAppData();
-  const [query, setQuery] = useState('');
 
   /*
     The category filter is addressable: `/notebook?category=לחמים`.
@@ -24,6 +24,33 @@ export function NotebookScreen() {
     survive a back button and a shared link.
   */
   const [params, setParams] = useSearchParams();
+
+  /*
+    UX PASS: THE SEARCH TERM IS IN THE URL TOO.
+
+    It was component state, which made the home screen's new search box
+    impossible — there was nowhere to send "חיפוש מתכון" to. It is also what a
+    user expects of a search: the back button returns to the results, a reload
+    keeps them, and the address can be handed to somebody else.
+
+    The input keeps its own state so typing is never waiting on the router,
+    and every keystroke writes the term to the address with `replace` — the
+    results and the address always agree, and the back button does not have to
+    walk back through one entry per letter. The effect below picks up a change
+    that came from outside (a link from the home screen, or the back button).
+  */
+  const urlQuery = params.get('q') ?? '';
+  const [query, setQuery] = useState(urlQuery);
+  useEffect(() => {
+    setQuery(urlQuery);
+  }, [urlQuery]);
+  const commitQuery = (next: string) => {
+    const p = new URLSearchParams(params);
+    if (next.trim() === '') p.delete('q');
+    else p.set('q', next);
+    setParams(p, { replace: true });
+  };
+
   const fromUrl = params.get('category');
   const category = fromUrl && categories.includes(fromUrl) ? fromUrl : 'הכל';
   const setCategory = (next: string) => {
@@ -34,8 +61,6 @@ export function NotebookScreen() {
     // in the history for the back button to walk through.
     setParams(p, { replace: true });
   };
-
-  const pro = prefs.pro === true;
 
   /*
     STAGE-10 AUDIT FIX, two defects in one place.
@@ -108,8 +133,11 @@ export function NotebookScreen() {
         </div>
       </header>
 
+      {/* A VISIBLE label, not a placeholder standing in for one: a placeholder
+          disappears the moment there is text in the box, which is exactly when
+          somebody looking away from the screen comes back to it. */}
       <div className={styles.searchRow}>
-        <label className="visuallyHidden" htmlFor="nb-search">
+        <label className={styles.searchLabel} htmlFor="nb-search">
           חיפוש מתכון
         </label>
         <input
@@ -117,7 +145,10 @@ export function NotebookScreen() {
           className={styles.search}
           type="search"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            commitQuery(e.target.value);
+          }}
           placeholder="שם, תג או רכיב"
         />
       </div>
@@ -162,23 +193,35 @@ export function NotebookScreen() {
       ) : (
         <ul className={styles.list}>
           {filtered.map((r) => {
-            // The list shows real computed figures, from the same engine AND
-            // the same central prices the recipe page uses — one conversion
-            // path, per B1/B2, and one cost.
+            /*
+              UX PASS: WHAT A CARD IS FOR.
+
+              A card answers "is this the recipe I am looking for?" — name,
+              category, how much it makes and how long it takes. It used to
+              carry the cost per kilo and a density warning as well, which is
+              production data: true, useful, and belonging to the recipe's own
+              page, where there is room to say what it means. Neither figure is
+              gone; both are on the recipe, priced by the same engine and the
+              same central catalogue as before.
+
+              The yield still comes from `compute()` rather than from the
+              stored field, so a card and the recipe it opens cannot disagree.
+            */
             const c = computedById.get(r.id) ?? compute(r, recipes, { prefs });
             const yieldLabel = r.yieldUnits
               ? `${r.yieldUnits} יח' · ${r.unitWeight} גר' ליחידה`
               : formatGrams(c.actualYield);
+            const time = timeLabelOf(r);
             return (
               <li key={r.id}>
                 <Link to={`/recipe/${r.id}`} className={styles.card}>
                   <span className={styles.cardName}>{r.name}</span>
                   <span className={styles.cardMeta}>
                     {r.category} · <span className="ltr">{yieldLabel}</span>
-                    {pro && c.costPerKg > 0 && (
+                    {time && (
                       <>
                         {' · '}
-                        <span className="ltr">{formatNis(c.costPerKg)}</span> לק&quot;ג
+                        <span className="ltr">{time}</span>
                       </>
                     )}
                   </span>
@@ -192,13 +235,6 @@ export function NotebookScreen() {
                       </span>
                     ))}
                   </span>
-                  {c.unresolved.length > 0 && (
-                    <span className={styles.cardWarn}>
-                      {c.unresolved.length === 1
-                        ? 'רכיב אחד ללא נתון צפיפות אמין'
-                        : `${c.unresolved.length} רכיבים ללא נתון צפיפות אמין`}
-                    </span>
-                  )}
                 </Link>
               </li>
             );

@@ -21,12 +21,19 @@
 // A notebook with a bake in progress gets that first instead: an unfinished
 // Cook Mode session is more "where you stopped" than a page you looked at.
 
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { compute, formatGrams, formatNis, type Recipe } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
-import { readLastOpened, readCookProgress } from '../data/offlineMirror.js';
+import {
+  readLastOpened,
+  readCookProgress,
+  readRecents,
+  readFavorites,
+} from '../data/offlineMirror.js';
+import { categoryIcon } from '../features/recipe/categoryIcon.js';
+import { timeLabelOf } from '../features/recipe/recipeTime.js';
 import styles from './HomeScreen.module.css';
 
 interface Resume {
@@ -37,7 +44,19 @@ interface Resume {
 
 export function HomeScreen() {
   const { recipes, categories, prefs, catalog, capabilities, ready } = useAppData();
+  const navigate = useNavigate();
   const [resume, setResume] = useState<Resume | null>(null);
+  /*
+    UX PASS: THE TWO SHORT LISTS A KITCHEN ACTUALLY OPENS.
+
+    Both are ids from the device mirror (see `offlineMirror.ts` for why they
+    are not columns), resolved against the notebook that is already loaded —
+    so an id that no longer exists, or belongs to another account, simply
+    disappears from the list instead of showing a broken row.
+  */
+  const [recentIds, setRecentIds] = useState<string[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [term, setTerm] = useState('');
 
   const pro = prefs.pro === true;
 
@@ -78,6 +97,36 @@ export function HomeScreen() {
       cancelled = true;
     };
   }, [recipes]);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const [r, f] = await Promise.all([readRecents(), readFavorites()]);
+      if (cancelled) return;
+      setRecentIds(r);
+      setFavoriteIds(f);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const byId = useMemo(() => new Map(recipes.map((r) => [r.id, r])), [recipes]);
+  const pick = useCallback(
+    (ids: readonly string[], limit: number): Recipe[] =>
+      ids
+        .map((id) => byId.get(id))
+        .filter((r): r is Recipe => r !== undefined)
+        .slice(0, limit),
+    [byId],
+  );
+
+  const favorites = useMemo(() => pick(favoriteIds, 6), [favoriteIds, pick]);
+  /* The recipe already offered as "המשך מאיפה שעצרת" is not repeated here. */
+  const recents = useMemo(
+    () => pick(recentIds.filter((id) => id !== resume?.recipe.id), 5),
+    [recentIds, pick, resume],
+  );
 
   /** How many recipes each category holds. Empty ones are not offered. */
   const counts = useMemo(() => {
@@ -131,6 +180,51 @@ export function HomeScreen() {
         </p>
       </header>
 
+      {/*
+        ── the two things a person comes to this screen to do ──────────────
+
+        UX PASS. The home screen had neither: to find a recipe you first went
+        to the notebook tab and then found the search box there, and to start a
+        new one you did the same. Both are here now, above everything else and
+        in that order — finding is the common case, writing is the loud one.
+
+        The search does not re-implement searching: it hands the term to the
+        notebook, which already searches names, tags and ingredients, and which
+        now keeps the term in its address (`/notebook?q=…`). One search, one
+        result list, and the browser's own back button behaves.
+      */}
+      <section className={styles.start} aria-label="התחלה">
+        <form
+          className={styles.searchForm}
+          onSubmit={(e) => {
+            e.preventDefault();
+            const q = term.trim();
+            navigate(q === '' ? '/notebook' : `/notebook?q=${encodeURIComponent(q)}`);
+          }}
+        >
+          <label className={styles.searchLabel} htmlFor="home-search">
+            חיפוש מתכון
+          </label>
+          <div className={styles.searchRow}>
+            <input
+              id="home-search"
+              className={styles.search}
+              type="search"
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              placeholder="שם, תג או רכיב"
+            />
+            <button type="submit" className={styles.searchBtn}>
+              חיפוש
+            </button>
+          </div>
+        </form>
+
+        <Link to="/recipe/new" className={styles.newBtn}>
+          + מתכון חדש
+        </Link>
+      </section>
+
       {/* ── המשך מאיפה שעצרת ─────────────────────────────────────────────── */}
       {resume ? (
         <section className={styles.resume} aria-label="המשך מאיפה שעצרת">
@@ -167,6 +261,48 @@ export function HomeScreen() {
         )
       )}
 
+      {/* ── favourites and recents (device-local, and it says so) ───────── */}
+      {favorites.length > 0 && (
+        <section className={styles.section} aria-label="מועדפים">
+          <h2 className={styles.sectionTitle}>מועדפים</h2>
+          <ul className={styles.quickList}>
+            {favorites.map((r) => (
+              <li key={r.id}>
+                <Link to={`/recipe/${r.id}`} className={styles.quickRow}>
+                  <span className={styles.quickName}>{r.name}</span>
+                  <span className={styles.quickMeta}>
+                    {r.category}
+                    {timeLabelOf(r) && (
+                      <>
+                        {' · '}
+                        <span className="ltr">{timeLabelOf(r)}</span>
+                      </>
+                    )}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {recents.length > 0 && (
+        <section className={styles.section} aria-label="נפתחו לאחרונה">
+          <h2 className={styles.sectionTitle}>נפתחו לאחרונה</h2>
+          <ul className={styles.quickList}>
+            {recents.map((r) => (
+              <li key={r.id}>
+                <Link to={`/recipe/${r.id}`} className={styles.quickRow}>
+                  <span className={styles.quickName}>{r.name}</span>
+                  <span className={styles.quickMeta}>{r.category}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className={styles.note}>הרשימות האלה נשמרות במכשיר הזה בלבד.</p>
+        </section>
+      )}
+
       {/* ── categories ──────────────────────────────────────────────────── */}
       <section className={styles.section} aria-label="קטגוריות">
         <h2 className={styles.sectionTitle}>קטגוריות</h2>
@@ -186,7 +322,16 @@ export function HomeScreen() {
                   to={`/notebook?category=${encodeURIComponent(c)}`}
                   className={styles.tile}
                 >
-                  <span className={styles.tileName}>{c}</span>
+                  <span className={styles.tileName}>
+                    {/* Decoration beside the name, never instead of it, and
+                        hidden from a screen reader that already reads it. */}
+                    {categoryIcon(c) && (
+                      <span className={styles.tileIcon} aria-hidden="true">
+                        {categoryIcon(c)}
+                      </span>
+                    )}
+                    {c}
+                  </span>
                   <span className={styles.tileCount}>
                     <span className="ltr">{counts.get(c)}</span>{' '}
                     {counts.get(c) === 1 ? 'מתכון' : 'מתכונים'}

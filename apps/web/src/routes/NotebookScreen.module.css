@@ -20,6 +20,15 @@
 .searchRow {
   padding-inline: var(--pad-card);
 }
+
+/* A visible label for the search field (UX pass): a placeholder is not a
+   label — it is gone exactly when the box has content in it. */
+.searchLabel {
+  display: block;
+  margin-block-end: 4px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
 .search {
   width: 100%;
   min-height: var(--hit-min);

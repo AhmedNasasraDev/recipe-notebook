@@ -13,7 +13,8 @@ import { memoryIdb, resetMemoryIdb } from '../test/memoryIdb.js';
 vi.mock('idb-keyval', () => memoryIdb());
 
 import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { defaultPrefs, type Recipe } from '@recipe-notebook/engine';
 import { HomeScreen } from './HomeScreen.js';
 import { AppDataProvider } from '../app/AppDataProvider.js';
@@ -72,11 +73,22 @@ const priceOf = (key: string, total: number): CatalogItem => ({
   allergens: [],
 });
 
+/* Where the router ended up — the UX pass added a screen that navigates. */
+let seenLocation = '/home';
+function LocationSpy() {
+  const l = useLocation();
+  seenLocation = `${l.pathname}${l.search}`;
+  return null;
+}
+const lastLocation = () => seenLocation;
+
 function show(
   opts: { recipes?: Recipe[]; catalog?: CatalogItem[]; pro?: boolean; canWrite?: boolean } = {},
 ) {
+  seenLocation = '/home';
   render(
     <MemoryRouter initialEntries={['/home']}>
+      <LocationSpy />
       <AppDataProvider
         repository={fakeRepository({
           prefs: { ...defaultPrefs(opts.pro === false ? 'home' : 'pro'), done: true },
@@ -108,8 +120,33 @@ describe('§2 the notebook at a glance', () => {
     show({ recipes: [] });
     expect(await screen.findByText('המחברת ריקה')).toBeInTheDocument();
     expect(screen.getByText(/הקטגוריות יופיעו כאן/)).toBeInTheDocument();
-    // And nothing on the screen claims a category or a base recipe exists.
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    /*
+      Nothing on the screen claims a category or a base recipe exists. The ONE
+      link that is right to offer an empty notebook is the way out of it, and
+      the UX pass put it here: "+ מתכון חדש".
+    */
+    const links = screen.getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', '/recipe/new');
+  });
+
+  /* ── UX pass ─────────────────────────────────────────────────────────── */
+
+  it('offers a search that hands the term to the notebook', async () => {
+    const user = userEvent.setup();
+    show();
+    await screen.findByText('3 מתכונים במחברת');
+    await user.type(screen.getByLabelText('חיפוש מתכון'), 'בריוש');
+    await user.click(screen.getByRole('button', { name: 'חיפוש' }));
+    expect(lastLocation()).toBe('/notebook?q=%D7%91%D7%A8%D7%99%D7%95%D7%A9');
+  });
+
+  it('an empty search term just opens the notebook', async () => {
+    const user = userEvent.setup();
+    show();
+    await screen.findByText('3 מתכונים במחברת');
+    await user.click(screen.getByRole('button', { name: 'חיפוש' }));
+    expect(lastLocation()).toBe('/notebook');
   });
 });
 

@@ -153,3 +153,118 @@
 .basePartial {
   color: var(--c-amber);
 }
+
+/* ── UX pass: find a recipe, or write one ────────────────────────────────
+   The first block on the screen, because those are the two reasons to be on
+   it. The search field is full width with its own visible label; the new
+   recipe button is the one filled control here, so there is never a question
+   about which of the two is the loud one. */
+.start {
+  padding: 16px 20px;
+  border-block-end: 1px solid var(--c-line);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+}
+
+.searchForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.searchLabel {
+  margin-block-end: 4px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+
+.searchRow {
+  display: flex;
+  gap: var(--gap-tight);
+}
+
+.search {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--hit-min);
+  padding-inline: 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  font-size: var(--fs-body);
+  color: var(--c-ink);
+}
+
+.search:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 1px;
+  border-color: var(--c-green);
+}
+
+.searchBtn {
+  flex: none;
+  min-height: var(--hit-min);
+  padding-inline: 16px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+}
+
+.newBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-family: var(--font-body);
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.newBtn:hover {
+  background: var(--c-green-ink);
+  color: var(--c-white);
+}
+
+/* ── favourites and recents ──────────────────────────────────────────────── */
+.quickList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  list-style: none;
+}
+
+.quickRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--gap-in-group);
+  min-height: var(--hit-min);
+  padding: 9px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-paper);
+  text-decoration: none;
+}
+
+.quickName {
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+  min-width: 0;
+}
+
+.quickMeta {
+  flex: none;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+
+/* The category emblem. `aria-hidden` in the markup: the name is right there. */
+.tileIcon {
+  margin-inline-end: 6px;
+}

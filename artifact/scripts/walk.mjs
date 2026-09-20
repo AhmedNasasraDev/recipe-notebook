@@ -84,6 +84,24 @@ const BASE = 'http://127.0.0.1:8135/index.html';
   suite that quietly covers less is worse than one that fails.
 */
 const PREPARE = {
+  /*
+    The recipe page again, with both panels open.
+
+    The UX pass moved the print sheets, שכפול and מחיקה under "עוד פעולות" and
+    the production data, the allergens and the version history under
+    "פרטים מקצועיים", and neither renders its contents while it is closed. A
+    walk that only saw the closed page would quietly stop covering a dozen
+    controls — exactly the silent loss of coverage the note below is about.
+  */
+  '/recipe/brioche#panels': async (page) => {
+    for (const label of ['עוד פעולות', 'פרטים מקצועיים']) {
+      const summary = page.getByText(label);
+      if (await summary.count()) {
+        await summary.first().click();
+        await page.waitForTimeout(250);
+      }
+    }
+  },
   '/recipe/brioche/cook#steps': async (page) => {
     const gate = page.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' });
     // Idempotent: a preparation that is already under way has no gate on
@@ -130,6 +148,8 @@ const SCREENS = [
   '/home',
   '/paste',
   '/recipe/brioche',
+  // the same route, walked again with both disclosure panels open
+  '/recipe/brioche#panels',
   '/recipe/brioche/edit',
   '/recipe/new',
   '/recipe/brioche/cook',

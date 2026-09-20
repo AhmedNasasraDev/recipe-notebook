@@ -62,6 +62,7 @@ import {
   panFromDraft,
   patchIngredientRow,
   validateDraft,
+  isBlankIngredient,
   type IngredientDraft,
   type RecipeDraft,
   type StepDraft,
@@ -100,7 +101,22 @@ export function RecipeEditScreen() {
   const [draft, setDraft] = useState<RecipeDraft>(() => emptyDraft());
   const [original, setOriginal] = useState<RecipeDraft>(() => emptyDraft());
   const [loaded, setLoaded] = useState(isNew);
-  const [problems, setProblems] = useState<string[]>([]);
+  /*
+    UX PASS: THE MESSAGES GO WHERE THE MISTAKE IS, AND THEY FOLLOW THE FIX.
+
+    `validateDraft` has always returned a FIELD with every message and the
+    screen threw it away, printing a list at the top of a form that can be
+    1,500 lines long — so "צריך לפחות רכיב אחד" appeared a screen and a half
+    from the ingredients.
+
+    Now the list is still there (it is what a screen reader is sent to, and it
+    is the one place that shows everything at once) AND each message is printed
+    beside its own field. Validation runs live once a save has been attempted,
+    so a message disappears the moment the field is right instead of waiting
+    for the next press. Nothing the user typed is ever cleared by a failed
+    validation.
+  */
+  const [submitted, setSubmitted] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [calibrateFor, setCalibrateFor] = useState<string | null>(null);
@@ -124,6 +140,26 @@ export function RecipeEditScreen() {
   const lockedBlock = existing?.locked === true;
 
   const dirty = isDirty(draft, original);
+
+  /** Live once a save has been attempted; silent before that. */
+  const problems = submitted ? validateDraft(draft) : [];
+  const problemFor = (field: string): string | null =>
+    problems.find((p) => p.field === field)?.message ?? null;
+  /*
+    `validateDraft` numbers ingredient problems by their position among the
+    NON-BLANK rows — the rows that will actually be saved — while the form is
+    indexed by the rows on screen, blanks included. This maps one to the other,
+    so a message lands on the row it is about.
+  */
+  const savedRowIndexes = draft.ingredients
+    .map((row, i) => ({ row, i }))
+    .filter(({ row }) => !isBlankIngredient(row))
+    .map(({ i }) => i);
+  const rowProblem = (index: number, key?: string): string | null => {
+    const n = savedRowIndexes.indexOf(index);
+    if (n < 0) return null;
+    return problemFor(key ? `ingredient-${n}-${key}` : `ingredient-${n}`);
+  };
 
   // Warn before a reload or a tab close drops unsaved work.
   useEffect(() => {
@@ -199,13 +235,11 @@ export function RecipeEditScreen() {
 
   const onSave = async () => {
     setSaveError(null);
-    const found = validateDraft(draft);
-    if (found.length > 0) {
-      setProblems(found.map((p) => p.message));
+    setSubmitted(true);
+    if (validateDraft(draft).length > 0) {
       errorRef.current?.focus();
       return;
     }
-    setProblems([]);
     setBusy(true);
     try {
       // §9 + requirement 1: the previous state is snapshotted by the server,
@@ -226,7 +260,16 @@ export function RecipeEditScreen() {
       // Replace the baseline before navigating, so the unsaved-changes guard
       // does not fire on a form that was just saved successfully.
       setOriginal(draftFromRecipe(saved));
-      navigate(`/recipe/${saved.id}`, { replace: true });
+      /*
+        UX PASS: say that it worked. The form used to navigate away in silence,
+        which on a slow connection is indistinguishable from nothing having
+        happened. The recipe page shows the line and then forgets it — it is in
+        the navigation, not in storage, so a reload does not repeat it.
+      */
+      navigate(`/recipe/${saved.id}`, {
+        replace: true,
+        state: { saved: isNew ? 'created' : 'updated' },
+      });
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'השמירה נכשלה.');
       errorRef.current?.focus();
@@ -288,7 +331,7 @@ export function RecipeEditScreen() {
             <p className={styles.errorTitle}>לא ניתן לשמור עדיין:</p>
             <ul>
               {problems.map((p) => (
-                <li key={p}>· {p}</li>
+                <li key={p.field}>· {p.message}</li>
               ))}
             </ul>
           </div>
@@ -302,19 +345,37 @@ export function RecipeEditScreen() {
 
       {/* ── identity ───────────────────────────────────────────────────── */}
       <section className={styles.card}>
-        <h2 className={styles.cardTitle}>המתכון</h2>
+        <h2 className={styles.cardTitle}>
+          <span className={styles.stepNum} aria-hidden="true">1</span>
+          פרטים בסיסיים
+        </h2>
 
         <div className={styles.field}>
+          {/* The chip is decoration and is hidden from assistive tech, which
+              is told the same thing properly through `aria-required` — putting
+              the word inside the label would rename the field to
+              "שם המתכון חובה". */}
           <label className={styles.label} htmlFor="r-name">
             שם המתכון
           </label>
+          <span className={styles.required} aria-hidden="true">
+            חובה
+          </span>
           <input
             id="r-name"
             className={styles.input}
             value={draft.name}
             onChange={(e) => patch({ name: e.target.value })}
             placeholder="למשל: בריוש נאנטר"
+            aria-required="true"
+            aria-invalid={problemFor('name') !== null}
+            {...(problemFor('name') ? { 'aria-describedby': 'r-name-error' } : {})}
           />
+          {problemFor('name') && (
+            <p id="r-name-error" className={styles.fieldError}>
+              {problemFor('name')}
+            </p>
+          )}
         </div>
 
         <div className={styles.row2}>
@@ -368,7 +429,13 @@ export function RecipeEditScreen() {
       {/* ── ingredients ────────────────────────────────────────────────── */}
       <section className={styles.card}>
         <div className={styles.cardHeadRow}>
-          <h2 className={styles.cardTitle}>רכיבים</h2>
+          <h2 className={styles.cardTitle}>
+            <span className={styles.stepNum} aria-hidden="true">2</span>
+            רכיבים
+            <span className={styles.required} aria-hidden="true">
+              חובה
+            </span>
+          </h2>
           <span className={styles.countHint}>
             {draft.ingredients.length === 1 ? 'שורה אחת' : `${draft.ingredients.length} שורות`}
           </span>
@@ -394,6 +461,7 @@ export function RecipeEditScreen() {
                     onChange={(e) => patchIngredient(i, { name: e.target.value })}
                     placeholder="שם הרכיב"
                     aria-label={`שם הרכיב בשורה ${i + 1}`}
+                    aria-invalid={rowProblem(i) !== null}
                   />
                   <div className={styles.rowTools}>
                     <button
@@ -440,6 +508,8 @@ export function RecipeEditScreen() {
                   </div>
                 </div>
 
+                {rowProblem(i) && <p className={styles.fieldError}>{rowProblem(i)}</p>}
+
                 <div className={styles.ingGrid}>
                   <div className={styles.field}>
                     <label className={styles.label} htmlFor={`q-${row.key}`}>
@@ -452,7 +522,11 @@ export function RecipeEditScreen() {
                       value={row.qty}
                       onChange={(e) => patchIngredient(i, { qty: e.target.value })}
                       aria-label={`כמות של ${label}`}
+                      aria-invalid={rowProblem(i, 'qty') !== null}
                     />
+                    {rowProblem(i, 'qty') && (
+                      <p className={styles.fieldError}>{rowProblem(i, 'qty')}</p>
+                    )}
                   </div>
                   <div className={styles.field}>
                     <label className={styles.label} htmlFor={`u-${row.key}`}>
@@ -712,6 +786,10 @@ export function RecipeEditScreen() {
           })}
         </ul>
 
+        {problemFor('ingredients') && (
+          <p className={styles.fieldError}>{problemFor('ingredients')}</p>
+        )}
+
         {/* The `+` is decorative. Without an explicit label a screen reader
             announces "plus hosafat rakiv", and the two add buttons on this
             screen would differ only by that leading glyph. */}
@@ -803,489 +881,12 @@ export function RecipeEditScreen() {
         </dl>
       </section>
 
-      {/* ── yield and pricing, behind the §3 disclosure ─────────────────── */}
-      <section className={styles.card}>
-        <button
-          type="button"
-          className={styles.disclosure}
-          aria-expanded={showProduction}
-          onClick={() => setShowProduction((v) => !v)}
-        >
-          {showProduction ? 'סגירת תשואה ותמחור' : 'תשואה ותמחור'}
-        </button>
-
-        {showProduction && (
-          <div className={styles.prodFields}>
-            <div className={styles.row2}>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="r-units">
-                  מספר יחידות
-                </label>
-                <input
-                  id="r-units"
-                  className={`${styles.input} ltr`}
-                  inputMode="decimal"
-                  value={draft.yieldUnits}
-                  onChange={(e) => patch({ yieldUnits: e.target.value })}
-                />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="r-unitweight">
-                  משקל ליחידה, גרם
-                </label>
-                <input
-                  id="r-unitweight"
-                  className={`${styles.input} ltr`}
-                  inputMode="decimal"
-                  value={draft.unitWeight}
-                  onChange={(e) => patch({ unitWeight: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="r-yieldactual">
-                תשואה שנמדדה בפועל, גרם
-              </label>
-              <input
-                id="r-yieldactual"
-                className={`${styles.input} ltr`}
-                inputMode="decimal"
-                value={draft.yieldActual}
-                onChange={(e) => patch({ yieldActual: e.target.value })}
-                placeholder="ריק = לפי החישוב התאורטי"
-              />
-              {/*
-                This hint is the user-facing face of the null-vs-zero rule, and
-                it is worth its space: leaving the field empty and typing 0 are
-                different answers, and without saying so nobody would guess it.
-              */}
-              <p className={styles.hint}>
-                שדה ריק פירושו &quot;לפי החישוב&quot;. אפס פירושו שנמדדה תשואה של
-                אפס — שני דברים שונים.
-              </p>
-            </div>
-
-            {/*
-              STAGE-11 COMPLETION (§1.1). These two weights are the only inputs
-              of `bakeLoss`, which the recipe page has been displaying since
-              stage 2 — as "פחת אפייה 0.0%" on every recipe in the notebook,
-              because the form never asked for them. A baker reading 0% loss on
-              a bread is being told something false. They are also the inputs of
-              "משקל לשקילה ליחידה", which is how much dough to weigh out so the
-              BAKED unit comes out at its target weight.
-            */}
-            <div className={styles.row2}>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="r-wbefore">
-                  משקל לפני אפייה, גרם
-                </label>
-                <input
-                  id="r-wbefore"
-                  className={`${styles.input} ltr`}
-                  inputMode="decimal"
-                  value={draft.weightBefore}
-                  onChange={(e) => patch({ weightBefore: e.target.value })}
-                  placeholder="ריק = לא נשקל"
-                />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="r-wafter">
-                  משקל אחרי אפייה, גרם
-                </label>
-                <input
-                  id="r-wafter"
-                  className={`${styles.input} ltr`}
-                  inputMode="decimal"
-                  value={draft.weightAfter}
-                  onChange={(e) => patch({ weightAfter: e.target.value })}
-                  placeholder="ריק = לא נשקל"
-                />
-              </div>
-            </div>
-            <p className={styles.hint}>
-              מהשניים האלה מחושב פחת האפייה, וממנו המשקל שצריך לשקול ליחידה כדי
-              שהיחידה האפויה תצא במשקל היעד. בלי שני המשקלים אין פחת — והמסך אומר
-              זאת ולא מציג אפס.
-            </p>
-
-            {/*
-              §13 — desired dough temperature. The four temperatures below are
-              the inputs of `waterTemp`, which `compute()` has always solved and
-              the recipe page has always been ready to show; with no form the
-              answer was permanently null and the row never appeared.
-
-              The toggle is not decoration: `compute()` returns null for the
-              water temperature unless `doughMode` is on, precisely so that a
-              recipe with three blank temperatures does not read as "use water
-              at 0°C".
-            */}
-            <div className={styles.field}>
-              <label className={styles.checkRow}>
-                <input
-                  type="checkbox"
-                  checked={draft.doughMode}
-                  onChange={(e) => patch({ doughMode: e.target.checked })}
-                />
-                <span>מתכון בצק — חישוב טמפרטורת מים</span>
-              </label>
-              {/*
-                The explanation sits OUTSIDE the label on purpose. Nested in
-                it, it became part of the checkbox's accessible name — and that
-                name then contained the words "חימום המערבל", which is also the
-                label of one of the four inputs below, so two controls answered
-                to the same phrase.
-              */}
-              <p className={styles.hint}>
-                לפי טמפרטורת בצק מבוקשת, טמפ&apos; הקמח, טמפ&apos; החדר וחימום
-                המערבל (§13).
-              </p>
-            </div>
-
-            {draft.doughMode && (
-              <>
-                <div className={styles.row2}>
-                  <div className={styles.field}>
-                    <label className={styles.label} htmlFor="r-ddt">
-                      טמפ&apos; בצק מבוקשת, °C
-                    </label>
-                    <input
-                      id="r-ddt"
-                      className={`${styles.input} ltr`}
-                      inputMode="decimal"
-                      value={draft.ddt}
-                      onChange={(e) => patch({ ddt: e.target.value })}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.label} htmlFor="r-flourtemp">
-                      טמפ&apos; הקמח, °C
-                    </label>
-                    <input
-                      id="r-flourtemp"
-                      className={`${styles.input} ltr`}
-                      inputMode="decimal"
-                      value={draft.flourTemp}
-                      onChange={(e) => patch({ flourTemp: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div className={styles.row2}>
-                  <div className={styles.field}>
-                    <label className={styles.label} htmlFor="r-roomtemp">
-                      טמפ&apos; החדר, °C
-                    </label>
-                    <input
-                      id="r-roomtemp"
-                      className={`${styles.input} ltr`}
-                      inputMode="decimal"
-                      value={draft.roomTemp}
-                      onChange={(e) => patch({ roomTemp: e.target.value })}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.label} htmlFor="r-friction">
-                      חימום המערבל, °C
-                    </label>
-                    <input
-                      id="r-friction"
-                      className={`${styles.input} ltr`}
-                      inputMode="decimal"
-                      value={draft.friction}
-                      onChange={(e) => patch({ friction: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <p className={styles.hint}>
-                  טמפרטורת המים המחושבת מופיעה בכרטיס &quot;נוסחה&quot; בדף
-                  המתכון. שדה שנשאר ריק נספר כאפס בנוסחה הזאת, ולכן כדאי למלא את
-                  ארבעתם.
-                </p>
-              </>
-            )}
-
-            {pro && (
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="r-fc">
-                  יעד פוד קוסט, אחוזים
-                </label>
-                <input
-                  id="r-fc"
-                  className={`${styles.input} ltr`}
-                  inputMode="decimal"
-                  value={draft.targetFC}
-                  onChange={(e) => patch({ targetFC: e.target.value })}
-                />
-                <p className={styles.hint}>
-                  היעד שממנו מחושב מחיר מכירה מוצע. אינו אחוז הפוד קוסט בפועל.
-                </p>
-              </div>
-            )}
-
-            {pro && (
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="r-sale">
-                  מחיר מכירה ₪
-                </label>
-                <input
-                  id="r-sale"
-                  className={`${styles.input} ltr`}
-                  inputMode="decimal"
-                  value={draft.salePrice}
-                  onChange={(e) => patch({ salePrice: e.target.value })}
-                  aria-label="מחיר מכירה"
-                />
-                <p className={styles.hint}>
-                  המחיר שאתם גובים בפועל. ממנו מחושב אחוז הפוד קוסט האמיתי. שדה
-                  ריק פירושו שלא הוגדר מחיר, ואפס פירושו שהמוצר נמסר בחינם — שני
-                  דברים שונים.
-                </p>
-              </div>
-            )}
-
-            {/*
-              Stage 8. Is that price for the whole batch or for one unit? The
-              answer is stored, never guessed: reading a per-unit price as a
-              batch price turns a 30% food cost into a 300% one, and nothing on
-              the screen would reveal which happened.
-            */}
-            {pro && (
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="r-sale-basis">
-                  מחיר המכירה הוא ל…
-                </label>
-                <select
-                  id="r-sale-basis"
-                  className={styles.input}
-                  value={draft.salePriceBasis}
-                  onChange={(e) =>
-                    patch({ salePriceBasis: e.target.value === 'unit' ? 'unit' : 'batch' })
-                  }
-                  aria-label="בסיס מחיר המכירה"
-                >
-                  <option value="batch">כל המתכון</option>
-                  <option value="unit">יחידה אחת</option>
-                </select>
-              </div>
-            )}
-
-            {/* Requirement E: entered, never invented. */}
-            {pro && (
-              <>
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="r-packaging">
-                    עלות אריזה ₪
-                  </label>
-                  <input
-                    id="r-packaging"
-                    className={`${styles.input} ltr`}
-                    inputMode="decimal"
-                    value={draft.packagingCost}
-                    onChange={(e) => patch({ packagingCost: e.target.value })}
-                    aria-label="עלות אריזה"
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="r-labor">
-                    עלות עבודה ₪
-                  </label>
-                  <input
-                    id="r-labor"
-                    className={`${styles.input} ltr`}
-                    inputMode="decimal"
-                    value={draft.laborCost}
-                    onChange={(e) => patch({ laborCost: e.target.value })}
-                    aria-label="עלות עבודה"
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="r-other">
-                    עלויות נוספות ₪
-                  </label>
-                  <input
-                    id="r-other"
-                    className={`${styles.input} ltr`}
-                    inputMode="decimal"
-                    value={draft.otherCost}
-                    onChange={(e) => patch({ otherCost: e.target.value })}
-                    aria-label="עלויות נוספות"
-                  />
-                  <p className={styles.hint}>
-                    עלויות ישירות נוספות שהוזנו כאן בלבד. שכירות, חשמל ותקורה
-                    אינם מחושבים אוטומטית, כי אין מודל שמגדיר איך לחלק אותם
-                    למתכון אחד. שדה ריק פירושו שלא הוזן, ואפס פירושו שאין עלות
-                    כזאת.
-                  </p>
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="r-gm">
-                    יעד רווח גולמי, אחוזים
-                  </label>
-                  <input
-                    id="r-gm"
-                    className={`${styles.input} ltr`}
-                    inputMode="decimal"
-                    value={draft.targetGM}
-                    onChange={(e) => patch({ targetGM: e.target.value })}
-                    aria-label="יעד רווח גולמי"
-                  />
-                  <p className={styles.hint}>
-                    ממנו מחושב מחיר שמתאים ליעד, לפי העלות הכוללת. אינו הרווח
-                    הגולמי בפועל.
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </section>
-
-      {/*
-        ── §7 the pan ────────────────────────────────────────────────────
-        The `pan` column, both mappers and `save_recipe` have carried this
-        since stage 1; §7 specifies the arithmetic; the prototype implemented
-        it. What was missing was anywhere to say which pan the recipe is
-        written for — without which the recipe page cannot offer to adapt it to
-        the pan the user actually owns.
-      */}
-      <section className={styles.card}>
-        <h2 className={styles.cardTitle}>תבנית</h2>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="r-pan-kind">
-            סוג התבנית של המתכון
-          </label>
-          <select
-            id="r-pan-kind"
-            className={styles.input}
-            value={draft.pan.kind}
-            onChange={(e) =>
-              patch({
-                pan: {
-                  ...draft.pan,
-                  kind: e.target.value as RecipeDraft['pan']['kind'],
-                },
-              })
-            }
-          >
-            <option value="">— לא צוין —</option>
-            {PAN_KINDS.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.he}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {panFields.includes('diameter') && (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="r-pan-d">
-              קוטר, ס&quot;מ
-            </label>
-            <input
-              id="r-pan-d"
-              className={`${styles.input} ltr`}
-              inputMode="decimal"
-              value={draft.pan.diameter}
-              onChange={(e) => patch({ pan: { ...draft.pan, diameter: e.target.value } })}
-            />
-          </div>
-        )}
-
-        {(panFields.includes('width') || panFields.includes('length')) && (
-          <div className={styles.row2}>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="r-pan-w">
-                רוחב, ס&quot;מ
-              </label>
-              <input
-                id="r-pan-w"
-                className={`${styles.input} ltr`}
-                inputMode="decimal"
-                value={draft.pan.width}
-                onChange={(e) => patch({ pan: { ...draft.pan, width: e.target.value } })}
-              />
-            </div>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="r-pan-l">
-                אורך, ס&quot;מ
-              </label>
-              <input
-                id="r-pan-l"
-                className={`${styles.input} ltr`}
-                inputMode="decimal"
-                value={draft.pan.length}
-                onChange={(e) => patch({ pan: { ...draft.pan, length: e.target.value } })}
-              />
-            </div>
-          </div>
-        )}
-
-        {panFields.includes('gn') && (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="r-pan-gn">
-              מידת GN
-            </label>
-            <select
-              id="r-pan-gn"
-              className={styles.input}
-              value={draft.pan.gn}
-              onChange={(e) => patch({ pan: { ...draft.pan, gn: e.target.value } })}
-            >
-              <option value="">— לא צוין —</option>
-              {GN_SIZES.map((g) => (
-                <option key={g} value={g}>
-                  GN {g}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {panFields.includes('cavities') && (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="r-pan-cav">
-              מספר שקעים
-            </label>
-            <input
-              id="r-pan-cav"
-              className={`${styles.input} ltr`}
-              inputMode="decimal"
-              value={draft.pan.cavities}
-              onChange={(e) => patch({ pan: { ...draft.pan, cavities: e.target.value } })}
-            />
-          </div>
-        )}
-
-        {panFields.includes('height') && (
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="r-pan-h">
-              גובה, ס&quot;מ
-            </label>
-            <input
-              id="r-pan-h"
-              className={`${styles.input} ltr`}
-              inputMode="decimal"
-              value={draft.pan.height}
-              onChange={(e) => patch({ pan: { ...draft.pan, height: e.target.value } })}
-            />
-            <p className={styles.hint}>
-              עם גובה בשתי התבניות ההשוואה נעשית לפי נפח. בלעדיו — לפי שטח בלבד,
-              וההמלצה תאמר זאת במפורש.
-            </p>
-          </div>
-        )}
-
-        {draft.pan.kind !== '' && draft.pan.kind !== 'none' && panLabel(panFromDraft(draft.pan)) === '' && (
-          <p className={styles.hint}>
-            נבחר סוג תבנית בלי מידות, ולכן אי אפשר להשוות אותה לתבנית אחרת. אפשר
-            להשלים את המידות או לבחור &quot;לא צוין&quot;.
-          </p>
-        )}
-      </section>
-
       {/* ── steps ──────────────────────────────────────────────────────── */}
       <section className={styles.card}>
-        <h2 className={styles.cardTitle}>אופן ההכנה</h2>
+        <h2 className={styles.cardTitle}>
+          <span className={styles.stepNum} aria-hidden="true">3</span>
+          אופן ההכנה
+        </h2>
         <ol className={styles.rows}>
           {draft.steps.map((step, i) => (
             <li key={step.key} className={styles.stepCard}>
@@ -1407,122 +1008,646 @@ export function RecipeEditScreen() {
         </button>
       </section>
 
-      {/* ── texts ──────────────────────────────────────────────────────── */}
-      <section className={styles.card}>
-        <h2 className={styles.cardTitle}>אחסון והערות</h2>
-        <div className={styles.row2}>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="r-shelf">
-              חיי מדף
-            </label>
-            <input
-              id="r-shelf"
-              className={styles.input}
-              value={draft.shelfLife}
-              onChange={(e) => patch({ shelfLife: e.target.value })}
-            />
-          </div>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="r-storage">
-              אחסון
-            </label>
-            <input
-              id="r-storage"
-              className={styles.input}
-              value={draft.storage}
-              onChange={(e) => patch({ storage: e.target.value })}
-            />
-          </div>
-        </div>
-        <div className={styles.row2}>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="r-freezing">
-              הקפאה
-            </label>
-            <input
-              id="r-freezing"
-              className={styles.input}
-              value={draft.freezing}
-              onChange={(e) => patch({ freezing: e.target.value })}
-            />
-          </div>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="r-thawing">
-              הפשרה
-            </label>
-            <input
-              id="r-thawing"
-              className={styles.input}
-              value={draft.thawing}
-              onChange={(e) => patch({ thawing: e.target.value })}
-            />
-          </div>
-        </div>
+      {/*
+        ── 4 · "פרטים מקצועיים" ──────────────────────────────────────────
+
+        UX PASS. The form asked for everything at once, in one column roughly
+        1,500 lines long: the name, then the ingredients, then the yield and
+        the pricing, then the pan, then the steps, then storage and notes. A
+        person writing down a recipe had to scroll past the food-cost target to
+        reach "אופן ההכנה".
+
+        The order is the order the work happens in now — details, ingredients,
+        method — and everything a professional adds afterwards is in this one
+        panel: yield and loss, pricing, the pan, storage, shelf life and notes.
+        Nothing was removed and nothing is gated by profile (§3 forbids that).
+        It is collapsed because it is optional, and the summary says so.
+      */}
+      <details className={styles.proDetails} open={showProduction}
+        onToggle={(e) => setShowProduction(e.currentTarget.open)}>
+        <summary className={styles.proSummary}>
+          <span className={styles.stepNum} aria-hidden="true">4</span>
+          פרטים מקצועיים
+          <span className={styles.proHint}>אפשר גם למלא אחר כך</span>
+        </summary>
+        {showProduction && (
+        <div className={styles.proBody}>
+        {/* ── yield and pricing ───────────────────────────────────────────
+            Inside "פרטים מקצועיים" now (step 4), without a second toggle of its
+            own: the panel IS the disclosure §3 asks for. */}
+        <section className={styles.card}>
+          <h3 className={styles.cardTitle}>תשואה ותמחור</h3>
+            <div className={styles.prodFields}>
+              <div className={styles.row2}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="r-units">
+                    מספר יחידות
+                  </label>
+                  <input
+                    id="r-units"
+                    className={`${styles.input} ltr`}
+                    inputMode="decimal"
+                    value={draft.yieldUnits}
+                    onChange={(e) => patch({ yieldUnits: e.target.value })}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="r-unitweight">
+                    משקל ליחידה, גרם
+                  </label>
+                  <input
+                    id="r-unitweight"
+                    className={`${styles.input} ltr`}
+                    inputMode="decimal"
+                    value={draft.unitWeight}
+                    onChange={(e) => patch({ unitWeight: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="r-yieldactual">
+                  תשואה שנמדדה בפועל, גרם
+                </label>
+                <input
+                  id="r-yieldactual"
+                  className={`${styles.input} ltr`}
+                  inputMode="decimal"
+                  value={draft.yieldActual}
+                  onChange={(e) => patch({ yieldActual: e.target.value })}
+                  placeholder="ריק = לפי החישוב התאורטי"
+                />
+                {/*
+                  This hint is the user-facing face of the null-vs-zero rule, and
+                  it is worth its space: leaving the field empty and typing 0 are
+                  different answers, and without saying so nobody would guess it.
+                */}
+                <p className={styles.hint}>
+                  שדה ריק פירושו &quot;לפי החישוב&quot;. אפס פירושו שנמדדה תשואה של
+                  אפס — שני דברים שונים.
+                </p>
+              </div>
+
+              {/*
+                STAGE-11 COMPLETION (§1.1). These two weights are the only inputs
+                of `bakeLoss`, which the recipe page has been displaying since
+                stage 2 — as "פחת אפייה 0.0%" on every recipe in the notebook,
+                because the form never asked for them. A baker reading 0% loss on
+                a bread is being told something false. They are also the inputs of
+                "משקל לשקילה ליחידה", which is how much dough to weigh out so the
+                BAKED unit comes out at its target weight.
+              */}
+              <div className={styles.row2}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="r-wbefore">
+                    משקל לפני אפייה, גרם
+                  </label>
+                  <input
+                    id="r-wbefore"
+                    className={`${styles.input} ltr`}
+                    inputMode="decimal"
+                    value={draft.weightBefore}
+                    onChange={(e) => patch({ weightBefore: e.target.value })}
+                    placeholder="ריק = לא נשקל"
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="r-wafter">
+                    משקל אחרי אפייה, גרם
+                  </label>
+                  <input
+                    id="r-wafter"
+                    className={`${styles.input} ltr`}
+                    inputMode="decimal"
+                    value={draft.weightAfter}
+                    onChange={(e) => patch({ weightAfter: e.target.value })}
+                    placeholder="ריק = לא נשקל"
+                  />
+                </div>
+              </div>
+              <p className={styles.hint}>
+                מהשניים האלה מחושב פחת האפייה, וממנו המשקל שצריך לשקול ליחידה כדי
+                שהיחידה האפויה תצא במשקל היעד. בלי שני המשקלים אין פחת — והמסך אומר
+                זאת ולא מציג אפס.
+              </p>
+
+              {/*
+                §13 — desired dough temperature. The four temperatures below are
+                the inputs of `waterTemp`, which `compute()` has always solved and
+                the recipe page has always been ready to show; with no form the
+                answer was permanently null and the row never appeared.
+
+                The toggle is not decoration: `compute()` returns null for the
+                water temperature unless `doughMode` is on, precisely so that a
+                recipe with three blank temperatures does not read as "use water
+                at 0°C".
+              */}
+              <div className={styles.field}>
+                <label className={styles.checkRow}>
+                  <input
+                    type="checkbox"
+                    checked={draft.doughMode}
+                    onChange={(e) => patch({ doughMode: e.target.checked })}
+                  />
+                  <span>מתכון בצק — חישוב טמפרטורת מים</span>
+                </label>
+                {/*
+                  The explanation sits OUTSIDE the label on purpose. Nested in
+                  it, it became part of the checkbox's accessible name — and that
+                  name then contained the words "חימום המערבל", which is also the
+                  label of one of the four inputs below, so two controls answered
+                  to the same phrase.
+                */}
+                <p className={styles.hint}>
+                  לפי טמפרטורת בצק מבוקשת, טמפ&apos; הקמח, טמפ&apos; החדר וחימום
+                  המערבל (§13).
+                </p>
+              </div>
+
+              {draft.doughMode && (
+                <>
+                  <div className={styles.row2}>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="r-ddt">
+                        טמפ&apos; בצק מבוקשת, °C
+                      </label>
+                      <input
+                        id="r-ddt"
+                        className={`${styles.input} ltr`}
+                        inputMode="decimal"
+                        value={draft.ddt}
+                        onChange={(e) => patch({ ddt: e.target.value })}
+                      />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="r-flourtemp">
+                        טמפ&apos; הקמח, °C
+                      </label>
+                      <input
+                        id="r-flourtemp"
+                        className={`${styles.input} ltr`}
+                        inputMode="decimal"
+                        value={draft.flourTemp}
+                        onChange={(e) => patch({ flourTemp: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.row2}>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="r-roomtemp">
+                        טמפ&apos; החדר, °C
+                      </label>
+                      <input
+                        id="r-roomtemp"
+                        className={`${styles.input} ltr`}
+                        inputMode="decimal"
+                        value={draft.roomTemp}
+                        onChange={(e) => patch({ roomTemp: e.target.value })}
+                      />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="r-friction">
+                        חימום המערבל, °C
+                      </label>
+                      <input
+                        id="r-friction"
+                        className={`${styles.input} ltr`}
+                        inputMode="decimal"
+                        value={draft.friction}
+                        onChange={(e) => patch({ friction: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <p className={styles.hint}>
+                    טמפרטורת המים המחושבת מופיעה בכרטיס &quot;נוסחה&quot; בדף
+                    המתכון. שדה שנשאר ריק נספר כאפס בנוסחה הזאת, ולכן כדאי למלא את
+                    ארבעתם.
+                  </p>
+                </>
+              )}
+
+              {pro && (
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="r-fc">
+                    יעד פוד קוסט, אחוזים
+                  </label>
+                  <input
+                    id="r-fc"
+                    className={`${styles.input} ltr`}
+                    inputMode="decimal"
+                    value={draft.targetFC}
+                    onChange={(e) => patch({ targetFC: e.target.value })}
+                  />
+                  <p className={styles.hint}>
+                    היעד שממנו מחושב מחיר מכירה מוצע. אינו אחוז הפוד קוסט בפועל.
+                  </p>
+                </div>
+              )}
+
+              {pro && (
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="r-sale">
+                    מחיר מכירה ₪
+                  </label>
+                  <input
+                    id="r-sale"
+                    className={`${styles.input} ltr`}
+                    inputMode="decimal"
+                    value={draft.salePrice}
+                    onChange={(e) => patch({ salePrice: e.target.value })}
+                    aria-label="מחיר מכירה"
+                  />
+                  <p className={styles.hint}>
+                    המחיר שאתם גובים בפועל. ממנו מחושב אחוז הפוד קוסט האמיתי. שדה
+                    ריק פירושו שלא הוגדר מחיר, ואפס פירושו שהמוצר נמסר בחינם — שני
+                    דברים שונים.
+                  </p>
+                </div>
+              )}
+
+              {/*
+                Stage 8. Is that price for the whole batch or for one unit? The
+                answer is stored, never guessed: reading a per-unit price as a
+                batch price turns a 30% food cost into a 300% one, and nothing on
+                the screen would reveal which happened.
+              */}
+              {pro && (
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="r-sale-basis">
+                    מחיר המכירה הוא ל…
+                  </label>
+                  <select
+                    id="r-sale-basis"
+                    className={styles.input}
+                    value={draft.salePriceBasis}
+                    onChange={(e) =>
+                      patch({ salePriceBasis: e.target.value === 'unit' ? 'unit' : 'batch' })
+                    }
+                    aria-label="בסיס מחיר המכירה"
+                  >
+                    <option value="batch">כל המתכון</option>
+                    <option value="unit">יחידה אחת</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Requirement E: entered, never invented. */}
+              {pro && (
+                <>
+                  <div className={styles.field}>
+                    <label className={styles.label} htmlFor="r-packaging">
+                      עלות אריזה ₪
+                    </label>
+                    <input
+                      id="r-packaging"
+                      className={`${styles.input} ltr`}
+                      inputMode="decimal"
+                      value={draft.packagingCost}
+                      onChange={(e) => patch({ packagingCost: e.target.value })}
+                      aria-label="עלות אריזה"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label} htmlFor="r-labor">
+                      עלות עבודה ₪
+                    </label>
+                    <input
+                      id="r-labor"
+                      className={`${styles.input} ltr`}
+                      inputMode="decimal"
+                      value={draft.laborCost}
+                      onChange={(e) => patch({ laborCost: e.target.value })}
+                      aria-label="עלות עבודה"
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label} htmlFor="r-other">
+                      עלויות נוספות ₪
+                    </label>
+                    <input
+                      id="r-other"
+                      className={`${styles.input} ltr`}
+                      inputMode="decimal"
+                      value={draft.otherCost}
+                      onChange={(e) => patch({ otherCost: e.target.value })}
+                      aria-label="עלויות נוספות"
+                    />
+                    <p className={styles.hint}>
+                      עלויות ישירות נוספות שהוזנו כאן בלבד. שכירות, חשמל ותקורה
+                      אינם מחושבים אוטומטית, כי אין מודל שמגדיר איך לחלק אותם
+                      למתכון אחד. שדה ריק פירושו שלא הוזן, ואפס פירושו שאין עלות
+                      כזאת.
+                    </p>
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label} htmlFor="r-gm">
+                      יעד רווח גולמי, אחוזים
+                    </label>
+                    <input
+                      id="r-gm"
+                      className={`${styles.input} ltr`}
+                      inputMode="decimal"
+                      value={draft.targetGM}
+                      onChange={(e) => patch({ targetGM: e.target.value })}
+                      aria-label="יעד רווח גולמי"
+                    />
+                    <p className={styles.hint}>
+                      ממנו מחושב מחיר שמתאים ליעד, לפי העלות הכוללת. אינו הרווח
+                      הגולמי בפועל.
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+        </section>
+
         {/*
-          §1.1 manualAllergens. The allergen list is derived from the
-          ingredient names, and the table cannot know everything — a filling
-          bought ready-made, a shared production line, a supplier's change.
-          Without this field the user could see an allergen missing from the
-          list and had no way to add it.
+          ── §7 the pan ────────────────────────────────────────────────────
+          The `pan` column, both mappers and `save_recipe` have carried this
+          since stage 1; §7 specifies the arithmetic; the prototype implemented
+          it. What was missing was anywhere to say which pan the recipe is
+          written for — without which the recipe page cannot offer to adapt it to
+          the pan the user actually owns.
         */}
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="r-allergens">
-            אלרגנים להוספה ידנית
-          </label>
-          <input
-            id="r-allergens"
-            className={styles.input}
-            value={draft.manualAllergens}
-            onChange={(e) => patch({ manualAllergens: e.target.value })}
-            placeholder="מופרדים בפסיק"
-          />
-          <p className={styles.hint}>
-            נוספים לאלרגנים שהמערכת מזהה מתוך שמות הרכיבים, ואינם מחליפים אותם.
-          </p>
+        <section className={styles.card}>
+          <h2 className={styles.cardTitle}>תבנית</h2>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="r-pan-kind">
+              סוג התבנית של המתכון
+            </label>
+            <select
+              id="r-pan-kind"
+              className={styles.input}
+              value={draft.pan.kind}
+              onChange={(e) =>
+                patch({
+                  pan: {
+                    ...draft.pan,
+                    kind: e.target.value as RecipeDraft['pan']['kind'],
+                  },
+                })
+              }
+            >
+              <option value="">— לא צוין —</option>
+              {PAN_KINDS.map((k) => (
+                <option key={k.id} value={k.id}>
+                  {k.he}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {panFields.includes('diameter') && (
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="r-pan-d">
+                קוטר, ס&quot;מ
+              </label>
+              <input
+                id="r-pan-d"
+                className={`${styles.input} ltr`}
+                inputMode="decimal"
+                value={draft.pan.diameter}
+                onChange={(e) => patch({ pan: { ...draft.pan, diameter: e.target.value } })}
+              />
+            </div>
+          )}
+
+          {(panFields.includes('width') || panFields.includes('length')) && (
+            <div className={styles.row2}>
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="r-pan-w">
+                  רוחב, ס&quot;מ
+                </label>
+                <input
+                  id="r-pan-w"
+                  className={`${styles.input} ltr`}
+                  inputMode="decimal"
+                  value={draft.pan.width}
+                  onChange={(e) => patch({ pan: { ...draft.pan, width: e.target.value } })}
+                />
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="r-pan-l">
+                  אורך, ס&quot;מ
+                </label>
+                <input
+                  id="r-pan-l"
+                  className={`${styles.input} ltr`}
+                  inputMode="decimal"
+                  value={draft.pan.length}
+                  onChange={(e) => patch({ pan: { ...draft.pan, length: e.target.value } })}
+                />
+              </div>
+            </div>
+          )}
+
+          {panFields.includes('gn') && (
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="r-pan-gn">
+                מידת GN
+              </label>
+              <select
+                id="r-pan-gn"
+                className={styles.input}
+                value={draft.pan.gn}
+                onChange={(e) => patch({ pan: { ...draft.pan, gn: e.target.value } })}
+              >
+                <option value="">— לא צוין —</option>
+                {GN_SIZES.map((g) => (
+                  <option key={g} value={g}>
+                    GN {g}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {panFields.includes('cavities') && (
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="r-pan-cav">
+                מספר שקעים
+              </label>
+              <input
+                id="r-pan-cav"
+                className={`${styles.input} ltr`}
+                inputMode="decimal"
+                value={draft.pan.cavities}
+                onChange={(e) => patch({ pan: { ...draft.pan, cavities: e.target.value } })}
+              />
+            </div>
+          )}
+
+          {panFields.includes('height') && (
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="r-pan-h">
+                גובה, ס&quot;מ
+              </label>
+              <input
+                id="r-pan-h"
+                className={`${styles.input} ltr`}
+                inputMode="decimal"
+                value={draft.pan.height}
+                onChange={(e) => patch({ pan: { ...draft.pan, height: e.target.value } })}
+              />
+              <p className={styles.hint}>
+                עם גובה בשתי התבניות ההשוואה נעשית לפי נפח. בלעדיו — לפי שטח בלבד,
+                וההמלצה תאמר זאת במפורש.
+              </p>
+            </div>
+          )}
+
+          {draft.pan.kind !== '' && draft.pan.kind !== 'none' && panLabel(panFromDraft(draft.pan)) === '' && (
+            <p className={styles.hint}>
+              נבחר סוג תבנית בלי מידות, ולכן אי אפשר להשוות אותה לתבנית אחרת. אפשר
+              להשלים את המידות או לבחור &quot;לא צוין&quot;.
+            </p>
+          )}
+        </section>
+
+        {/* ── texts ──────────────────────────────────────────────────────── */}
+        <section className={styles.card}>
+          <h2 className={styles.cardTitle}>אחסון והערות</h2>
+          <div className={styles.row2}>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="r-shelf">
+                חיי מדף
+              </label>
+              <input
+                id="r-shelf"
+                className={styles.input}
+                value={draft.shelfLife}
+                onChange={(e) => patch({ shelfLife: e.target.value })}
+              />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="r-storage">
+                אחסון
+              </label>
+              <input
+                id="r-storage"
+                className={styles.input}
+                value={draft.storage}
+                onChange={(e) => patch({ storage: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className={styles.row2}>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="r-freezing">
+                הקפאה
+              </label>
+              <input
+                id="r-freezing"
+                className={styles.input}
+                value={draft.freezing}
+                onChange={(e) => patch({ freezing: e.target.value })}
+              />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="r-thawing">
+                הפשרה
+              </label>
+              <input
+                id="r-thawing"
+                className={styles.input}
+                value={draft.thawing}
+                onChange={(e) => patch({ thawing: e.target.value })}
+              />
+            </div>
+          </div>
+          {/*
+            §1.1 manualAllergens. The allergen list is derived from the
+            ingredient names, and the table cannot know everything — a filling
+            bought ready-made, a shared production line, a supplier's change.
+            Without this field the user could see an allergen missing from the
+            list and had no way to add it.
+          */}
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="r-allergens">
+              אלרגנים להוספה ידנית
+            </label>
+            <input
+              id="r-allergens"
+              className={styles.input}
+              value={draft.manualAllergens}
+              onChange={(e) => patch({ manualAllergens: e.target.value })}
+              placeholder="מופרדים בפסיק"
+            />
+            <p className={styles.hint}>
+              נוספים לאלרגנים שהמערכת מזהה מתוך שמות הרכיבים, ואינם מחליפים אותם.
+            </p>
+          </div>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="r-equipment">
+              ציוד נדרש
+            </label>
+            <input
+              id="r-equipment"
+              className={styles.input}
+              value={draft.equipment}
+              onChange={(e) => patch({ equipment: e.target.value })}
+            />
+          </div>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="r-notes">
+              הערות
+            </label>
+            <textarea
+              id="r-notes"
+              className={styles.textarea}
+              value={draft.notes}
+              onChange={(e) => patch({ notes: e.target.value })}
+              rows={3}
+            />
+            <p className={styles.hint}>
+              ההערות האלה נוסעות עם המתכון בשיתוף ובדף ההזמנה (§8).
+            </p>
+          </div>
+        </section>
         </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="r-equipment">
-            ציוד נדרש
-          </label>
-          <input
-            id="r-equipment"
-            className={styles.input}
-            value={draft.equipment}
-            onChange={(e) => patch({ equipment: e.target.value })}
-          />
-        </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="r-notes">
-            הערות
-          </label>
-          <textarea
-            id="r-notes"
-            className={styles.textarea}
-            value={draft.notes}
-            onChange={(e) => patch({ notes: e.target.value })}
-            rows={3}
-          />
-          <p className={styles.hint}>
-            ההערות האלה נוסעות עם המתכון בשיתוף ובדף ההזמנה (§8).
-          </p>
-        </div>
-      </section>
+        )}
+      </details>
 
       {/* ── the action bar ─────────────────────────────────────────────── */}
-      <div className={styles.actions}>
-        <button
-          type="button"
-          className={styles.saveBtn}
-          onClick={() => void onSave()}
-          disabled={busy || !capabilities.canWrite}
-        >
-          {busy ? 'שומר…' : isNew ? 'שמירת המתכון' : 'שמירת השינויים'}
-        </button>
-        <button type="button" className={styles.cancelBtn} onClick={onCancel}>
-          ביטול
-        </button>
-      </div>
+      {/*
+        UX PASS: THE SAVE BUTTON TRAVELS WITH THE FORM.
 
+        It was at the very bottom of a form that is four sections long, so on a
+        phone "where is save?" meant scrolling past everything. It is pinned
+        now, which is the same answer Cook Mode's gate and the chat's composer
+        got. It stays a single primary button — "שמירת מתכון" — with ביטול
+        beside it, and when it cannot be pressed the line underneath says why,
+        rather than leaving a grey rectangle to be guessed at.
+      */}
+      <div className={styles.saveBar}>
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.saveBtn}
+            onClick={() => void onSave()}
+            disabled={busy || !capabilities.canWrite}
+          >
+            {busy ? 'שומר…' : isNew ? 'שמירת המתכון' : 'שמירת השינויים'}
+          </button>
+          <button type="button" className={styles.cancelBtn} onClick={onCancel}>
+            ביטול
+          </button>
+        </div>
+        {!capabilities.canWrite && (
+          <p className={styles.saveWhy}>
+            {/* Short, and deliberately not a second copy of the banner at the
+                top of the screen — it points at it. */}
+            השמירה אינה זמינה כרגע — ההסבר בראש המסך.
+          </p>
+        )}
+        {problems.length > 0 && (
+          <p className={styles.saveWhy}>
+            {problems.length === 1
+              ? 'חסר פרט אחד כדי לשמור — ההסבר מופיע ליד השדה.'
+              : `חסרים ${problems.length} פרטים כדי לשמור — ההסברים מופיעים ליד השדות.`}
+          </p>
+        )}
+      </div>
       {calibrateFor !== null && (
         <CalibrateSheet
           ingredientName={calibrateFor}

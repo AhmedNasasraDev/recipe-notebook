@@ -161,6 +161,17 @@ async function passMise(page) {
 const only = process.argv[2];
 const should = (letter) => !only || only.toUpperCase() === letter;
 
+/*
+  UX PASS: the print sheets, שכפול and מחיקה live under the recipe page's
+  "עוד פעולות" panel, and the professional data under "פרטים מקצועיים". Both
+  render their contents only while open, so a journey that needs one opens it —
+  which is the tap a user makes too.
+*/
+async function openMore(page) {
+  await page.getByText('עוד פעולות').click();
+  await page.waitForTimeout(250);
+}
+
 /* ── A. the notebook ─────────────────────────────────────────────────────── */
 
 if (should('A')) {
@@ -253,6 +264,7 @@ if (should('B')) {
     cookHref === '/recipe/brioche/cook?mode=units&v=24',
     cookHref ?? 'none',
   );
+  await openMore(page);
   const orderHref = await page.getByRole('link', { name: 'דף הזמנה' }).getAttribute('href');
   check(
     'as does the order link',
@@ -438,6 +450,7 @@ if (should('D')) {
 if (should('E')) {
   journey = 'E label';
   const { ctx, page } = await fresh('/recipe/brioche');
+  await openMore(page);
   await page.getByRole('link', { name: 'תווית מוצר' }).click();
   await page.waitForTimeout(800);
   check('the label opens from the recipe', /\/label$/.test(await route(page)), await route(page));
@@ -473,6 +486,7 @@ if (should('F')) {
   // its label to.
   await page.locator('#scale-value').fill('3000');
   await page.waitForTimeout(400);
+  await openMore(page);
   const href = await page.getByRole('link', { name: 'דף הזמנה' }).getAttribute('href');
   await page.getByRole('link', { name: 'דף הזמנה' }).click();
   await page.waitForTimeout(800);
