@@ -23,7 +23,7 @@
   references a file it would have to fetch.
 */
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -107,9 +107,26 @@ for (const [re, what] of forbidden) {
 
 mkdirSync(path.dirname(OUT), { recursive: true });
 writeFileSync(OUT, out, 'utf8');
+/*
+  The same bytes under two names. `recipe-notebook-demo.html` is what a person
+  downloads and recognises in their files; `index.html` is what a static host
+  serves at the root of a URL, which is how the demo has to be opened on most
+  phones (a downloaded .html often cannot be opened from local storage there).
+*/
+const INDEX = path.join(path.dirname(OUT), 'index.html');
+writeFileSync(INDEX, out, 'utf8');
+
+/*
+  The build's own output goes away once it is folded in: what is left in
+  `dist-demo` is the two identical documents and nothing else, so the directory
+  can be handed to a static host as it stands — and nobody can open the
+  half-page that still points at `./assets/…`.
+*/
+rmSync(path.join(DIST, 'demo.html'), { force: true });
+rmSync(path.join(DIST, 'assets'), { recursive: true, force: true });
 
 const kb = (n) => `${Math.round(n / 1024)}KB`;
 console.log(
-  `${path.relative(process.cwd(), OUT)} written — ${kb(Buffer.byteLength(out))} ` +
+  `${path.relative(process.cwd(), OUT)} + index.html written — ${kb(Buffer.byteLength(out))} ` +
     `(css ${kb(css.length)} with the fonts inside, js ${kb(js.length)}), 0 files to fetch`,
 );
