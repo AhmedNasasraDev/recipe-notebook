@@ -32,8 +32,8 @@
   /* The phone's own bottom inset, so the bar clears the home indicator and
      never sits on top of what it is navigating. */
   padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid color-mix(in srgb, var(--c-caramel) 55%, transparent);
-  background: var(--c-ivory);
+  border-top: 1px solid color-mix(in srgb, var(--c-border) 55%, transparent);
+  background: var(--c-surface);
 }
 
 .tab {
@@ -44,7 +44,7 @@
   min-width: 48px;
   border: 0;
   background: transparent;
-  color: var(--c-cocoa-soft);
+  color: var(--c-muted-ink);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -67,17 +67,17 @@
 }
 
 .active {
-  color: var(--c-cocoa);
+  color: var(--c-text);
 }
 
 .active .glyph {
-  background: var(--c-cream-deep);
+  background: var(--c-select);
 }
 
 /* Keyboard focus is its own state, and it is visible on both the rest and the
    active tab. */
 .tab:focus-visible {
-  outline: 2px solid var(--c-cocoa);
+  outline: 2px solid var(--c-text);
   outline-offset: -3px;
 }
 
@@ -102,8 +102,8 @@
     transform: translateX(50%);
     padding: 4px 10px;
     border-radius: var(--r-pill);
-    background: var(--c-cocoa);
-    color: var(--c-ivory);
+    background: var(--c-text);
+    color: var(--c-surface);
     font-size: var(--fs-meta-lg);
     white-space: nowrap;
     opacity: 0;
@@ -127,7 +127,7 @@
   colour.
 */
 .pending {
-  color: var(--c-cocoa-soft);
+  color: var(--c-muted-ink);
 }
 
 .pendingDot {
@@ -137,5 +137,5 @@
   inline-size: 6px;
   block-size: 6px;
   border-radius: 50%;
-  background: var(--c-caramel);
+  background: var(--c-border);
 }

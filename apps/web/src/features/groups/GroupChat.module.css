@@ -87,7 +87,7 @@
   background: var(--c-neutral-bg);
   color: var(--c-muted);
   font-size: var(--fs-label);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   overflow: hidden;
 }
 
@@ -137,7 +137,7 @@
 
 .name {
   font-size: var(--fs-meta-lg);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   color: var(--c-ink);
 }
 
@@ -178,7 +178,7 @@
 }
 
 .quoteName {
-  font-weight: 700;
+  font-weight: var(--fw-title);
   color: var(--c-ink);
 }
 
@@ -321,7 +321,9 @@
 
 .send:disabled,
 .small:disabled {
-  opacity: 0.5;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: default;
 }
 

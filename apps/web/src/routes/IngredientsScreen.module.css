@@ -58,7 +58,9 @@
   margin-block-end: 16px;
 }
 .addBtn:disabled {
-  opacity: 0.5;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: not-allowed;
 }
 
@@ -113,7 +115,7 @@
   border-radius: var(--r-card);
   background: var(--c-sand);
   font-size: var(--fs-meta-lg);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   line-height: 1.6;
 }
 
@@ -156,7 +158,7 @@
   line-height: 1.7;
 }
 .affectedTitle {
-  font-weight: 700;
+  font-weight: var(--fw-title);
   margin-block-end: 4px;
 }
 .affectedList {
@@ -210,7 +212,9 @@
 .primary:disabled,
 .secondary:disabled,
 .danger:disabled {
-  opacity: 0.5;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: not-allowed;
 }
 
@@ -236,11 +240,11 @@
 }
 .itemName {
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: var(--fw-title);
 }
 .itemPrice {
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: var(--fw-title);
 }
 /* "No price" is a state, not a zero, so it reads as words and not as a figure. */
 .noPrice {
@@ -281,7 +285,7 @@
 
 .derivedMain {
   font-size: var(--fs-meta-lg);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   line-height: 1.6;
 }
 
@@ -340,7 +344,7 @@
 }
 
 .historyPrice {
-  font-weight: 700;
+  font-weight: var(--fw-title);
 }
 
 .historyWho,
@@ -349,6 +353,6 @@
 }
 
 .historyChange {
-  font-weight: 700;
+  font-weight: var(--fw-title);
   color: var(--c-red);
 }

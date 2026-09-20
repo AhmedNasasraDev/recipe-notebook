@@ -74,7 +74,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--gap-in-group);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--c-cocoa) 6%, transparent);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--c-text) 6%, transparent);
 }
 
 /*
@@ -501,7 +501,9 @@
   color: var(--c-green);
 }
 .pill:disabled {
-  opacity: 0.4;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: not-allowed;
 }
 
@@ -730,7 +732,9 @@
 }
 .actionBtn:disabled,
 .actionBtnDanger:disabled {
-  opacity: 0.5;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: default;
 }
 
@@ -837,7 +841,9 @@
 }
 .versionBtn:disabled,
 .versionBtnPrimary:disabled {
-  opacity: 0.45;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: default;
 }
 
@@ -976,7 +982,7 @@
 
 .cmpHeading {
   font-size: var(--fs-meta-lg);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   color: var(--c-muted);
   margin-block-end: 8px;
 }
@@ -1059,7 +1065,7 @@
   color: var(--c-muted);
 }
 .cmpAfter {
-  font-weight: 700;
+  font-weight: var(--fw-title);
 }
 
 .cmpIngBlock {
@@ -1067,7 +1073,7 @@
 }
 .cmpIngName {
   font-size: var(--fs-meta-lg);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   margin-block-end: 4px;
 }
 
@@ -1097,7 +1103,7 @@
 }
 .fcTitle {
   font-size: var(--fs-secondary);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   margin-block-end: 8px;
 }
 .fcGrid {
@@ -1123,7 +1129,7 @@
   padding-block-start: 8px;
   border-block-start: 1px solid var(--c-line);
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: var(--fw-title);
 }
 .fcWhy {
   margin-block-start: 8px;
@@ -1238,9 +1244,11 @@
 }
 
 /* ── §14 the way into Cook Mode ─────────────────────────────────────────── */
-/* The one filled control on the page: chocolate, the width of the column, and
+/* The one filled control on the page: the sage, the width of the column, and
    the only thing shaped like a pill — there is never a question about which
-   button starts the work. `--c-ivory` on `--c-cocoa` measures 14.86:1. */
+   button starts the work. The palette gives green to the actions, so this is
+   the same fill as every other primary button (measured in tokens.test.ts:
+   the surface colour on the accent, 5.75:1). */
 .cookBtn {
   display: flex;
   align-items: center;
@@ -1249,18 +1257,18 @@
   margin-block-end: 0;
   margin-inline: 0;
   border-radius: var(--r-pill);
-  background: var(--c-ink);
-  color: var(--c-ivory);
+  background: var(--c-green);
+  color: var(--c-surface);
   font-family: var(--font-body);
   font-size: var(--fs-body-lg);
   font-weight: 600;
   text-decoration: none;
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--c-cocoa) 18%, transparent);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--c-text) 18%, transparent);
 }
 
 .cookBtn:hover {
   background: var(--c-green-ink);
-  color: var(--c-ivory);
+  color: var(--c-surface);
 }
 
 /* ── §2 screens 8 and 9: the print outputs ───────────────────────────────── */

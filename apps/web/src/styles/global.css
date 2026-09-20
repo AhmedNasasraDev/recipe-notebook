@@ -30,7 +30,7 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: var(--fw-title);
   margin: 0;
   line-height: 1.2;
   text-wrap: pretty;
@@ -39,6 +39,14 @@ h4 {
 p {
   margin: 0;
   line-height: 1.6;
+}
+
+/* The six places the app emphasises a word inside a sentence. Left to the
+ * browser this is 700, which in Hebrew reads as a heavier letter rather than
+ * as emphasis; 600 is the interface's own top weight. */
+strong,
+b {
+  font-weight: var(--fw-title);
 }
 
 button {

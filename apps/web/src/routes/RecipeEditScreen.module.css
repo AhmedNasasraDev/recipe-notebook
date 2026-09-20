@@ -232,8 +232,10 @@
   color: var(--c-red);
   font-size: 19px;
 }
+/* An icon with no label of its own: it keeps a fade, but one that still
+   draws — 0.75 of the secondary ink is about 3.6:1, where 0.3 was 1.6. */
 .iconBtn:disabled {
-  opacity: 0.3;
+  opacity: 0.75;
   cursor: default;
 }
 .iconBtn:hover:not(:disabled),
@@ -466,7 +468,9 @@
   font-weight: 600;
 }
 .saveBtn:disabled {
-  opacity: 0.55;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: default;
 }
 
@@ -543,7 +547,7 @@
   background: var(--c-green);
   color: var(--c-white);
   font-size: var(--fs-meta);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   vertical-align: middle;
 }
 
@@ -627,9 +631,11 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding-block: 10px;
+  padding-block: 12px;
   background: var(--c-app-bg);
-  box-shadow: 0 -10px 14px 10px var(--c-app-bg);
+  /* A drawn edge, not a 24px wash over the last field — see the note on
+     CookScreen's `.gateBar`, which had the same defect. */
+  border-block-start: 1px solid var(--c-line);
 }
 
 .saveWhy {

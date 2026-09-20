@@ -1,8 +1,8 @@
-Frank Ruhl Libre and Assistant are distributed under the
-SIL OPEN FONT LICENSE Version 1.1 (http://scripts.sil.org/OFL).
+Heebo is distributed under the SIL OPEN FONT LICENSE Version 1.1
+(http://scripts.sil.org/OFL).
 
-Frank Ruhl Libre — Copyright (c) 2016, Yanek Iontef, Michal Sahar
-Assistant — Copyright (c) 2015, Ben Nathan
+Heebo — Copyright (c) 2015, Oded Ezer, Meir Sadan
+(Hebrew extension of Roboto, Copyright (c) 2011 Google Inc.)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 the Font Software, to use, study, copy, merge, embed, modify, redistribute, and

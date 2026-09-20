@@ -551,14 +551,49 @@ describe('§14 Mise en place — the stage that cannot be skipped', () => {
     for (const word of [/דלג/, /בכל זאת/, /ללא הכנ/, /התחל ללא/, /לשלבים/]) {
       expect(screen.queryByText(word)).not.toBeInTheDocument();
     }
-    // The only controls are the five ticks, the gate, and the way out of Cook
-    // Mode — which goes to the recipe, not to the steps.
+    /*
+      The only controls are the five ticks, "מסך מלא", the gate, and the way
+      out of Cook Mode — which goes to the recipe, not to the steps. What this
+      test is really about is that NOTHING here gets past the gate, so the
+      fullscreen button is named and accounted for rather than merely counted.
+    */
     const buttons = screen.getAllByRole('button');
-    expect(buttons).toHaveLength(1);
-    expect(buttons[0]).toHaveAccessibleName('הכול מוכן — מתחילים בהכנה');
+    expect(buttons.map((b) => b.textContent)).toEqual([
+      'מסך מלא',
+      'הכול מוכן — מתחילים בהכנה',
+    ]);
     const links = screen.getAllByRole('link');
     expect(links).toHaveLength(1);
     expect(links[0]).toHaveAttribute('href', '/recipe/cake');
+  });
+
+  it('says why the shut gate is shut, and stops saying it when it opens', async () => {
+    // Ahmed: "אם כפתור ההמשך מושבת, הצג סיבה קצרה וברורה."
+    const user = userEvent.setup();
+    show(CAKE);
+    await screen.findByRole('heading', { name: 'הכנת חומרי גלם' });
+
+    const gate = screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' });
+    expect(gate).toBeDisabled();
+    const why = screen.getByText(/כדי להתחיל, סמנו את כל חומרי הגלם/);
+    // The reason is not only next to the button; it is attached to it, so it
+    // reaches a cook who arrives there by keyboard or screen reader.
+    expect(gate.getAttribute('aria-describedby')).toBe(why.getAttribute('id'));
+    expect(why).toHaveTextContent('נשארו 5');
+
+    const boxes = screen.getAllByRole('checkbox');
+    await user.click(boxes[0]!);
+    await waitFor(() => expect(why).toHaveTextContent('נשארו 4'));
+
+    for (const box of boxes.slice(1)) await user.click(box);
+    await waitFor(() =>
+      expect(
+        screen.queryByText(/כדי להתחיל, סמנו את כל חומרי הגלם/),
+      ).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' }),
+    ).not.toHaveAttribute('aria-describedby');
   });
 
   it('opens the gate at 100%, and the press lands on step 1', async () => {
@@ -755,5 +790,103 @@ describe('§14 Mise en place — the stage that cannot be skipped', () => {
     expect(
       bar?.contains(screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' })),
     ).toBe(true);
+  });
+
+  /* ── "מסך מלא" ──────────────────────────────────────────────────────── */
+
+  /*
+    WHAT THESE PIN, AND WHAT THEY CANNOT
+
+    jsdom has no Fullscreen API and no layout, so what is testable here is the
+    CONTRACT: the control exists on both stages, it says which state it is in,
+    pressing it turns the focused mode on without navigating anywhere, and the
+    step, the ticks and the chosen quantity are untouched by it. Whether a real
+    fullscreen is granted is a browser decision measured in
+    `artifact/scripts/fullscreen.mjs`.
+  */
+  it('offers "מסך מלא" on the weighing stage and on the steps', async () => {
+    const user = userEvent.setup();
+    show(CAKE);
+    await screen.findByRole('heading', { name: 'הכנת חומרי גלם' });
+    expect(screen.getByRole('button', { name: 'מסך מלא' })).toBeInTheDocument();
+
+    await startCooking(user);
+    expect(screen.getByRole('button', { name: 'מסך מלא' })).toBeInTheDocument();
+  });
+
+  it('turns the focused mode on and off, and says which it is', async () => {
+    const user = userEvent.setup();
+    show(CAKE);
+    await screen.findByRole('heading', { name: 'הכנת חומרי גלם' });
+
+    const btn = screen.getByRole('button', { name: 'מסך מלא' });
+    expect(btn).toHaveAttribute('aria-pressed', 'false');
+    await user.click(btn);
+
+    const out = await screen.findByRole('button', { name: 'יציאה ממסך מלא' });
+    expect(out).toHaveAttribute('aria-pressed', 'true');
+    await user.click(out);
+    expect(await screen.findByRole('button', { name: 'מסך מלא' })).toBeInTheDocument();
+  });
+
+  it('leaving fullscreen is not leaving Cook Mode, and loses nothing', async () => {
+    const user = userEvent.setup();
+    show(CAKE);
+    await startCooking(user);
+
+    // Somewhere in the middle, with a step marked.
+    await user.click(screen.getByRole('button', { name: /^שלב 2/ }));
+    await user.click(screen.getByRole('button', { name: /סימון השלב/ }));
+    const before = screen.getByRole('status').textContent;
+
+    await user.click(screen.getByRole('button', { name: 'מסך מלא' }));
+    await user.click(screen.getByRole('button', { name: 'יציאה ממסך מלא' }));
+
+    // Still in Cook Mode, on the same step, with the same marks.
+    expect(screen.getByRole('navigation', { name: 'שלבי ההכנה' })).toBeInTheDocument();
+    expect(screen.getByRole('status').textContent).toBe(before);
+  });
+
+  /* ── the fade that covered the last card ───────────────────────────────── */
+
+  it('draws an edge under the pinned bar instead of washing over the list', () => {
+    /*
+      THE DEFECT: `.gateBar` carried `box-shadow: 0 -10px 14px 10px` in the
+      screen's own colour — 24px of opaque wash painted OVER whatever was
+      above it, which on a full list was the last ingredient's weight and its
+      checkbox, half dissolved. jsdom cannot see a shadow, so the rule itself
+      is the assertion, the way `styles/tokens.test.ts` pins the tokens; that
+      the last row is really clear of the bar is measured in a browser by
+      `artifact/scripts/fullscreen.mjs`.
+    */
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const css = readFileSync(path.join(here, 'CookScreen.module.css'), 'utf8');
+
+    const bar = /\.gateBar\s*\{([^}]*)\}/s.exec(css)?.[1] ?? '';
+    expect(bar).not.toMatch(/box-shadow/);
+    expect(bar).toMatch(/border-block-start:\s*1px solid/);
+    // And the page reserves room for it when something is scrolled into view.
+    expect(css).toMatch(/scroll-padding-block-end:/);
+  });
+
+  it('lays the kitchen screen out for a phone on its side', () => {
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const css = readFileSync(path.join(here, 'CookScreen.module.css'), 'utf8');
+
+    // Landscape AND short: a tablet in landscape has the height for the
+    // portrait layout and keeps it.
+    const q = /@media \(orientation: landscape\) and \(max-height: 600px\) \{/;
+    expect(css).toMatch(q);
+    const block = css.slice(css.search(q));
+    // The instruction gets the room: the 54px numeral shrinks, the text does
+    // not, and a long instruction scrolls rather than being cut.
+    expect(block).toMatch(/\.stepNum\s*\{[^}]*font-size:\s*28px/s);
+    expect(block).toMatch(/\.stepText\s*\{[^}]*font-size:\s*21px/s);
+    expect(block).toMatch(/\.stepBox\s*\{[^}]*overflow-y:\s*auto/s);
+    // The weighing list uses the width instead of one long column.
+    expect(block).toMatch(/\.miseList\s*\{[^}]*grid-template-columns:\s*repeat\(2/s);
+    // Nothing is rotated and no orientation is locked.
+    expect(css).not.toMatch(/transform:\s*rotate/);
+    expect(css).not.toMatch(/orientation:\s*(portrait|landscape)\s*!important/);
   });
 });

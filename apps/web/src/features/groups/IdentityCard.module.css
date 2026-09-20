@@ -46,7 +46,7 @@
   background: var(--c-neutral-bg);
   color: var(--c-muted);
   font-size: var(--fs-body-lg);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   overflow: hidden;
 }
 
@@ -115,7 +115,9 @@
 .secondary:disabled,
 .link:disabled,
 .input:disabled {
-  opacity: 0.5;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: default;
 }
 

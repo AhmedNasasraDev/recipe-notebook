@@ -1,65 +1,39 @@
 /* ─────────────────────────────────────────────────────────────────────────────
- * THE TWO HEBREW FACES, SERVED FROM THIS PROJECT.
+ * HEEBO, SERVED FROM THIS PROJECT.
  *
- * They used to come from `fonts.googleapis.com` through a <link> in index.html,
- * which meant the app's typography depended on a third party being reachable —
- * and in the environment this project is audited in, it is not: every screenshot
- * fell back to a system serif and the one outward request on the page was always
- * that stylesheet. Ahmed asked for the Hebrew to be verified as actually
- * loading, and this is the only way to be able to say so.
+ * Ahmed's decision, replacing the Frank Ruhl Libre + Assistant pair: one
+ * Hebrew face for the whole interface, headings included. Heebo is a Hebrew
+ * neo-grotesque with a large x-height and unambiguous digits — the qualities
+ * that matter when the text being read is "275 גר'" at arm's length — and one
+ * family means the hierarchy is carried by size and weight rather than by a
+ * change of voice.
  *
- * Both families are licensed under the SIL Open Font License 1.1, which permits
- * bundling and serving. The licence text is in `fonts/OFL.txt`; the files are
- * the Google Fonts woff2 subsets, unmodified.
+ * It is served from here, not from a font host: the application's typography
+ * must not depend on a third party being reachable, and in this project's own
+ * audit environment it is not. SIL Open Font License 1.1 permits bundling; the
+ * notice is in `fonts/OFL.txt`.
  *
- *   · Frank Ruhl Libre — a Hebrew printed-book serif, for headings. It is what
- *     §16 already named as the display face.
- *   · Assistant — a Hebrew humanist sans, for body text, fields and buttons.
- *     Chosen over Heebo (§16's body face) because Heebo's flat terminals read
- *     as a systems font next to a book serif; Assistant has the warmer, rounder
- *     letterform this notebook wants and keeps its legibility at 13px.
- *
- * Both are VARIABLE fonts: one file per family per subset covers 400–700, which
- * is why there are four files for eight weights. `font-display: swap` keeps text
- * visible while they load; `unicode-range` is Google's own split, so a page of
- * Hebrew never downloads the Latin file it does not use.
+ * One variable file per subset covers every weight the interface uses (400
+ * body · 500 quantities and actions · 600 headings), so two files serve four
+ * weights. `unicode-range` is Google's own split, so a Hebrew page never
+ * downloads the Latin file.
  * ───────────────────────────────────────────────────────────────────────────── */
 
 @font-face {
-  font-family: 'Frank Ruhl Libre';
+  font-family: 'Heebo';
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
-  src: url('./fonts/frank-ruhl-libre-hebrew.woff2') format('woff2');
+  src: url('./fonts/heebo-hebrew.woff2') format('woff2');
   unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
 }
 
 @font-face {
-  font-family: 'Frank Ruhl Libre';
+  font-family: 'Heebo';
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
-  src: url('./fonts/frank-ruhl-libre-latin.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
-    U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212,
-    U+2215, U+FEFF, U+FFFD;
-}
-
-@font-face {
-  font-family: 'Assistant';
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url('./fonts/assistant-hebrew.woff2') format('woff2');
-  unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;
-}
-
-@font-face {
-  font-family: 'Assistant';
-  font-style: normal;
-  font-weight: 400 700;
-  font-display: swap;
-  src: url('./fonts/assistant-latin.woff2') format('woff2');
+  src: url('./fonts/heebo-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
     U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212,
     U+2215, U+FEFF, U+FFFD;

@@ -17,7 +17,7 @@
 .title {
   font-family: var(--font-display);
   font-size: var(--fs-recipe-title);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   line-height: 1.2;
 }
 
@@ -75,7 +75,7 @@
 .h2 {
   font-family: var(--font-display);
   font-size: var(--fs-body-lg);
-  font-weight: 700;
+  font-weight: var(--fw-title);
 }
 
 .permsList,
@@ -100,7 +100,7 @@
 
 .yes {
   color: var(--c-green);
-  font-weight: 700;
+  font-weight: var(--fw-title);
 }
 
 .no {
@@ -183,7 +183,9 @@
 
 .primary:disabled,
 .secondary:disabled {
-  opacity: 0.5;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: default;
 }
 

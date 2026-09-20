@@ -1,23 +1,18 @@
-/* §14 Cook Mode. The one dark screen in the app.
+/* §14 Cook Mode. Once the one dark screen in the app — now light like the
+   rest of it.
 
-   THE DESIGN PASS WARMED IT.
+   THE HISTORY, BECAUSE THE TOKEN NAMES STILL CARRY IT.
 
-   The surface was #171A18 — a near-black with a green cast — and the greys on
-   it (#c9d2cc, #4a5550, #202623) were cool to match. Beside a cream-and-
-   chocolate application that read as a different product with the lights off.
-   The five values are tokens now (`--c-cook-*` in tokens.css), all of them
-   warm, and all of them measured against the surface they sit on: the body
-   text 14.45:1, the secondary text 9.89 on the screen and 8.43 on a raised
-   row. §14's own rules — the surface, the two type sizes, the 44px targets —
-   are untouched.
-   §14 named the surface #171A18 and both type sizes; the surface is
-   `--c-cook-bg` now (a dark chocolate) because `--c-ink` became the text
-   colour of a light application, and
-   they are already tokens: --fs-cook-body 25px, --fs-cook-step 54px.
-   Every pair below is light-on-dark, so the contrast guard in tokens.test.ts
-   measures them the other way round from the rest of the app. */
+   §14 named a near-black surface (#171A18) with cool greys on it; a later pass
+   warmed that to a dark chocolate. Ahmed's decision is that the weighing list
+   and the steps read light, so the five `--c-cook-*` tokens kept their names
+   and took light values (tokens.css says so in one place). Every pair on this
+   screen is therefore dark-on-light again, measured by the contrast guard in
+   tokens.test.ts the same way as the rest of the application. What §14 fixed
+   and this pass did not touch: the two type sizes (--fs-cook-body 25px,
+   --fs-cook-step 54px) and the 44px targets. */
 
-/* The dark screen owns the whole viewport. `min-height: 100%` resolved
+/* The screen owns the whole viewport. `min-height: 100%` resolved
    against an ancestor that has no height of its own, so a short preparation
    left a band of the light application showing under it — invisible while the
    app background was near-white, a seam now that it is cream. */
@@ -37,6 +32,9 @@
   */
   padding-block: 14px 22px;
   padding-inline: max(18px, calc((100% - 720px) / 2));
+  /* Anything scrolled into view — the last checkbox under a keyboard — stops
+     above the pinned bar rather than under it. */
+  scroll-padding-block-end: 132px;
   background: var(--c-cook-bg);
   color: var(--c-cook-text);
 }
@@ -48,12 +46,23 @@
   gap: var(--gap-in-group);
 }
 
+/*
+  The two screen-level controls — the way out and the fullscreen toggle — are
+  grouped at the inline start, where the thumb is, and the recipe's name takes
+  the rest of the row with its text still reading from the start edge. Nothing
+  sits in the far corner of the row, which is also where the audit page's
+  simulation chip is pinned.
+*/
 .recipeName {
+  flex: 1;
   font-family: var(--font-display);
   font-size: var(--fs-body-lg);
   color: var(--c-cook-text);
-  text-align: end;
+  text-align: start;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .exit {
@@ -100,12 +109,12 @@
   background: var(--c-cook-line);
 }
 
-/* The action colour is chocolate now, and chocolate on a chocolate screen is
-   nothing. A finished segment is caramel — 7.4:1 on this surface — and the
-   segment you are ON stays the brightest thing on the bar, so the two are
-   told apart by brightness as well as by hue. */
+/* On a light screen: a finished segment is the action green, the segment you
+   are ON is the darkest thing on the bar and taller than the others, and what
+   is left is the border colour. Brightness AND height tell them apart, not
+   hue alone. */
 .segDone::after {
-  background: var(--c-caramel);
+  background: var(--c-cook-accent);
 }
 
 .segNow::after {
@@ -119,7 +128,7 @@
 }
 
 /* ── Mise en place: the first stage ───────────────────────────────────────
-   Same dark surface, same tokens, same type scale as the rest of the screen —
+   Same surface, same tokens, same type scale as the rest of the screen —
    it is a stage of Cook Mode, not a screen of its own. What is deliberately
    bigger than the app's default is the tap target: a 64px row and a 28px box,
    because this is operated with wet hands while looking at a scale, and the
@@ -155,18 +164,28 @@
   line-height: 1.6;
 }
 
+/* The one line that says why the gate is shut. Secondary voice — it is a rule,
+   not a warning, and it disappears the moment the list is complete. */
+.gateWhy {
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+}
+
 .miseDone {
   font-size: var(--fs-body-lg);
   font-weight: 600;
   color: var(--c-cook-text);
 }
 
+/* Room for the pinned bar at the end of the list: the last card is fully
+   clear of it at the bottom of the scroll, with no layer over it. `--bar-room`
+   is the bar's own height (count + optional "100%" line + the 60px gate). */
 .miseList {
   display: flex;
   flex-direction: column;
   gap: var(--gap-tight);
   margin: 0;
-  padding: 0;
+  padding: 0 0 8px;
   list-style: none;
 }
 
@@ -237,9 +256,20 @@
    — so the answer to "can I start?" was nowhere to be seen. Both ride along
    at the bottom now.
 
-   `--c-cook-bg` is this screen's own surface, and the bar has to be opaque
-   because the rows scroll underneath it. The shadow in the same colour is a
-   short fade, so a row is not sliced by a hard line. */
+   NO FADE OVER THE LIST — AND THE REASON IT WAS THERE IS FIXED
+
+   This bar used to carry `box-shadow: 0 -10px 14px 10px` in the screen's own
+   colour: 24px of opaque wash painted OVER whatever was above it, which on a
+   full list was the bottom of the last ingredient — its weight and its
+   checkbox, half dissolved. It was there to soften the edge a row crosses as
+   it scrolls under the bar.
+
+   The edge is drawn instead of faded (a 1px line, the same one every card
+   uses), and the list is given room for the bar at its end, so at the bottom
+   of the scroll the last row sits ABOVE it in full and nothing is ever
+   covered. `scroll-padding-block-end` on the page does the same for
+   `scrollIntoView`, so focusing the last checkbox with a keyboard does not
+   park it under the bar either. */
 .gateBar {
   position: sticky;
   inset-block-end: 0;
@@ -248,9 +278,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--gap-tight);
-  padding-block: 10px;
+  padding-block: 12px;
   background: var(--c-cook-bg);
-  box-shadow: 0 -10px 14px 10px var(--c-cook-bg);
+  border-block-start: 1px solid var(--c-cook-line);
 }
 
 /* The gate. Full width, 60px, and unmistakably inert until the list is done. */
@@ -267,11 +297,18 @@
   cursor: pointer;
 }
 
+/*
+  A SHUT BUTTON IS STILL READ.
+  This was `opacity: 0.6` over the muted ink, which computes to about 2.7:1 on
+  the page — the label of the one control that decides whether the stage is
+  finished, too faint to read in a lit kitchen. The shape carries the state
+  instead: an outline where the open button is filled sage, in the secondary
+  ink, which measures 5.20:1. The line above it says why it is shut.
+*/
 .start:disabled {
   border-color: var(--c-cook-line);
   background: transparent;
   color: var(--c-cook-muted);
-  opacity: 0.6;
   cursor: default;
 }
 
@@ -448,8 +485,20 @@
   cursor: pointer;
 }
 
+/* The forward move, filled — the same green as "סיום ההכנה", so the bottom
+   right of the screen always holds the one button that continues the work. */
+.navNext {
+  border-color: var(--c-cook-accent);
+  background: var(--c-cook-accent);
+  color: var(--c-cook-on-accent);
+  font-weight: var(--fw-title);
+}
+
+/* Same reasoning as the gate: "הקודם" on the first step is unavailable, not
+   invisible. */
 .navBtn:disabled {
-  opacity: 0.4;
+  border-color: var(--c-cook-line);
+  color: var(--c-cook-muted);
   cursor: default;
 }
 
@@ -485,4 +534,208 @@
   font-family: var(--font-display);
   font-size: var(--fs-screen-title);
   color: var(--c-cook-text);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   "מסך מלא" AND THE FOCUSED MODE
+
+   The button is quiet — it is not what you press to start work — and it says
+   which of the two states it is in. When the mode is on, the screen fills the
+   whole viewport, the padding tightens, and nothing that is not the
+   preparation is on it. Cook Mode has no tab bar to hide; what focus mode
+   removes is the breathing room the page keeps when it is one screen among
+   many.
+   ───────────────────────────────────────────────────────────────────────── */
+.fsBtn {
+  flex: none;
+  min-height: var(--hit-compact);
+  padding-inline: 12px;
+  border: 1px solid var(--c-cook-line);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--c-cook-muted);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  cursor: pointer;
+}
+
+.fsBtn[aria-pressed='true'] {
+  border-color: var(--c-cook-accent);
+  background: var(--c-select);
+  color: var(--c-cook-accent);
+}
+
+.fsBtn:focus-visible {
+  outline: 2px solid var(--c-cook-accent);
+  outline-offset: 2px;
+}
+
+/* Said once, only when a real fullscreen was refused, and never as an error. */
+.fsNote {
+  padding: 8px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-select);
+  color: var(--c-cook-text);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+
+.focus {
+  /* The mode fills whatever it is given: a real fullscreen element, or the
+     frame it is embedded in. `100dvh` covers both. */
+  min-block-size: 100dvh;
+  padding-block: 10px 14px;
+  padding-inline: max(14px, calc((100% - 860px) / 2));
+  gap: var(--gap-in-group);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   LANDSCAPE — THE PHONE ON ITS SIDE
+
+   Wide and SHORT: the height is the scarce thing, so the 54px step numeral
+   and the generous gaps have to give way to the instruction, which is what is
+   actually being read. Nothing is rotated and no orientation is locked — this
+   is the same markup laid out for the space that exists.
+
+   Keyed on the aspect ratio AND a short viewport so a tablet held in
+   landscape (which has plenty of height) keeps the portrait layout.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (orientation: landscape) and (max-height: 600px) {
+  .wrap {
+    padding-block: 8px 12px;
+    gap: var(--gap-in-group);
+    /* Room for the pinned step bar, so the end of a long instruction and the
+       end of the ingredient list both clear it. */
+    scroll-padding-block-end: 76px;
+  }
+
+  .head {
+    /* The name is the first thing to give up its line. */
+    gap: var(--gap-tight);
+  }
+
+  .recipeName {
+    font-size: var(--fs-secondary);
+  }
+
+  /* One step at a time, with the instruction taking the room. The numeral
+     shrinks from 54px to a compact figure beside the text rather than a
+     headline above it. */
+  .stepBox {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    column-gap: 14px;
+    row-gap: 6px;
+    /* Long instructions scroll here instead of being cut or shrunk. */
+    overflow-y: auto;
+    min-block-size: 0;
+  }
+
+  .stepNum {
+    font-size: 28px;
+    grid-row: 1 / span 2;
+  }
+
+  .stepText {
+    font-size: 21px;
+    line-height: 1.45;
+  }
+
+  .stepMeta {
+    grid-column: 2;
+  }
+
+  /* Marking, the timer and the ingredient list stay reachable, and stay out
+     of the middle of the screen. */
+  .mark,
+  .markOn {
+    grid-column: 1 / -1;
+    min-height: 48px;
+    margin-block-start: 2px;
+  }
+
+  .miseTitle {
+    font-size: 20px;
+  }
+
+  .miseHelp {
+    /* Still the app's body size — a phone on its side is still a phone — but
+       it gives up its leading, which is what the short screen needs. */
+    font-size: var(--fs-body);
+    line-height: 1.35;
+  }
+
+  /* The stage's own stack tightens so the list starts higher: on a 402px-tall
+     screen the title, the instruction and the batch line were using a third of
+     the height between them. */
+  .mise {
+    gap: var(--gap-tight);
+  }
+
+  /* The weighing list becomes two columns. The reading order is the row: with
+     `dir="rtl"` the first card is top-right, the second top-left, and then the
+     next row — the way the one-column list reads, only wider. Each quantity
+     stays inside its own card beside its own ingredient, so the pairing cannot
+     be misread across the gap. */
+  .miseList {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--gap-in-group);
+  }
+
+  .miseRow,
+  .miseRowOn {
+    min-height: 56px;
+  }
+
+  .miseName {
+    font-size: var(--fs-body-lg);
+  }
+
+  .miseQty {
+    font-size: var(--fs-body-lg);
+  }
+
+  /*
+    THE WAY FORWARD STAYS ON SCREEN.
+    Held sideways there is no room for the instruction, the marking button, the
+    timer, the ingredient list AND the two step buttons: measured at 874×402
+    the pair sat below the fold, so continuing meant scrolling first. The bar
+    pins itself to the bottom of the viewport the same way the weighing gate
+    does — in flow, pushed down by `margin-block-start: auto`, with a drawn
+    edge instead of a shadow, and the scroll padding that keeps the last line
+    of a long instruction clear of it.
+  */
+  .foot {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 1;
+    margin-block-start: auto;
+    padding-block: 8px;
+    background: var(--c-cook-bg);
+    border-block-start: 1px solid var(--c-cook-line);
+  }
+
+  .navBtn,
+  .finish {
+    min-height: 48px;
+  }
+
+  .start {
+    min-height: 52px;
+  }
+}
+
+/* The running-timer strip keeps its targets and loses its padding — on a short
+   screen it is competing with the instruction for the same pixels. */
+@media (orientation: landscape) and (max-height: 600px) {
+  .timers {
+    gap: var(--gap-tight);
+  }
+
+  .timer,
+  .timerDone {
+    padding-block: 6px;
+  }
 }

@@ -14,6 +14,26 @@ const HEX: Readonly<Record<string, string>> = Object.fromEntries(
   [...tokens.matchAll(/(--c-[\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map((m) => [m[1]!, m[2]!]),
 );
 
+/**
+ * The names the stylesheets read are mostly ALIASES now — `--c-paper` holds
+ * `var(--c-surface)`, Cook Mode's surface holds the page's — which is the
+ * point: one palette, named once, pointed at from the structural names. A
+ * guard that cannot follow an alias measures nothing, so this follows the
+ * chain to the hex at the end of it.
+ */
+const ALIAS: Readonly<Record<string, string>> = Object.fromEntries(
+  [...tokens.matchAll(/(--c-[\w-]+):\s*var\((--c-[\w-]+)\)/g)].map((m) => [m[1]!, m[2]!]),
+);
+
+const hexOf = (name: string, seen = new Set<string>()): string | undefined => {
+  if (seen.has(name)) return undefined; // a cycle is a bug, not a colour
+  seen.add(name);
+  const direct = HEX[name];
+  if (direct) return direct;
+  const next = ALIAS[name];
+  return next ? hexOf(next, seen) : undefined;
+};
+
 const luminance = (hex: string): number => {
   const v = (i: number) => {
     const c = parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16) / 255;
@@ -61,12 +81,12 @@ const SPEC_PAIRS: ReadonlySet<string> = new Set([
  * has to measure 4.5:1.
  */
 const PALETTE: readonly [string, string][] = [
-  ['שמנת חמה', '#f5ede3'],
-  ['שנהב', '#fffbf6'],
-  ['שוקולד', '#352019'],
-  ['חום אפרפר', '#756358'],
-  ['קרמל', '#c8ab8d'],
-  ['שמנת עמוקה', '#f3e9dd'],
+  ['שמנת בהירה', '#f7f5ef'],
+  ['כרטיסים ומשטחים', '#fffefa'],
+  ['ירוק מרווה', '#496451'],
+  ['פחם חם', '#292d29'],
+  ['מסגרות', '#ded8cc'],
+  ['רקע בחירה', '#e7ede4'],
 ];
 
 describe('the design system is one palette, in one place', () => {
@@ -78,36 +98,47 @@ describe('the design system is one palette, in one place', () => {
 
   it('binds the names every stylesheet reads to that palette', () => {
     for (const [token, source] of [
-      ['--c-app-bg', '--c-cream'],
-      ['--c-paper', '--c-ivory'],
-      ['--c-ink', '--c-cocoa'],
-      ['--c-muted', '--c-cocoa-soft'],
-      ['--c-line', '--c-caramel'],
-      ['--c-green', '--c-cocoa'],
+      ['--c-app-bg', '--c-base'],
+      ['--c-paper', '--c-surface'],
+      ['--c-ink', '--c-text'],
+      ['--c-muted', '--c-muted-ink'],
+      ['--c-line', '--c-border'],
+      ['--c-green', '--c-accent'],
     ] as const) {
       expect(tokens).toMatch(new RegExp(`${token}:\\s*var\\(${source}\\)`));
     }
   });
 
-  it('keeps success, warning and error as their own colours', () => {
+  it('keeps warning and error as their own colours, and merges success with the action green', () => {
     /*
-      Ahmed: "שמור צבעים מובחנים להצלחה, שגיאה ואזהרה כאשר יש להם משמעות."
-      The action colour is chocolate; "this figure is exact" must not be the
-      same colour as "press this", or the two stop meaning anything.
+      Ahmed: "שמור צבעים מובחנים להצלחה, אזהרה ושגיאה." With a GREEN action
+      colour, a second different green for "correct" is two greens nobody can
+      tell apart — so success is the sage and the distinction that carries
+      meaning is kept where it matters: amber and red are their own hues, and
+      neither is the action colour.
     */
-    expect(tokens).toMatch(/--c-ok:\s*#2f6b4a/);
+    expect(tokens).toMatch(/--c-ok:\s*var\(--c-accent\)/);
     expect(tokens).toMatch(/--c-source-exact:\s*var\(--c-ok\)/);
     expect(tokens).toMatch(/--c-amber:\s*#/);
     expect(tokens).toMatch(/--c-red:\s*#/);
-    // And none of the three is the action colour.
-    for (const semantic of ['--c-ok', '--c-amber', '--c-red']) {
-      expect(HEX[semantic]).not.toBe(HEX['--c-cocoa']);
+    for (const semantic of ['--c-amber', '--c-red']) {
+      expect(hexOf(semantic)).not.toBe(hexOf('--c-accent'));
     }
+    // And the two of them are not each other.
+    expect(hexOf('--c-amber')).not.toBe(hexOf('--c-red'));
   });
 
-  it('declares both Hebrew faces, and serves them from this project', () => {
-    expect(tokens).toContain('Frank Ruhl Libre');
-    expect(tokens).toContain('Assistant');
+  it('declares ONE Hebrew face, and serves it from this project', () => {
+    /*
+      Ahmed's decision: Heebo for the whole interface, headings included. Both
+      of the family names the rules use hold it, so a heading differs by size
+      and weight and never by a change of voice — and the two faces it
+      replaced must be gone, not merely unused.
+    */
+    expect(tokens).toMatch(/--font-body:\s*'Heebo'/);
+    expect(tokens).toMatch(/--font-display:\s*'Heebo'/);
+    expect(tokens).not.toContain('Frank Ruhl Libre');
+    expect(tokens).not.toContain('Assistant');
 
     /*
       A `font-family` declaration is not a font. These are the @font-face rules
@@ -116,15 +147,13 @@ describe('the design system is one palette, in one place', () => {
       this project's own audit environment it is not.
     */
     const faces = readFileSync(join(HERE, 'fonts.css'), 'utf8');
-    for (const file of [
-      'frank-ruhl-libre-hebrew.woff2',
-      'frank-ruhl-libre-latin.woff2',
-      'assistant-hebrew.woff2',
-      'assistant-latin.woff2',
-    ]) {
+    for (const file of ['heebo-hebrew.woff2', 'heebo-latin.woff2']) {
       expect(faces).toContain(file);
       expect(existsSync(join(HERE, 'fonts', file))).toBe(true);
     }
+    // The weights the hierarchy uses — 400 body, 500 quantities, 600 headings
+    // — all come from the one variable file, so its range has to cover them.
+    expect(faces).toMatch(/font-weight:\s*400 700/);
     // The Hebrew subsets have to cover the Hebrew block, or a Hebrew page
     // silently falls back while the CSS looks correct.
     expect(faces).toContain('U+0590-05FF');
@@ -139,6 +168,57 @@ describe('the design system is one palette, in one place', () => {
     const html = readFileSync(join(SRC, '..', 'index.html'), 'utf8');
     expect(html).not.toContain('fonts.googleapis.com');
     expect(html).not.toContain('fonts.gstatic.com');
+  });
+
+  it('uses three weights, and never the heavy one', () => {
+    /*
+      Ahmed: "כותרות 500–600 · הוראות, רכיבים ותיאורים 400 · כמויות ופעולות
+      חשובות 500–600… אל תשתמש במשקל כבד בכל מקום." Heebo's file carries 700,
+      so nothing stops a stylesheet asking for it; this is what stops it.
+    */
+    expect(tokens).toMatch(/--fw-body:\s*400/);
+    const mid = Number(/--fw-mid:\s*(\d+)/.exec(tokens)?.[1]);
+    const title = Number(/--fw-title:\s*(\d+)/.exec(tokens)?.[1]);
+    expect(mid).toBeGreaterThanOrEqual(500);
+    expect(title).toBeGreaterThanOrEqual(500);
+    expect(title).toBeLessThanOrEqual(600);
+
+    const heavy: string[] = [];
+    for (const sheet of [...moduleSheets(), join(HERE, 'global.css')]) {
+      const css = readFileSync(sheet, 'utf8');
+      // The variable range in fonts.css (`400 700`) is a different thing and
+      // is not matched here: this looks for a single resolved weight.
+      for (const m of css.matchAll(/font-weight:\s*(\d{3}|bold(?:er)?)\s*;/g)) {
+        const w = m[1] ?? '';
+        if (w === 'bold' || w === 'bolder' || Number(w) > 600) {
+          heavy.push(`${sheet.slice(SRC.length + 1)}: ${w}`);
+        }
+      }
+    }
+    expect(heavy).toEqual([]);
+  });
+
+  it('never fades a disabled control below legibility', () => {
+    /*
+      Ahmed asked for the contrast to be checked in practice, "כולל טקסט משני
+      ומצבי כפתורים". Every disabled button in the app was an `opacity` fade
+      (0.3–0.6), which computes to 1.6:1–2.9:1 on this light page. The state is
+      a flat neutral fill with the secondary ink now; the only fade left is on
+      a label-less icon, and it has a floor.
+    */
+    expect(contrast(hexOf('--c-off-ink') ?? '', hexOf('--c-off-bg') ?? '')).toBeGreaterThanOrEqual(4.5);
+
+    const faded: string[] = [];
+    for (const sheet of moduleSheets()) {
+      const css = readFileSync(sheet, 'utf8');
+      for (const m of css.matchAll(/([^{}]*(?::disabled|\[disabled\])[^{}]*)\{([^}]*)\}/g)) {
+        const value = /opacity:\s*([\d.]+)/.exec(m[2] ?? '')?.[1];
+        if (value !== undefined && Number(value) < 0.75) {
+          faded.push(`${sheet.slice(SRC.length + 1)}: ${(m[1] ?? '').trim()} → ${value}`);
+        }
+      }
+    }
+    expect(faded).toEqual([]);
   });
 
   it('keeps the 44px minimum hit target (§15)', () => {
@@ -279,35 +359,40 @@ describe('stage-10 audit: no stylesheet pairs unreadable colours', () => {
 // no module may declare a palette of its own.
 describe('the palette, measured', () => {
   const pastry = (name: string): string => {
-    const hex = HEX[name];
-    expect(hex, `${name} is declared in tokens.css`).toBeTruthy();
+    const hex = hexOf(name);
+    expect(hex, `${name} resolves to a colour in tokens.css`).toBeTruthy();
     return hex!;
   };
 
-  const cream = () => pastry('--c-cream');
-  const ivory = () => pastry('--c-ivory');
-  const cocoa = () => pastry('--c-cocoa');
-  const soft = () => pastry('--c-cocoa-soft');
-  const deep = () => pastry('--c-cream-deep');
+  const base = () => pastry('--c-base');
+  const surface = () => pastry('--c-surface');
+  const text = () => pastry('--c-text');
+  const soft = () => pastry('--c-muted-ink');
+  const select = () => pastry('--c-select');
+  const accent = () => pastry('--c-accent');
 
-  it('chocolate reads on both papers, with room to spare', () => {
-    expect(contrast(cream(), cocoa())).toBeGreaterThanOrEqual(7);
-    expect(contrast(ivory(), cocoa())).toBeGreaterThanOrEqual(7);
+  it('the charcoal reads on the page and on a card, with room to spare', () => {
+    expect(contrast(base(), text())).toBeGreaterThanOrEqual(7);
+    expect(contrast(surface(), text())).toBeGreaterThanOrEqual(7);
   });
 
-  it('the secondary brown reaches AA on every surface it is used on', () => {
-    for (const bg of [cream(), ivory(), deep(), pastry('--c-outer-bg')]) {
+  it('the secondary ink reaches AA on every surface it is used on', () => {
+    for (const bg of [base(), surface(), select(), pastry('--c-outer-bg')]) {
       expect(contrast(bg, soft())).toBeGreaterThanOrEqual(4.5);
     }
   });
 
-  it('the deep cream fill carries both text colours', () => {
-    expect(contrast(deep(), cocoa())).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(deep(), soft())).toBeGreaterThanOrEqual(4.5);
+  it('the selection fill carries the text, the secondary ink and the green', () => {
+    expect(contrast(select(), text())).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(select(), soft())).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(select(), accent())).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('ivory reads on chocolate, which is the primary button', () => {
-    expect(contrast(cocoa(), ivory())).toBeGreaterThanOrEqual(7);
+  it('the green works as an action — as ink on the page and as a filled button', () => {
+    expect(contrast(base(), accent())).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(surface(), accent())).toBeGreaterThanOrEqual(4.5);
+    // A filled button: the surface colour as its label.
+    expect(contrast(accent(), surface())).toBeGreaterThanOrEqual(4.5);
   });
 
   it('the meaning colours reach AA on the surfaces they appear on', () => {
@@ -318,26 +403,36 @@ describe('the palette, measured', () => {
     ] as const) {
       expect(contrast(pastry(bg), pastry(ink)), `${ink} on ${bg}`).toBeGreaterThanOrEqual(4.5);
       expect(
-        contrast(cream(), pastry(ink)),
+        contrast(base(), pastry(ink)),
         `${ink} on the app background`,
       ).toBeGreaterThanOrEqual(4.5);
     }
   });
 
-  it('Cook Mode stays legible with the lights off', () => {
+  it('Cook Mode is light now, and every pairing on it measures', () => {
+    /*
+      It was the one dark screen — §16's near-black, then a dark chocolate.
+      Ahmed's decision is that the weighing list and the steps are light like
+      the rest of the application, so these pairings are the same ones the
+      light screens use and are held to the same floor.
+    */
     const bg = pastry('--c-cook-bg');
     expect(contrast(bg, pastry('--c-cook-text'))).toBeGreaterThanOrEqual(7);
     expect(contrast(bg, pastry('--c-cook-muted'))).toBeGreaterThanOrEqual(4.5);
-    // A filled control there is caramel, not the light application's
-    // chocolate, which on this surface would be invisible.
-    expect(contrast(bg, pastry('--c-caramel'))).toBeGreaterThanOrEqual(4.5);
+    // A filled control there: the action green with the surface on it.
+    expect(contrast(bg, pastry('--c-cook-accent'))).toBeGreaterThanOrEqual(4.5);
     expect(
-      contrast(pastry('--c-caramel'), pastry('--c-cook-on-accent')),
+      contrast(pastry('--c-cook-accent'), pastry('--c-cook-on-accent')),
     ).toBeGreaterThanOrEqual(4.5);
+    // And it is a LIGHT screen: its surface IS the application's own page,
+    // rather than a dark value of its own.
+    expect(hexOf('--c-cook-bg')).toBe(hexOf('--c-base'));
+    expect(tokens).toMatch(/--c-cook-bg:\s*var\(--c-base\)/);
   });
 
-  it('caramel is never asked to be text on a light surface', () => {
-    expect(contrast(cream(), pastry('--c-caramel'))).toBeLessThan(3);
+  it('the border colour is never asked to be text', () => {
+    // #ded8cc is 1.30:1 on the page. It draws edges and fills shapes.
+    expect(contrast(base(), pastry('--c-border'))).toBeLessThan(3);
   });
 
   it('no module declares a palette of its own', () => {

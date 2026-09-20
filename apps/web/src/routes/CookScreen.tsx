@@ -1,6 +1,6 @@
 // §2 screen 7 / §14 — Cook Mode.
 //
-// One step on the screen, big type on the dark surface, a progress bar of
+// One step on the screen, big type on a light surface, a progress bar of
 // segments you can jump with, a completion count, and a timer per step that
 // has a duration — all running in parallel, because a bake and a proof do not
 // take turns.
@@ -67,6 +67,7 @@ import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
 import { readScale, SCALE_MODE_TEXT } from '../features/recipe/scaleLink.js';
 import { rowLabel } from '../features/recipe/rowLabel.js';
+import { useFullscreen } from '../features/cook/useFullscreen.js';
 import {
   miseKeyOf,
   miseSignature,
@@ -105,6 +106,16 @@ export function CookScreen() {
   /** §14 `kDone`, keyed by step index for this recipe. */
   const [done, setDone] = useState<ReadonlySet<number>>(() => new Set());
   const [timers, setTimers] = useState<ReadonlyMap<number, TimerState>>(() => new Map());
+
+  /*
+    "מסך מלא" — see `useFullscreen`. The ref is the element that is made
+    fullscreen: the screen's own wrapper, so the preparation fills the display
+    and nothing of the application around it is left showing. Neither entering
+    nor leaving it touches the step, the ticks, the chosen quantity or the
+    timers — they are state on THIS component, and this only adds a class.
+  */
+  const screenRef = useRef<HTMLDivElement | null>(null);
+  const fs = useFullscreen();
   const [now, setNow] = useState(() => Date.now());
   /** false until the stored progress has been read, so the first write cannot
       overwrite it with an empty set. */
@@ -232,6 +243,29 @@ export function CookScreen() {
   // itself, not back at the top of the page.
   const stepRef = useRef<HTMLDivElement>(null);
 
+  /*
+    EVERY STEP STARTS AT ITS OWN TOP.
+
+    Cook Mode is outside the AppShell (§14: a full screen without tabs), so it
+    is the DOCUMENT that scrolls it. On a phone held sideways the gate is
+    pressed at the end of a scrolled page — and React keeps that scroll — so
+    the steps used to open with the way out and the fullscreen control already
+    above the fold (measured: the header at -71..-27 in a 402px-tall viewport).
+    Moving between steps had the same effect. This resets the scroll only: the
+    step, the ticks, the chosen quantity and the running timers are state and
+    are not touched. `scrollTop` rather than `window.scrollTo`, because it is
+    the same one line in the browser and silent under jsdom.
+  */
+  /* Which stage the screen is on — computed here, above the early returns,
+     because the effect below needs it and hooks cannot follow a `return`. */
+  const mise = miseState(rows, ticks);
+  const started = startedHere || startedFrom(startedSaved, mise);
+  useEffect(() => {
+    if (!started) return;
+    const root = document.scrollingElement ?? document.documentElement;
+    root.scrollTop = 0;
+  }, [at, started]);
+
   if (!ready) return null;
 
   if (!recipe) {
@@ -266,22 +300,59 @@ export function CookScreen() {
 
   /* ── Mise en place: the first stage, and the only way to the steps ────── */
 
-  const mise = miseState(rows, ticks);
-  const started = startedHere || startedFrom(startedSaved, mise);
+  /* The gate's own condition, named once: the list is real and not finished. */
+  const gateShut = !mise.complete && mise.total > 0;
+  const gateWhyId = 'mise-gate-why';
   const scaleLine =
     scale.factor === 1
       ? SCALE_MODE_TEXT.recipe
       : `${SCALE_MODE_TEXT[scale.mode]} · ×${scale.factor.toFixed(2)}`;
 
+
+  /*
+    THE SAME HEAD ON BOTH STAGES.
+
+    Weighing and the steps are two returns from one component, and both need
+    the same three things at the top: the way out of Cook Mode (which is NOT
+    the way out of fullscreen), the recipe's name, and "מסך מלא". Written once
+    so the two cannot drift.
+  */
+  const head = (
+    <header className={styles.head}>
+      <Link to={`/recipe/${recipe.id}`} className={`${styles.exit} nowrap`}>
+        ← יציאה
+      </Link>
+      <button
+        type="button"
+        className={styles.fsBtn}
+        onClick={() => fs.toggle(screenRef.current)}
+        aria-pressed={fs.focus}
+      >
+        {fs.focus ? 'יציאה ממסך מלא' : 'מסך מלא'}
+      </button>
+      <span className={styles.recipeName}>{recipe.name}</span>
+    </header>
+  );
+
+  /* Shown once, and only when the environment refused a real fullscreen —
+     the screen says what it actually did rather than claiming the phone's own
+     bars went away. */
+  const fsNote = fs.fallback ? (
+    <p className={styles.fsNote} role="status">
+      מסך מלא אינו זמין בתצוגה הזאת, ולכן ההכנה ממלאת את כל השטח שיש. סרגלי
+      המכשיר והמסגרת שסביב אינם בשליטת האפליקציה.
+    </p>
+  ) : null;
+
   if (!started) {
     return (
-      <div className={styles.wrap} dir="rtl">
-        <header className={styles.head}>
-          <Link to={`/recipe/${recipe.id}`} className={`${styles.exit} nowrap`}>
-            ← יציאה
-          </Link>
-          <span className={styles.recipeName}>{recipe.name}</span>
-        </header>
+      <div
+        className={fs.focus ? `${styles.wrap} ${styles.focus}` : styles.wrap}
+        dir="rtl"
+        ref={screenRef}
+      >
+        {head}
+        {fsNote}
 
         <section className={styles.mise} aria-label="הכנת חומרי גלם">
           <h1 className={styles.miseTitle}>הכנת חומרי גלם</h1>
@@ -365,16 +436,30 @@ export function CookScreen() {
                 <span className="ltr">100%</span> — Mise en place הושלם
               </p>
             )}
+            {/*
+              WHY THE BUTTON IS SHUT.
+              Ahmed: "אם כפתור ההמשך מושבת, הצג סיבה קצרה וברורה." The count
+              above states the fact; this states the rule, and `aria-describedby`
+              carries it to anyone who reaches the disabled button by keyboard
+              or screen reader instead of seeing the line under it.
+            */}
+            {gateShut && (
+              <p className={styles.gateWhy} id={gateWhyId}>
+                כדי להתחיל, סמנו את כל חומרי הגלם. נשארו{' '}
+                <span className="ltr">{mise.total - mise.ready}</span>.
+              </p>
+            )}
             <button
               type="button"
               className={styles.start}
+              aria-describedby={gateShut ? gateWhyId : undefined}
               /*
                 The gate. Not a link to somewhere else, not a confirmation that
                 can be dismissed: while this is disabled the steps are not on
                 the page at all, and this is the only thing that puts them
                 there.
               */
-              disabled={!mise.complete && mise.total > 0}
+              disabled={gateShut}
               onClick={() => setStartedHere(true)}
             >
               הכול מוכן — מתחילים בהכנה
@@ -413,13 +498,13 @@ export function CookScreen() {
   const running = [...timers.entries()].sort((a, b) => a[0] - b[0]);
 
   return (
-    <div className={styles.wrap} dir="rtl">
-      <header className={styles.head}>
-        <Link to={`/recipe/${recipe.id}`} className={`${styles.exit} nowrap`}>
-          ← יציאה
-        </Link>
-        <span className={styles.recipeName}>{recipe.name}</span>
-      </header>
+    <div
+      className={fs.focus ? `${styles.wrap} ${styles.focus}` : styles.wrap}
+      dir="rtl"
+      ref={screenRef}
+    >
+      {head}
+      {fsNote}
 
       {/* §14 the progress bar: a segment per step, clickable, green when done */}
       <nav className={styles.bar} aria-label="שלבי ההכנה">
@@ -594,7 +679,13 @@ export function CookScreen() {
             סיום ההכנה
           </button>
         ) : (
-          <button type="button" className={styles.navBtn} onClick={() => jump(index + 1)}>
+          <button
+            type="button"
+            /* The step you are most likely to want is the filled one: the
+               way forward reads as the action, the way back as an option. */
+            className={`${styles.navBtn} ${styles.navNext}`}
+            onClick={() => jump(index + 1)}
+          >
             הבא
           </button>
         )}

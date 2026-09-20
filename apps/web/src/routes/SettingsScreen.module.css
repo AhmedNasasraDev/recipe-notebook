@@ -211,7 +211,9 @@
   cursor: pointer;
 }
 .primary:disabled {
-  opacity: 0.55;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: default;
 }
 
@@ -246,7 +248,9 @@
   cursor: pointer;
 }
 .signOut:disabled {
-  opacity: 0.55;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: default;
 }
 

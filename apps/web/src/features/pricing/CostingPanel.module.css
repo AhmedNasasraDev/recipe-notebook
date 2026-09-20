@@ -14,7 +14,7 @@
 
 .subTitle {
   font-size: var(--fs-meta);
-  font-weight: 700;
+  font-weight: var(--fw-title);
 }
 
 .grid {
@@ -37,7 +37,7 @@
 }
 
 .row dd {
-  font-weight: 700;
+  font-weight: var(--fw-title);
   white-space: nowrap;
 }
 
@@ -46,7 +46,7 @@
 }
 
 .headline dt {
-  font-weight: 700;
+  font-weight: var(--fw-title);
 }
 
 .note,

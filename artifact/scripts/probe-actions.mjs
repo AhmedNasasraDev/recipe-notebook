@@ -114,6 +114,24 @@ try {
     await page.goto(`${BASE}#${route}`, { waitUntil: 'load' });
     await page.reload({ waitUntil: 'load' });
     await page.waitForTimeout(700);
+    /*
+      THE RECIPE SCREEN KEEPS ITS PROFESSIONAL TOOLS FOLDED AWAY.
+
+      The UX pass put the version history, the food cost, the pan card and the
+      destructive actions behind two disclosures — "פרטים מקצועיים" and
+      "עוד פעולות" — and what is closed is NOT BUILT (`{showPro && …}`), so
+      those controls are not in the document at all until the summary is
+      pressed. This probe was written before that and looked for a restore
+      button on a page that no longer has one; opening both panels here is what
+      it means to "load the recipe page" now.
+    */
+    for (const name of ['פרטים מקצועיים', 'עוד פעולות']) {
+      const summary = page.getByText(name, { exact: true }).first();
+      if (await summary.count()) {
+        await summary.click();
+        await page.waitForTimeout(350);
+      }
+    }
   };
 
   // ── §9 versions ──────────────────────────────────────────────────────

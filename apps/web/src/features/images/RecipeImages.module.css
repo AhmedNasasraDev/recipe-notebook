@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--gap-in-group);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--c-cocoa) 6%, transparent);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--c-text) 6%, transparent);
 }
 
 /* The same cookbook heading the recipe page's sections use — this card is
