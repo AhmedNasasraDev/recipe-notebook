@@ -259,6 +259,44 @@ try {
         const shellTop = shell ? Math.round(shell.getBoundingClientRect().top) : null;
 
         /*
+          ── THE BAR MUST END WHERE THE APP ENDS ─────────────────────────────
+
+          Ahmed: "אני רוצה שהפס יהיה צמוד לתחתית שטח האפליקציה, בלי רווח
+          חיצוני מתחתיו… בחלק מהמסכים נשארת רצועה ריקה ובהירה מתחתיו."
+
+          Two separate facts, measured separately, because they had two
+          separate causes:
+
+            flush   the bar's bottom edge IS the frame's bottom edge. If the
+                    bar ever becomes `position: fixed` or picks up an outer
+                    margin, this is what catches it.
+            filled  the frame's bottom edge IS the viewport's, at phone
+                    widths. This is the one that was false: `max-height: 874`
+                    applied at every width, so a 915px-tall phone showed the
+                    lighter `--c-outer-bg` as a band under the bar. Only
+                    checked below 560px, because from there up a centred,
+                    capped frame is the intent rather than the defect.
+
+          Cook Mode is rendered OUTSIDE the shell by design (§14: a full screen
+          without tabs), so it has neither and reports null rather than a
+          failure.
+        */
+        const barEl = document.querySelector('nav[aria-label="ניווט ראשי"]');
+        const frameEl = document.querySelector('[class*="frame"]');
+        const px = (el) => (el ? Math.round(el.getBoundingClientRect().bottom) : null);
+        const bar = barEl
+          ? {
+              bottom: px(barEl),
+              top: Math.round(barEl.getBoundingClientRect().top),
+              frameBottom: px(frameEl),
+              /* The bar paints the device's safe area itself, so the inset is
+                 INSIDE its background rather than a band under it. */
+              padBottom: getComputedStyle(barEl).paddingBottom,
+            }
+          : null;
+        const frameBottom = px(frameEl);
+
+        /*
           THE CHAT'S TWO EDGES MUST STAY ON SCREEN (finding F27)
 
           The control the screen exists for used to sit below the fold. The
@@ -327,6 +365,8 @@ try {
               : null,
           badgeGone: badge === null,
           shellTop,
+          bar,
+          frameBottom,
           overflowX: doc.scrollWidth - doc.clientWidth,
           wide: [...new Set(wide)].slice(0, 4),
           tabBottom: tab ? Math.round(tab.getBoundingClientRect().bottom) : null,
@@ -345,6 +385,25 @@ try {
       check(`${tag}: nothing is wider than the viewport`, m.wide.length === 0, m.wide.join(' · '));
       check(`${tag}: right-to-left`, m.dir === 'rtl', m.dir);
       check(`${tag}: no simulation strip on the page`, m.badgeGone);
+      if (m.bar) {
+        check(
+          `${tag}: the tab bar is flush with the bottom of the app`,
+          m.bar.bottom === m.bar.frameBottom,
+          `bar ${m.bar.bottom}, frame ${m.bar.frameBottom}`,
+        );
+        check(
+          `${tag}: the device's safe area is inside the bar, not a band under it`,
+          /env\(safe-area-inset-bottom|^\d/.test(m.bar.padBottom),
+          m.bar.padBottom,
+        );
+        if (width < 560) {
+          check(
+            `${tag}: and no pale strip is left below it`,
+            m.frameBottom === m.viewportH,
+            `frame ${m.frameBottom} of ${m.viewportH}`,
+          );
+        }
+      }
       check(
         `${tag}: and nothing is inset for one — the app starts at the top`,
         m.shellTop === 0,

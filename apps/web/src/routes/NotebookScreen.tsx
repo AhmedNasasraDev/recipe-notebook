@@ -5,7 +5,7 @@ import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
 import { timeLabelOf } from '../features/recipe/recipeTime.js';
 import { categoryPhoto } from '../features/categories/categoryImage.js';
-import { CATEGORY_ICON, ChevronIcon, ICON_STROKE } from '../shell/Icons.js';
+import { CATEGORY_ICON, ChevronIcon, ICON_STROKE, SearchIcon } from '../shell/Icons.js';
 import styles from './NotebookScreen.module.css';
 
 /**
@@ -177,6 +177,7 @@ export function NotebookScreen() {
           somebody looking away from the screen comes back to it. */}
       <div className={styles.searchRow}>
         <label className={styles.searchLabel} htmlFor="nb-search">
+          <SearchIcon />
           חיפוש מתכון
         </label>
         <input

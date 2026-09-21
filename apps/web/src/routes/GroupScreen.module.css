@@ -117,7 +117,7 @@
   gap: 4px;
   padding: 4px;
   border: 1px solid var(--c-line);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-paper);
 }
 
@@ -129,7 +129,7 @@
   min-height: var(--hit-min);
   padding-inline: 10px;
   border: 0;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: transparent;
   color: var(--c-muted);
   font: inherit;
@@ -154,7 +154,7 @@
 .badge {
   min-width: 20px;
   padding: 1px 6px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-white);
   color: var(--c-green);
   font-size: var(--fs-label);
@@ -218,7 +218,7 @@
 .done,
 .pendingTag {
   padding: 1px 8px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   font-size: var(--fs-label);
 }
 
@@ -289,7 +289,7 @@
   margin-block-start: 4px;
   padding-inline: 14px;
   border: 1px solid var(--c-line);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: transparent;
   color: var(--c-muted);
   font: inherit;

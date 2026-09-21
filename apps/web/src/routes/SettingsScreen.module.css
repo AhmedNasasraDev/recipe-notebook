@@ -70,7 +70,11 @@
   min-height: var(--hit-min);
   padding: 10px 14px;
   border: 1px solid var(--c-line);
-  border-radius: var(--r-card);
+  /* These look like cards and behave like a radio group: a title, a line of
+     explanation, and one of them is chosen. They are CHOICES, which is the
+     list Ahmed put at 12px — "כפתורי פעולה, שדות חיפוש, שדות טקסט, בחירות
+     ותיבות כתיבה" — so they take the control radius, not the card one. */
+  border-radius: var(--r-control);
   background: var(--c-white);
   font-family: var(--font-body);
   text-align: start;
@@ -123,7 +127,7 @@
   min-height: var(--hit-compact);
   padding: 6px 14px;
   border: 1px solid var(--c-line);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-white);
   color: var(--c-ink);
   font-family: var(--font-body);

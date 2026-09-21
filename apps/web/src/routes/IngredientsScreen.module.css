@@ -134,7 +134,7 @@
 .chipOff {
   min-height: var(--hit-compact);
   padding-inline: 10px;
-  border-radius: 999px;
+  border-radius: var(--r-control);
   font-size: var(--fs-meta);
   cursor: pointer;
 }
@@ -188,6 +188,11 @@
 .secondary,
 .danger {
   min-height: var(--hit-min);
+  /* A glyph beside the words: one row, centred, with the gap the set uses. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding-inline: 16px;
   border-radius: var(--r-control);
   font-size: var(--fs-meta-lg);
@@ -367,6 +372,10 @@
 
 .searchLabel {
   font-size: var(--fs-meta-lg);
+  /* The magnifier sits on the label's baseline row, not above the words. */
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: var(--c-muted);
 }
 

@@ -255,6 +255,10 @@
 }
 
 .searchLabel {
+  /* The magnifier sits on the label's baseline row, not above the words. */
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-block-end: 4px;
   font-size: var(--fs-meta-lg);
   color: var(--c-muted);
@@ -285,6 +289,11 @@
 
 .searchBtn {
   flex: none;
+  /* A glyph beside the words: one row, centred, with the gap the set uses. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   min-height: var(--hit-min);
   padding-inline: 16px;
   border: 1px solid var(--c-line);
@@ -302,7 +311,7 @@
   min-height: 52px;
   /* The same shape as "מצב הכנה" on the recipe page: in this application a
      filled pill is the control that starts something. */
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-green);
   color: var(--c-white);
   font-family: var(--font-body);

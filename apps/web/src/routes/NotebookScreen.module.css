@@ -28,7 +28,10 @@
 /* A visible label for the search field (UX pass): a placeholder is not a
    label — it is gone exactly when the box has content in it. */
 .searchLabel {
-  display: block;
+  /* The magnifier sits on the label's baseline row, not above the words. */
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-block-end: 4px;
   font-size: var(--fs-meta-lg);
   color: var(--c-muted);
@@ -83,7 +86,7 @@
   flex: none;
   min-height: var(--hit-min);
   padding-inline: var(--pad-card);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   font-size: var(--fs-secondary);
   border: 1px solid var(--c-line);
   background: var(--c-white);
@@ -194,7 +197,7 @@
 .badgeTag {
   font-size: var(--fs-meta);
   padding: 3px 8px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
 }
 .badgeSub {
   background: var(--c-green-bg);
@@ -234,7 +237,7 @@
   display: inline-flex;
   align-items: center;
   padding: 0 15px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-green);
   color: var(--c-white);
   font-size: var(--fs-secondary);

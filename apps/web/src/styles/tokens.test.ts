@@ -435,6 +435,111 @@ describe('the palette, measured', () => {
     expect(contrast(base(), pastry('--c-border'))).toBeLessThan(3);
   });
 
+  /*
+    ── ONE SHAPE LANGUAGE ────────────────────────────────────────────────────
+
+    Ahmed asked for it in these words: "השתמש במלבנים עם עיגול עדין ואחיד של
+    12px בכל ארבע הפינות עבור כפתורי פעולה, שדות חיפוש, שדות טקסט, בחירות
+    ותיבות כתיבה. אין להשתמש בצורת גלולה ברכיבים האלה."
+
+    A one-off pass that converts 46 rules is worth nothing if the 47th is
+    written next week, so the rule is a test. It reads the stylesheets rather
+    than the rendered page, because that is where a pill is introduced.
+  */
+  it('the radius scale is two steps, and 12px is a literal nowhere', () => {
+    expect(tokens).toMatch(/--r-control:\s*12px/);
+    expect(tokens).toMatch(/--r-card:\s*16px/);
+    expect(tokens).toMatch(/--r-card-lg:\s*16px/);
+
+    /*
+      NO PIXEL LITERAL ANYWHERE, except five that are not app surfaces.
+
+      The pass that unified the shapes found 9px, 10px, 13px and 14px radii
+      scattered around — each one defensible on its own line ("the group's 12
+      minus its padding") and collectively the reason the interface read as
+      four shape languages. So the rule is: a radius comes from a token. The
+      five exceptions are named, because each is a different MEDIUM:
+
+        the two 28px  the simulated device's own edge, in AppShell and in
+                      Onboarding's copy of it. Not a control, not a card — the
+                      rounding of the phone the app is drawn inside.
+        6px, 5px, 4px paper. The order sheet, its figure boxes and the product
+                      label are printed, and a 12px corner on a printed label
+                      is not a house style, it is a mistake.
+    */
+    const PAPER = new Set([
+      'shell/AppShell.module.css:28px',
+      'routes/OnboardingScreen.module.css:28px',
+      'routes/OrderScreen.module.css:6px',
+      'routes/OrderScreen.module.css:5px',
+      'routes/LabelScreen.module.css:4px',
+    ]);
+    const literals: string[] = [];
+    for (const sheet of moduleSheets()) {
+      const css = readFileSync(sheet, 'utf8');
+      const name = sheet.slice(SRC.length + 1);
+      for (const m of css.matchAll(/border-radius:\s*(\d+px)/g)) {
+        /* 999px is the pill test's business, by SELECTOR, just below. */
+        if (m[1] === '999px') continue;
+        if (!PAPER.has(`${name}:${m[1]}`)) literals.push(`${name} hard-codes ${m[1]}`);
+      }
+    }
+    expect(literals).toEqual([]);
+  });
+
+  it('no control is a pill', () => {
+    /*
+      The five exceptions are named, and each is a shape whose ROUNDNESS IS
+      THE MEANING rather than a control: two round avatars, the onboarding
+      progress dot, the step-progress segment and the wizard's numbered stage
+      marker. Anything else with a 999px or `--r-pill` radius is the mixture
+      Ahmed asked to end, so it fails here with its own name.
+    */
+    const ALLOWED = new Set([
+      'features/groups/GroupChat.module.css:.avatar',
+      'features/groups/IdentityCard.module.css:.avatar',
+      'routes/OnboardingScreen.module.css:.dotOff',
+      'routes/CookScreen.module.css:.segNow::after',
+      'routes/RecipeEditScreen.module.css:.stageNum',
+    ]);
+    const offenders: string[] = [];
+    for (const sheet of moduleSheets()) {
+      const css = readFileSync(sheet, 'utf8');
+      const name = sheet.slice(SRC.length + 1);
+      let selector = '';
+      for (const line of css.split('\n')) {
+        const head = /^([.:&#a-zA-Z[][^{}]*)\{/.exec(line.trim());
+        if (head) selector = head[1]!.trim();
+        if (/border-radius:\s*(var\(--r-pill\)|999px)/.test(line)) {
+          const at = `${name}:${selector}`;
+          if (!ALLOWED.has(at)) offenders.push(at);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('the platform cannot re-shape a field on a phone', () => {
+    /*
+      iOS Safari draws its own chrome on form controls and two of them change
+      the SHAPE: a search input gets fully rounded ends, and a button gets the
+      platform radius and a gradient. `appearance: none` is what turns that
+      off — and the radius has to be restated, because removing the platform
+      style removes the platform's rounding with it.
+    */
+    const g = readFileSync(join(HERE, 'global.css'), 'utf8');
+    expect(g).toMatch(/appearance:\s*none/);
+    expect(g).toMatch(/-webkit-appearance:\s*none/);
+    expect(g).toMatch(/border-radius:\s*var\(--r-control\)/);
+    /* And the three whose shape is their meaning are spared by name. */
+    expect(g).toMatch(/\[type='radio'\]/);
+    expect(g).toMatch(/\[type='checkbox'\]/);
+    expect(g).toMatch(/\[type='range'\]/);
+    /* A select keeps its native arrow: stripping it would leave a control
+       that looks exactly like a text field. */
+    expect(g).not.toMatch(/select\s*\{[^}]*appearance:\s*none/);
+  });
+
   it('no module declares a palette of its own', () => {
     /*
       THE UNIFORMITY GUARD, which replaced the scoping one.

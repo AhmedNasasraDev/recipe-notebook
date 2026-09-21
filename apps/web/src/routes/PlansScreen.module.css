@@ -127,6 +127,11 @@
 .secondary,
 .danger {
   min-height: var(--hit-compact);
+  /* A glyph beside the words: one row, centred, with the gap the set uses. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 0 14px;
   border-radius: var(--r-control);
   border: 1px solid var(--c-line);

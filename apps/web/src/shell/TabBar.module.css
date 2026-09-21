@@ -8,6 +8,11 @@
   the icon and the word together, which is also what the handoff draws. It is
   real text, so it is the link's accessible name as well — see TabBar.tsx.
 
+  The four glyphs come from Lucide (see shell/Icons.tsx): House, NotebookText,
+  Users and Ellipsis. NotebookText rather than a plain book because the plain
+  one read as an empty rectangle at 24px — Ahmed asked for "אייקון מחברת עם
+  פרטים קריאים".
+
   The colours are the pastry tokens, used directly rather than by re-binding
   §16's names — the bar sits outside the recipe page, so a re-binding here
   would be the leak the guard in `styles/tokens.test.ts` exists to catch.
@@ -16,12 +21,32 @@
   THE ACTIVE TAB IS MARKED TWICE, NEVER BY COLOUR ALONE
 
     1. a soft rounded fill behind the glyph (`--c-cream-deep`)
-    2. the glyph itself is drawn at a heavier stroke — 2.3 against 1.6 — which
+    2. the glyph itself is drawn at a heavier stroke — 2.5 against 1.75 — which
        is a property of the icon set, so all four change together
 
   Colour is the third cue, not the only one.
 */
 
+/*
+  THE BAR SITS AT THE BOTTOM OF THE FRAME, AND THE DEVICE'S SAFE AREA IS
+  INSIDE IT.
+
+  Ahmed: "אזור בטוח שנדרש על ידי המכשיר צריך להשתלב ברקע הפס, בלי ליצור
+  רצועה נפרדת או ריווח כפול."
+
+  That is what `padding-bottom: calc(6px + env(...))` does and why the inset
+  is padding rather than margin: the bar's own `background` paints the whole
+  box, padding included, so the strip over the home indicator is the bar's
+  colour and not a second band under it. There is no outer spacing to go with
+  it — the bar is a flex child of the frame with `flex: none`, so it ends
+  exactly where the frame ends, and the frame now ends exactly where the
+  viewport does (see the note in AppShell.module.css about the 874px cap).
+
+  Nothing here is `position: fixed`. A fixed bar is what makes the last row of
+  a list unreachable, and it is also what rides up with the keyboard; this one
+  is in normal flow, so the scroller above it gets exactly the height that is
+  left and no content can end up behind it.
+*/
 .bar {
   flex: none;
   display: flex;
@@ -29,8 +54,6 @@
   align-items: stretch;
   gap: 2px;
   padding: 6px 8px;
-  /* The phone's own bottom inset, so the bar clears the home indicator and
-     never sits on top of what it is navigating. */
   padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid color-mix(in srgb, var(--c-border) 55%, transparent);
   background: var(--c-surface);
@@ -52,20 +75,22 @@
   justify-content: center;
   gap: 2px;
   text-decoration: none;
-  border-radius: 14px;
+  /* The one control radius. It was 14 — the kind of near-miss that makes an
+     interface feel unresolved without anybody being able to name why. */
+  border-radius: var(--r-control);
   position: relative;
 }
 
-/* The glyph's own box: the rounded fill of the active tab is drawn on THIS,
-   so the tap target stays 48px while the marker stays a neat pill. */
+/* The glyph's own box: the marker behind the active tab is drawn on THIS, so
+   the tap target stays 48px while the marker stays narrower than the tab.
+   The radius is the project's one control radius — it was a full pill, which
+   is the shape Ahmed asked to take off every control. */
 .glyph {
   display: grid;
   place-items: center;
-  /* The pill is wider than it is tall and narrower than the tab, so four of
-     them read as a row of marks rather than as four boxes. */
   inline-size: 44px;
   block-size: 28px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   color: inherit;
 }
 

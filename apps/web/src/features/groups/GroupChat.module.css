@@ -179,7 +179,7 @@
 .tag {
   padding: 0 6px;
   border: 1px solid var(--c-amber);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-white);
   color: var(--c-ink);
   font-size: var(--fs-label);
@@ -316,7 +316,7 @@
   padding: 4px 6px 4px 4px;
   border: 1px solid var(--c-line);
   /* Fully round, at any height it grows to. */
-  border-radius: 999px;
+  border-radius: var(--r-control);
   background: var(--c-white);
 }
 
@@ -372,7 +372,7 @@
   inline-size: var(--hit-min);
   block-size: var(--hit-min);
   border: 0;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-green);
   color: var(--c-white);
   cursor: pointer;
@@ -442,7 +442,7 @@
   justify-self: center;
   padding: 6px 14px;
   border: 1px solid var(--c-line);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-white);
   color: var(--c-ink);
   font: inherit;

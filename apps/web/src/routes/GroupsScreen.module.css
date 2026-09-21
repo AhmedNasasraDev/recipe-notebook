@@ -136,7 +136,7 @@
 .badge {
   min-width: 20px;
   padding: 1px 6px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-green);
   color: var(--c-white);
   font-size: var(--fs-label);

@@ -105,7 +105,7 @@
 .chip {
   flex: none;
   padding: 2px 8px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   font-size: var(--fs-meta);
   background: var(--c-neutral-bg);
   color: var(--c-muted);

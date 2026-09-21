@@ -34,6 +34,7 @@
 import { useState } from 'react';
 import type { RecipeImagesState } from './useRecipeImages.js';
 import { MAX_EDGE } from './convert.js';
+import { DeleteIcon } from '../../shell/Icons.js';
 import styles from './RecipeImages.module.css';
 
 interface Props {
@@ -151,6 +152,7 @@ export function RecipeImages({ state, canWrite, canEdit }: Props) {
                       disabled={busy}
                       aria-label="מחיקת התמונה"
                     >
+                      <DeleteIcon />
                       מחיקה
                     </button>
                   ))}

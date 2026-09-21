@@ -21,6 +21,10 @@
   flex-direction: column;
   gap: var(--pad-card);
   padding-block: var(--pad-card) 40px;
+  /* Fill the scroller, so the save bar below lands at the bottom of the
+     screen on a short stage instead of floating in the middle of it with the
+     page's background underneath. */
+  min-block-size: 100%;
 }
 
 .topBar {
@@ -282,7 +286,7 @@
 .fixBtnGhost {
   min-height: var(--hit-compact);
   padding: 0 13px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   font-family: var(--font-body);
   font-size: var(--fs-meta-lg);
 }
@@ -403,7 +407,7 @@
   display: inline-block;
   margin-inline-start: 5px;
   padding: 1px 5px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   font-size: 9.5px;
   color: var(--c-amber);
   background: var(--c-amber-bg);
@@ -572,7 +576,7 @@
   align-self: center;
   margin-inline-start: 6px;
   padding: 1px 7px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-amber-bg);
   color: var(--c-amber);
   font-size: var(--fs-meta);
@@ -633,6 +637,13 @@
 
 /* The save bar rides along the bottom of the form. */
 .saveBar {
+  /*
+    `auto` places it at the bottom when the stage is shorter than the screen;
+    `sticky` pins it there when the stage is longer and the form scrolls. The
+    two do not fight: the auto margin only has slack to take when there is
+    slack, which is exactly when there is nothing to stick to.
+  */
+  margin-block-start: auto;
   position: sticky;
   inset-block-end: 0;
   z-index: 2;
@@ -692,7 +703,10 @@
   min-height: var(--hit-min);
   padding: 4px 10px;
   border: 0;
-  border-radius: var(--r-card);
+  /* A stage marker is something you PRESS, so it takes the control radius and
+     not the card one — 16px here made the editor read as two shape languages
+     at once. */
+  border-radius: var(--r-control);
   background: transparent;
   color: var(--c-muted);
   font: inherit;
@@ -748,7 +762,7 @@
   min-height: var(--hit-min);
   padding-inline: 16px;
   border: 1px solid var(--c-green);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-green-bg);
   color: var(--c-green-ink);
   font: inherit;
@@ -767,7 +781,7 @@
   min-height: var(--hit-min);
   padding-inline: 16px;
   border: 1px solid var(--c-line);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-paper);
   color: var(--c-ink);
   font: inherit;

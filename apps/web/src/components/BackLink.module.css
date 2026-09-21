@@ -12,7 +12,7 @@
   gap: 4px;
   min-height: var(--hit-min);
   padding-inline: 14px 10px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   font-family: var(--font-body);
   font-size: var(--fs-secondary);
   text-decoration: none;

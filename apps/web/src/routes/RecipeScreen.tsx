@@ -29,7 +29,7 @@ import { PanCard } from '../features/recipe/PanCard.js';
 import { PrivateNote } from '../features/recipe/PrivateNote.js';
 import { RecipeImages } from '../features/images/RecipeImages.js';
 import { useRecipeImages } from '../features/images/useRecipeImages.js';
-import { MenuDotsIcon } from '../shell/Icons.js';
+import { DeleteIcon, EditIcon, MenuDotsIcon } from '../shell/Icons.js';
 import { BackLink } from '../components/BackLink.js';
 import {
   forgetRecipeLocally,
@@ -852,6 +852,9 @@ export function RecipeScreen() {
           className={styles.actionBtn}
           aria-label={`עריכת ${recipe.name}`}
         >
+          {/* The glyph beside the word, not instead of it: Ahmed asked for a
+              clear edit icon, and a kitchen control keeps its label. */}
+          <EditIcon />
           עריכה
         </Link>
         <button
@@ -920,6 +923,7 @@ export function RecipeScreen() {
               disabled={actionBusy !== null || !capabilities.canWrite}
               aria-label={`מחיקת ${recipe.name}`}
             >
+              <DeleteIcon />
               מחיקה
             </button>
           </div>

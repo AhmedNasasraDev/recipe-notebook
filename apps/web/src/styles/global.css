@@ -64,6 +64,78 @@ select {
   color: inherit;
 }
 
+/*
+  THE BROWSER MUST NOT RE-SHAPE A FIELD ON A PHONE.
+
+  Ahmed: "ודא שגם העיצוב המובנה של הדפדפן אינו משנה את צורת השדות בנייד."
+  This is a real iOS Safari behaviour and not a theoretical one: it draws its
+  own chrome on form controls, and two of them change the SHAPE whatever the
+  stylesheet says —
+
+    · input[type="search"] gets fully rounded ends and an inner shadow, so a
+      search field came out as a pill beside 12px text fields
+    · <button> and input[type="submit"] get the platform's own corner radius
+      and a vertical gradient
+
+  `appearance: none` is what turns that off, and it has to be paired with an
+  explicit radius, because removing the platform style also removes the
+  platform's rounding. So the radius is stated here, once, from the token —
+  which is also what makes "12px on all four corners" true by default instead
+  of true wherever a component stylesheet remembered to say so.
+
+  WHAT IS EXEMPT, AND WHY EACH ONE
+
+    radio, checkbox, range   their shape IS their meaning, and stripping the
+                             platform style leaves an empty box with no tick,
+                             no dot and no track. A radio must stay a circle;
+                             that is how it is told apart from a checkbox.
+    date, time               the platform's own picker chrome lives inside
+                             these, and `appearance: none` takes the calendar
+                             and clock affordance with it.
+    file                     the two in this project are 1×1 boxes behind a
+                             styled label, so there is nothing to restyle.
+    select                   NOT stripped, only given the radius. Every engine
+                             honours `border-radius` on a select, and
+                             `appearance: none` would remove the dropdown
+                             arrow — leaving a select that looks exactly like
+                             a text field, which is worse than the problem
+                             this rule is here to fix. Drawing a replacement
+                             arrow would mean hand-writing an SVG path, which
+                             is the thing the icon pass just removed.
+*/
+button,
+input:not([type='radio']):not([type='checkbox']):not([type='range']):not([type='date']):not([type='time']):not([type='file']),
+textarea {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+button,
+input,
+textarea,
+select {
+  border-radius: var(--r-control);
+}
+
+/* iOS injects its own magnifier and cancel button into a search field, and
+   neither is ours to style — nor does either belong beside a label that
+   already says "חיפוש". */
+input[type='search']::-webkit-search-decoration,
+input[type='search']::-webkit-search-cancel-button {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* The three whose shape is the meaning keep it: a radio is a circle, a
+   checkbox is a small square, and neither takes the control radius. */
+input[type='radio'] {
+  border-radius: 50%;
+}
+
+input[type='checkbox'] {
+  border-radius: var(--r-check);
+}
+
 a {
   color: var(--c-green);
 }

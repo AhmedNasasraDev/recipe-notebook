@@ -32,7 +32,7 @@ import {
   readRecents,
   readFavorites,
 } from '../data/offlineMirror.js';
-import { CATEGORY_ICON, ICON_STROKE } from '../shell/Icons.js';
+import { CATEGORY_ICON, ICON_STROKE, SearchIcon } from '../shell/Icons.js';
 import { categoryPhoto } from '../features/categories/categoryImage.js';
 import { timeLabelOf } from '../features/recipe/recipeTime.js';
 import styles from './HomeScreen.module.css';
@@ -204,6 +204,7 @@ export function HomeScreen() {
           }}
         >
           <label className={styles.searchLabel} htmlFor="home-search">
+            <SearchIcon />
             חיפוש מתכון
           </label>
           <div className={styles.searchRow}>
@@ -216,6 +217,7 @@ export function HomeScreen() {
               placeholder="שם, תג או רכיב"
             />
             <button type="submit" className={styles.searchBtn}>
+              <SearchIcon />
               חיפוש
             </button>
           </div>

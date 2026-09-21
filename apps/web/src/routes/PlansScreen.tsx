@@ -10,6 +10,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BackLink } from '../components/BackLink.js';
 import { useAppData } from '../app/AppDataProvider.js';
 import type { PlanSummary } from '../data/repository.js';
+import { DeleteIcon } from '../shell/Icons.js';
 import styles from './PlansScreen.module.css';
 
 const today = (): string => new Date().toISOString().slice(0, 10);
@@ -154,6 +155,7 @@ export function PlansScreen() {
                   disabled={!canWrite}
                   aria-label={`מחיקת ${p.name || `תוכנית ${when(p.planDate)}`}`}
                 >
+                  <DeleteIcon />
                   מחיקה
                 </button>
               </div>

@@ -19,7 +19,11 @@
   overflow: hidden;
 }
 
-@media (min-width: 440px) and (min-height: 900px) {
+/* 560, not 440 — the same threshold AppShell uses, and for the same reason: at
+   440 an iPhone 16 Pro Max (440×956) was handed a rounded, shadowed window
+   instead of its own screen. Onboarding kept its own copy of this rule, so it
+   kept its own copy of the bug. */
+@media (min-width: 560px) and (min-height: 900px) {
   .frame {
     border-radius: 28px;
     box-shadow: 0 24px 60px rgba(23, 26, 24, 0.18);
@@ -79,7 +83,8 @@
   width: 100%;
   text-align: start;
   padding: 13px var(--pad-card);
-  border-radius: 13px;
+  /* A choice you press takes the control radius, not 13. */
+  border-radius: var(--r-control);
   border: 1px solid var(--c-line);
   background: var(--c-white);
   color: var(--c-ink);
@@ -150,7 +155,8 @@
   text-align: start;
   min-height: 46px;
   padding: 0 var(--pad-card);
-  border-radius: 13px;
+  /* A choice you press takes the control radius, not 13. */
+  border-radius: var(--r-control);
   font-size: var(--fs-body);
   border: 1px solid var(--c-line);
   background: var(--c-white);
@@ -190,7 +196,7 @@
 .back {
   min-height: 48px;
   padding-inline: 18px;
-  border-radius: 12px;
+  border-radius: var(--r-control);
   border: 1px solid var(--c-line);
   background: var(--c-white);
   color: var(--c-muted);
@@ -200,7 +206,7 @@
 .next {
   flex: 1;
   min-height: 48px;
-  border-radius: 12px;
+  border-radius: var(--r-control);
   border: 0;
   background: var(--c-green);
   color: var(--c-white);

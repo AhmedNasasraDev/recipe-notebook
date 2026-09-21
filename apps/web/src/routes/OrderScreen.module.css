@@ -296,7 +296,7 @@
 .partialChip {
   margin-inline-start: 6px;
   padding: 1px 7px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-control);
   background: var(--c-amber-bg);
   color: var(--c-amber);
   font-size: var(--fs-label);

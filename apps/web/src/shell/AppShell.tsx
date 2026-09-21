@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { useAppData } from '../app/AppDataProvider.js';
 import { TabBar } from './TabBar.js';
+import { useSoftKeyboard } from './useSoftKeyboard.js';
 import styles from './AppShell.module.css';
 
 /**
@@ -9,6 +10,21 @@ import styles from './AppShell.module.css';
  */
 export function AppShell() {
   const { error, clearError, capabilities, backendNote } = useAppData();
+  /*
+    THE BAR IS NOT RENDERED WHILE THE SOFTWARE KEYBOARD IS UP.
+
+    It used to be carried up on top of the keyboard, because the frame is
+    sized in `dvh` and the keyboard shrinks that — see useSoftKeyboard.ts for
+    why no CSS length fixes it on both engines, and for the approval of this
+    fallback. Not rendered rather than hidden with CSS: the bar is a flex
+    child in the column, so removing it gives its height back to the scroller
+    and the field being typed into has more room, instead of a `display: none`
+    element still owning a row.
+
+    Nothing is remembered and nothing needs to be: the bar is four links, so
+    it comes back exactly as it was the moment the keyboard closes.
+  */
+  const keyboardOpen = useSoftKeyboard();
 
   // §17 / AC #17: the app states plainly where its data comes from. It never
   // presents a local-only session as if it were connected.
@@ -67,7 +83,7 @@ export function AppShell() {
             <Outlet />
           </div>
         </main>
-        <TabBar />
+        {!keyboardOpen && <TabBar />}
       </div>
     </div>
   );

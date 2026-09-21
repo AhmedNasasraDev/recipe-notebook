@@ -148,11 +148,36 @@
   --c-off-bg: #eceae2;
   --c-off-ink: var(--c-muted-ink);
 
-  /* ── radius ───────────────────────────────────────────────────────────── */
+  /* ── radius ───────────────────────────────────────────────────────────────
+     TWO STEPS, AND ONE OF THEM IS FOR CONTROLS.
+
+     Ahmed: "השתמש במלבנים עם עיגול עדין ואחיד של 12px בכל ארבע הפינות עבור
+     כפתורי פעולה, שדות חיפוש, שדות טקסט, בחירות ותיבות כתיבה. אין להשתמש
+     בצורת גלולה ברכיבים האלה. בכרטיסי תוכן גדולים אפשר להשתמש ברדיוס אחיד
+     של 16px."
+
+     So the scale collapsed. It used to be 12 / 14 / 18 / 24 / 999, and the
+     999 was on 46 controls — buttons, chips, the composer, the back link, the
+     filter row, the segmented controls — beside rectangles with 12 and 14.
+     That mixture is the thing he asked to end. It is now:
+
+       --r-control  12px  every button, field, select, textarea, chip, badge
+       --r-card     16px  a content card, at one value — `--r-card-lg` is kept
+                          as a NAME because ~20 stylesheets import it, and it
+                          resolves to the same 16
+       --r-sheet    24px  a modal sheet, which is not a card and not a control
+       --r-pill     999px kept for the five things whose roundness is the
+                          meaning: the two avatars, the onboarding progress
+                          dot, the step-progress segment and the wizard's
+                          numbered stage marker. Never on a control again.
+
+     A radio stays a circle: `input[type='radio']` is drawn by the browser and
+     is deliberately untouched — its shape is what tells it apart from a
+     checkbox. */
   --r-check: 7px;
   --r-control: 12px;
-  --r-card: 14px;
-  --r-card-lg: 18px;
+  --r-card: 16px;
+  --r-card-lg: 16px;
   --r-sheet: 24px;
   --r-pill: 999px;
 

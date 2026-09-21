@@ -49,6 +49,7 @@ import {
   type PurchaseRecord,
 } from '../features/pricing/purchases.js';
 import type { PurchaseUnit } from '../lib/database.types.js';
+import { DeleteIcon, EditIcon, SearchIcon } from '../shell/Icons.js';
 import styles from './IngredientsScreen.module.css';
 
 /** The form, held as strings so an empty field can stay empty. */
@@ -712,6 +713,7 @@ export function IngredientsScreen() {
       {catalog.length > 0 && (
         <div className={styles.searchRow}>
           <label className={styles.searchLabel} htmlFor="ing-search">
+            <SearchIcon />
             חיפוש חומר גלם
           </label>
           <input
@@ -785,6 +787,7 @@ export function IngredientsScreen() {
                   disabled={!canWrite}
                   aria-label={`עריכת ${item.name}`}
                 >
+                  <EditIcon />
                   עריכה
                 </button>
                 <button
@@ -794,6 +797,7 @@ export function IngredientsScreen() {
                   disabled={!canWrite}
                   aria-label={`מחיקת ${item.name}`}
                 >
+                  <DeleteIcon />
                   מחיקה
                 </button>
               </div>
