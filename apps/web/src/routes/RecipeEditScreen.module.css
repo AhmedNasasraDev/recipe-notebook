@@ -804,3 +804,49 @@
   font-size: var(--fs-meta-lg);
   color: var(--c-green-ink);
 }
+
+/*
+  ── THE PHOTOGRAPH CARD ON STAGE 1 ─────────────────────────────────────────
+
+  A new recipe has no row to attach a file to, so the file is held and shown
+  here first. The preview is the same shape as the hero it will become —
+  `object-fit: cover` in a 16:9-ish band — so what is chosen looks like what
+  will appear, rather than like a stretched thumbnail.
+*/
+.photoPreview {
+  display: block;
+  inline-size: 100%;
+  block-size: clamp(150px, 26vh, 240px);
+  object-fit: cover;
+  border-radius: var(--r-control);
+  background: var(--c-neutral-bg);
+}
+
+.photoRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-in-group);
+}
+
+/* A label, not a button: it wraps the file input, which is the standard way
+   to style a file picker without the browser's own control. */
+.photoPick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--hit-min);
+  padding-inline: 16px;
+  border: 1px solid var(--c-green);
+  border-radius: var(--r-control);
+  background: var(--c-paper);
+  color: var(--c-green-ink);
+  font-size: var(--fs-secondary);
+  font-weight: var(--fw-mid);
+  cursor: pointer;
+}
+
+.photoPick:focus-within {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}

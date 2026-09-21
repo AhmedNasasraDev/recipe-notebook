@@ -30,7 +30,7 @@ import { PrivateNote } from '../features/recipe/PrivateNote.js';
 import { RecipeImages } from '../features/images/RecipeImages.js';
 import { useRecipeImages } from '../features/images/useRecipeImages.js';
 import { DeleteIcon, EditIcon, MenuDotsIcon } from '../shell/Icons.js';
-import { BackLink } from '../components/BackLink.js';
+import { BackControl } from '../components/BackLink.js';
 import {
   forgetRecipeLocally,
   noteRecipeOpened,
@@ -105,6 +105,7 @@ export function RecipeScreen() {
     raiseError,
     addRecipeImage,
     removeRecipeImage,
+    setRecipeImageFocus,
     signedImageUrl,
   } = useAppData();
 
@@ -163,7 +164,22 @@ export function RecipeScreen() {
     add: addRecipeImage,
     remove: removeRecipeImage,
     sign: signedImageUrl,
+    focus: setRecipeImageFocus,
   });
+
+  /*
+    ── ADJUSTING WHERE THE PHOTOGRAPH IS LOOKED AT ─────────────────────────
+
+    Ahmed: "אפשר להעלות תמונה, להחליף אותה, להתאים חיתוך או מיקום ולהסיר
+    אותה… הצג תצוגה מקדימה ואפשר לבטל את השינוי לפני השמירה."
+
+    `draftFocus` is that preview: while the panel is open the hero renders
+    THIS value, so dragging moves the real picture in the real band at the
+    real size — not a thumbnail of it. `null` closes the panel and the stored
+    value takes over again, which is what cancelling means.
+  */
+  const [draftFocus, setDraftFocus] = useState<{ x: number; y: number } | null>(null);
+  const [focusSaved, setFocusSaved] = useState(false);
 
   const [scaleFor, setScaleFor] = useState(recipeId);
   if (scaleFor !== recipeId) {
@@ -358,7 +374,7 @@ export function RecipeScreen() {
     return (
       <div className={styles.missing}>
         <p>המתכון הזה לא נמצא במחברת.</p>
-        <BackLink to="/notebook">המחברת</BackLink>
+        <BackControl>המחברת</BackControl>
       </div>
     );
   }
@@ -495,6 +511,18 @@ export function RecipeScreen() {
   */
   const heroImage = imageState.load === 'ready' ? (imageState.images[0] ?? null) : null;
   const heroUrl = heroImage ? (imageState.urls[heroImage.id] ?? null) : null;
+  /* The preview while adjusting, the stored point otherwise. */
+  const focus = draftFocus ?? {
+    x: heroImage?.focalX ?? 50,
+    y: heroImage?.focalY ?? 50,
+  };
+  /*
+    The same two conditions the gallery below uses, and for the same reason:
+    ownership, not the profile. A group recipe a member is reading is not
+    theirs to re-photograph, and a session with no write access cannot store
+    anything anyway.
+  */
+  const canEditPhoto = capabilities.canWrite && !recipe.group_id;
 
   return (
     <div className={styles.page}>
@@ -528,15 +556,60 @@ export function RecipeScreen() {
             src={heroUrl}
             alt=""
             aria-hidden="true"
+            /*
+              `cover` crops, and this is where it crops FROM — the stored
+              focal point, or the one being dragged. With no adjustment it is
+              50% 50%, which is exactly what `cover` does on its own, so a
+              photograph nobody has touched looks the way it always did.
+            */
+            style={{ objectPosition: `${focus.x}% ${focus.y}%` }}
             onError={() => heroImage && imageState.broken(heroImage)}
           />
+        )}
+        {/*
+          ── THE POSITION CONTROL, ON THE PICTURE ITSELF ──────────────────
+
+          Only for somebody who may edit this recipe — Ahmed: "אפשר שינוי
+          תמונה רק למי שמורשה לערוך את המתכון" — and only when there IS a
+          picture, because there is nothing to position otherwise.
+
+          Pressing anywhere on the band sets the focal point to that spot, and
+          the picture moves under the finger immediately: the preview is the
+          hero, at the size it really is, rather than a thumbnail that lies
+          about the crop. Then "שמירה" writes it and "ביטול" throws the draft
+          away and the stored point comes back.
+
+          A press and not a drag: a drag over the band would fight the page's
+          own vertical scroll on a phone, and on a photograph 170-300px tall a
+          tap is precise enough — the whole adjustment is which THIRD of the
+          picture you want.
+        */}
+        {heroUrl && canEditPhoto && draftFocus !== null && (
+          <button
+            type="button"
+            className={styles.focusTarget}
+            aria-label="בחירת מיקום התמונה — לחיצה על הנקודה שתישאר במרכז"
+            onClick={(e) => {
+              const box = e.currentTarget.getBoundingClientRect();
+              setDraftFocus({
+                x: ((e.clientX - box.left) / box.width) * 100,
+                y: ((e.clientY - box.top) / box.height) * 100,
+              });
+            }}
+          >
+            <span
+              className={styles.focusDot}
+              style={{ insetInlineStart: `${focus.x}%`, insetBlockStart: `${focus.y}%` }}
+              aria-hidden="true"
+            />
+          </button>
         )}
         <div className={styles.topBar}>
           {/* RTL: back is on the RIGHT — first in the source — and its chevron
               points the way back, which in Hebrew is rightwards. */}
-          <BackLink to="/notebook" tone="paper">
+          <BackControl tone="paper">
             המחברת
-          </BackLink>
+          </BackControl>
           <button
             type="button"
             className={styles.menuBtn}
@@ -561,6 +634,73 @@ export function RecipeScreen() {
           </button>
         </div>
       </div>
+
+      {/*
+        ── THE ROW THAT OPENS, SAVES AND CANCELS ──────────────────────────
+
+        Under the picture rather than on it: three controls on a photograph
+        would cover the photograph, which is the thing being judged.
+
+        "נשמר" appears only after the write came back true — the same rule as
+        the personal note, and for the same reason. A failure leaves the panel
+        OPEN with the draft still in it, so nothing typed or chosen is thrown
+        away by an error.
+      */}
+      {heroUrl && canEditPhoto && (
+        <div className={styles.focusBar}>
+          {draftFocus === null ? (
+            <>
+              <button
+                type="button"
+                className={styles.focusBtn}
+                onClick={() => {
+                  setFocusSaved(false);
+                  setDraftFocus({
+                    x: heroImage?.focalX ?? 50,
+                    y: heroImage?.focalY ?? 50,
+                  });
+                }}
+              >
+                התאמת מיקום התמונה
+              </button>
+              {focusSaved && (
+                <span className={styles.focusOk} role="status">
+                  המיקום נשמר
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              <span className={styles.focusHint}>
+                לחצו על הנקודה בתמונה שתישאר במרכז החיתוך.
+              </span>
+              <button
+                type="button"
+                className={styles.focusBtnPrimary}
+                disabled={imageState.busy}
+                onClick={() => {
+                  if (!heroImage) return;
+                  const at = draftFocus;
+                  void imageState.refocus(heroImage, at).then((ok) => {
+                    if (!ok) return;
+                    setDraftFocus(null);
+                    setFocusSaved(true);
+                  });
+                }}
+              >
+                {imageState.busy ? 'שומר…' : 'שמירת המיקום'}
+              </button>
+              <button
+                type="button"
+                className={styles.focusBtn}
+                onClick={() => setDraftFocus(null)}
+              >
+                ביטול
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/*
         The identity block, as the handoff draws it: the name, the category it

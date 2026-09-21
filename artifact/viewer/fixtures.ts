@@ -901,10 +901,20 @@ export function createViewerRepository(activeUserId: string = VIEWER_USER_ID): R
         bytes: converted.bytes,
         caption: '',
         createdAt: new Date().toISOString(),
+        focalX: 50,
+        focalY: 50,
       };
       objectUrls.set(image.storagePath, URL.createObjectURL(converted.blob));
       images = [...images, image];
       return image;
+    },
+    /* The focal point, stored in the simulation the same way the server
+       stores it, so the adjustment really survives a screen change here. */
+    setRecipeImageFocus: async (image: RecipeImage, focal: { x: number; y: number }) => {
+      const clamp = (n: number) => Math.round(Math.min(100, Math.max(0, n)) * 10) / 10;
+      const next: RecipeImage = { ...image, focalX: clamp(focal.x), focalY: clamp(focal.y) };
+      images = images.map((i) => (i.id === image.id ? next : i));
+      return next;
     },
     removeRecipeImage: async (image: RecipeImage) => {
       const url = objectUrls.get(image.storagePath);

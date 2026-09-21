@@ -32,7 +32,7 @@ import {
   readRecents,
   readFavorites,
 } from '../data/offlineMirror.js';
-import { CATEGORY_ICON, ICON_STROKE, SearchIcon } from '../shell/Icons.js';
+import { CATEGORY_ICON, ICON_STROKE, QUICK_ICON, SearchIcon } from '../shell/Icons.js';
 import { categoryPhoto } from '../features/categories/categoryImage.js';
 import { timeLabelOf } from '../features/recipe/recipeTime.js';
 import styles from './HomeScreen.module.css';
@@ -228,6 +228,62 @@ export function HomeScreen() {
         </Link>
       </section>
 
+      {/*
+        ── THE FOUR PLACES THE WORK STARTS ───────────────────────────────────
+
+        Ahmed: "פעולות מהירות: יצירת מתכון, המחברת שלי, קטגוריות וחומרי גלם."
+
+        Search and "מתכון חדש" are above, where they were. These are the other
+        three, plus the two tools that had no entrance from here at all — a
+        person who wanted the measuring tools or a group had to go through
+        "עוד", which is a filing cabinet, not a starting point.
+
+        Every one of them is a REAL screen that exists and works. The rule
+        Ahmed set is the one that matters here: "אל תוסיף כפתורים שאינם
+        עובדים" — so this row is exactly as long as the list of screens that
+        answer, and grows only when one more does.
+      */}
+      <nav className={styles.quick} aria-label="פעולות מהירות">
+        {(
+          [
+            ['/notebook', 'המחברת שלי', 'notebook'],
+            ['/ingredients', 'חומרי גלם', 'ingredients'],
+            ['/tools', 'כלי מדידה', 'tools'],
+            ['/groups', 'קבוצות', 'groups'],
+            ['/plans', 'תכנון ורכש', 'plans'],
+          ] as const
+        ).map(([to, label, key]) => (
+          <Link key={key} to={to} className={styles.quickCard}>
+            <span className={styles.quickGlyph}>
+              {QUICK_ICON[key]?.({ width: ICON_STROKE.rest })}
+            </span>
+            <span className={styles.quickLabel}>{label}</span>
+          </Link>
+        ))}
+        {/*
+          "קטגוריות" is a BUTTON and not a link, because the categories are
+          not a screen — they are a section of THIS one, a short scroll below,
+          with a count beside each. Sending this card to `/notebook` would
+          have made two cards in the same row lead to the same place, which is
+          the duplication Ahmed asked to avoid; inventing a categories screen
+          to link to would have been worse.
+        */}
+        <button
+          type="button"
+          className={styles.quickCard}
+          onClick={() => {
+            document
+              .getElementById('home-categories')
+              ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+        >
+          <span className={styles.quickGlyph}>
+            {QUICK_ICON['categories']?.({ width: ICON_STROKE.rest })}
+          </span>
+          <span className={styles.quickLabel}>קטגוריות</span>
+        </button>
+      </nav>
+
       {/* ── המשך מאיפה שעצרת ─────────────────────────────────────────────── */}
       {resume ? (
         <section className={styles.resume} aria-label="המשך מאיפה שעצרת">
@@ -307,7 +363,7 @@ export function HomeScreen() {
       )}
 
       {/* ── categories ──────────────────────────────────────────────────── */}
-      <section className={styles.section} aria-label="קטגוריות">
+      <section id="home-categories" className={styles.section} aria-label="קטגוריות">
         <h2 className={styles.sectionTitle}>קטגוריות</h2>
         {counts.size === 0 ? (
           <p className={styles.note}>

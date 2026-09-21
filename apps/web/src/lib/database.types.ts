@@ -604,6 +604,9 @@ export type RecipeImageRow = {
   height: number | null;
   bytes: number | null;
   caption: string;
+  /** 0..100 per axis, fed to CSS object-position — migration 0038. */
+  focal_x: number;
+  focal_y: number;
   created_at: string;
   created_by: string | null;
 };

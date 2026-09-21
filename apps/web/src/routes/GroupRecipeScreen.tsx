@@ -29,7 +29,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BackLink } from '../components/BackLink.js';
+import { BackControl } from '../components/BackLink.js';
 import { compute } from '@recipe-notebook/engine';
 import type { Recipe } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
@@ -156,7 +156,7 @@ export function GroupRecipeScreen() {
           המתכון הזה אינו זמין לחשבון הזה. ייתכן שהמדריך לא שיתף אותו, או שאין
           לכם גישה לקבוצה.
         </p>
-        <BackLink to="/groups">לכל הקבוצות</BackLink>
+        <BackControl>לכל הקבוצות</BackControl>
         {problem !== null && (
           <p className={styles.problem} role="alert">
             {problem}
@@ -172,7 +172,7 @@ export function GroupRecipeScreen() {
   return (
     <div className={styles.page}>
       <header className={styles.head}>
-        <BackLink to={`/group/${groupId}`}>{group.name}</BackLink>
+        <BackControl>{group.name}</BackControl>
         <h1 className={styles.title}>{item.name}</h1>
         <p className={styles.meta}>
           {course} · {lesson}

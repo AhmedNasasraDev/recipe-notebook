@@ -14,7 +14,7 @@
 // writing the same `prefs`: this is one setting with two doors, not two
 // settings that can disagree.
 
-import { BackLink } from '../components/BackLink.js';
+import { BackControl } from '../components/BackLink.js';
 import {
   TOOL_OPTIONS,
   toolLabel,
@@ -36,7 +36,7 @@ export function ToolsScreen() {
       <header className={styles.head}>
         {/* §4: the way back is at the TOP of an inner screen, not at the end
             of it — it used to be the last thing on the page. */}
-        <BackLink to="/more">עוד</BackLink>
+        <BackControl>עוד</BackControl>
         <h1 className={styles.title}>כלי המדידה שלי</h1>
         <p className={styles.lead}>
           כל המרה בין נפח למשקל באפליקציה נעשית לפי הכלים האלה. שינוי כאן מעדכן

@@ -49,6 +49,7 @@ import {
   type PurchaseRecord,
 } from '../features/pricing/purchases.js';
 import type { PurchaseUnit } from '../lib/database.types.js';
+import { BackControl } from '../components/BackLink.js';
 import { DeleteIcon, EditIcon, SearchIcon } from '../shell/Icons.js';
 import styles from './IngredientsScreen.module.css';
 
@@ -377,6 +378,14 @@ export function IngredientsScreen() {
   return (
     <div className={styles.page}>
       <header className={styles.head}>
+        {/*
+          THE SCREEN AHMED PHOTOGRAPHED. It had no way back at all — the only
+          exit was the tab bar, which moves you to another section rather than
+          returning you to the screen you came from. `BackControl` goes to the
+          previous in-app screen when there is one and to "עוד" when there is
+          not, because that is where this screen is reached from.
+        */}
+        <BackControl />
         <h1 className={styles.title}>חומרי גלם</h1>
         <p className={styles.lede}>
           המחיר של כל חומר גלם נמצא כאן, במקום אחד. שינוי מחיר כאן משנה את העלות

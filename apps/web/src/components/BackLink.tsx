@@ -18,8 +18,9 @@
 */
 
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { BackIcon } from '../shell/Icons.js';
+import { parentName, useGoBack } from '../shell/navigation.js';
 import styles from './BackLink.module.css';
 
 interface Common {
@@ -65,6 +66,47 @@ export function BackButton({
     <button type="button" onClick={onClick} className={cls(tone, className)} {...rest}>
       <BackIcon />
       <span className={styles.label}>{children}</span>
+    </button>
+  );
+}
+
+/**
+ * THE BACK CONTROL EVERY INNER SCREEN SHOULD USE.
+ *
+ * `BackLink` above takes an address, which is why every screen in the project
+ * ended up hard-coding `/notebook` and sending a person to a screen they had
+ * never been on. This one takes nothing: it asks `useGoBack` where back IS —
+ * the previous in-app screen when there is one, the parent screen when there
+ * is not, never out of the application — and names the destination itself.
+ *
+ * It renders NOTHING on a screen that has no way back (the four tabs), so a
+ * screen can use it unconditionally and Home does not grow a dead control.
+ *
+ * `guard` is for a screen holding unsaved work. It runs first and returns
+ * false to stop the navigation, which lets the editor keep using the
+ * confirmation it already has rather than growing a second one.
+ */
+export function BackControl({
+  children,
+  tone,
+  className,
+  guard,
+}: Omit<Common, 'children'> & { children?: ReactNode; guard?: () => boolean }) {
+  const back = useGoBack();
+  const { pathname } = useLocation();
+  if (back === null) return null;
+  const label = children ?? parentName(pathname);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (guard && !guard()) return;
+        back();
+      }}
+      className={cls(tone, className)}
+    >
+      <BackIcon />
+      <span className={styles.label}>{label}</span>
     </button>
   );
 }

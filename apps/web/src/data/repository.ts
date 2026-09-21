@@ -288,6 +288,22 @@ export interface RecipeImage {
   bytes: number | null;
   caption: string;
   createdAt: string;
+  /**
+   * WHERE THE PICTURE IS LOOKED AT — 0..100 per axis, fed straight to CSS
+   * `object-position` (migration 0038).
+   *
+   * The hero is a fixed band with `object-fit: cover`, so the browser crops;
+   * without this it crops from the centre, which on a tray shot from above is
+   * often nothing. 50/50 is exactly what `cover` does on its own, so a photo
+   * nobody has adjusted looks the way it always did.
+   *
+   * A point and not a rectangle on purpose: the file is never re-encoded, so
+   * the original keeps every pixel, the adjustment can be changed again for
+   * free, and the same point crops correctly in the wide hero AND in the
+   * square notebook thumbnail — which a rectangle cannot do.
+   */
+  focalX: number;
+  focalY: number;
 }
 
 export interface RecipeImageRepository {
@@ -299,6 +315,15 @@ export interface RecipeImageRepository {
   addRecipeImage(recipeId: string, file: File | Blob): Promise<RecipeImage>;
   /** Removes the object AND its row. The object goes first — see 0029. */
   removeRecipeImage(image: RecipeImage): Promise<void>;
+  /**
+   * Moves the focal point. Two numbers, no re-upload, no new object — the
+   * picture itself is untouched, so this can be changed as often as somebody
+   * likes and never degrades the original.
+   *
+   * Returns the row as it now stands, so a caller renders what was stored
+   * rather than what it hoped was stored.
+   */
+  setRecipeImageFocus(image: RecipeImage, focal: { x: number; y: number }): Promise<RecipeImage>;
   /**
    * A time-limited URL for a private object, or null when one cannot be had.
    * Null is a real answer: the photo exists and this caller may not see it.

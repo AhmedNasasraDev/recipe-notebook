@@ -1,3 +1,4 @@
+import { BackControl } from '../components/BackLink.js';
 import styles from './NotImplementedScreen.module.css';
 
 /**
@@ -16,6 +17,8 @@ export function NotImplementedScreen({ screen }: { screen: string }) {
 
   return (
     <div className={styles.wrap}>
+      {/* Being unbuilt is no reason to be a dead end. */}
+      <BackControl />
       <h1 className={styles.title}>{screen}</h1>
       {/*
         STAGE-11: the body text used to say "בשלב הזה מומשו שאלות הפתיחה,

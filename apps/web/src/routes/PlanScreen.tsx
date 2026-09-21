@@ -23,7 +23,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { BackLink } from '../components/BackLink.js';
+import { BackControl } from '../components/BackLink.js';
 import {
   compute,
   formatGrams,
@@ -235,7 +235,7 @@ export function PlanScreen() {
         <p className={styles.error} role="alert">
           {loadError}
         </p>
-        <BackLink to="/plans">התוכניות</BackLink>
+        <BackControl>התוכניות</BackControl>
       </div>
     );
   }
@@ -256,7 +256,7 @@ export function PlanScreen() {
   return (
     <div className={styles.page}>
       <header className={styles.head}>
-        <BackLink to="/plans">התוכניות</BackLink>
+        <BackControl>התוכניות</BackControl>
         <h1 className={styles.title}>{plan.name || 'תוכנית ייצור'}</h1>
         <p className={styles.lede}>
           כל מה שמתחת מחושב מהמתכונים ומהמחירים שבמרכז חומרי הגלם. בתוכנית עצמה
@@ -782,9 +782,9 @@ export function PlanScreen() {
       </section>
 
       <div className={styles.actions}>
-        <BackLink to="/plans" aria-label="חזרה לרשימת התוכניות">
+        <BackControl aria-label="חזרה לרשימת התוכניות">
           התוכניות
-        </BackLink>
+        </BackControl>
       </div>
     </div>
   );

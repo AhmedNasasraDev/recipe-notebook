@@ -29,6 +29,7 @@ export interface RecipeImagesApi {
   add(recipeId: string, file: File | Blob): Promise<RecipeImage>;
   remove(image: RecipeImage): Promise<void>;
   sign(storagePath: string): Promise<string | null>;
+  focus(image: RecipeImage, focal: { x: number; y: number }): Promise<RecipeImage>;
 }
 
 export interface RecipeImagesState {
@@ -42,6 +43,14 @@ export interface RecipeImagesState {
   drop(image: RecipeImage): void;
   /** Re-sign once when a URL has expired mid-session. */
   broken(image: RecipeImage): void;
+  /**
+   * Stores a new focal point and returns whether it landed.
+   *
+   * The caller gets the boolean because the UI has a confirmation to show and
+   * a panel to close, and neither should happen on a failed write — which is
+   * the whole of the "נשמר" lesson from the personal note.
+   */
+  refocus(image: RecipeImage, focal: { x: number; y: number }): Promise<boolean>;
 }
 
 export function useRecipeImages({
@@ -50,6 +59,7 @@ export function useRecipeImages({
   add,
   remove,
   sign,
+  focus,
 }: RecipeImagesApi): RecipeImagesState {
   const [images, setImages] = useState<readonly RecipeImage[]>([]);
   const [load, setLoad] = useState<ImagesLoad>('loading');
@@ -129,5 +139,33 @@ export function useRecipeImages({
     [sign],
   );
 
-  return { images, load, urls, busy, error, pick, drop, broken };
+  /*
+    THE FOCAL POINT, AND WHY IT REPLACES THE ROW RATHER THAN PATCHING IT.
+
+    `focus` returns the row as the store now holds it, and that row is what
+    goes into state — not the numbers this function was handed. If the
+    database clamped 101 to 100, or rounded, the screen shows what was
+    actually stored. The alternative is a position that reads back differently
+    after a reload, which is the same class of defect as saying "נשמר" before
+    a save confirmed.
+  */
+  const refocus = useCallback(
+    async (image: RecipeImage, focal: { x: number; y: number }): Promise<boolean> => {
+      setError(null);
+      setBusy(true);
+      try {
+        const stored = await focus(image, focal);
+        setImages((prev) => prev.map((i) => (i.id === stored.id ? stored : i)));
+        return true;
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'שמירת מיקום התמונה נכשלה.');
+        return false;
+      } finally {
+        setBusy(false);
+      }
+    },
+    [focus],
+  );
+
+  return { images, load, urls, busy, error, pick, drop, broken, refocus };
 }

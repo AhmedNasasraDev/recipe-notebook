@@ -818,6 +818,8 @@ describe('the recipe opens with its photograph, or with nothing at all', () => {
             height: 1200,
             bytes: 120000,
             caption: '',
+            focalX: 50,
+            focalY: 50,
             createdAt: '2026-09-17T10:00:00Z',
           },
         ],
@@ -852,8 +854,9 @@ describe('the recipe opens with its photograph, or with nothing at all', () => {
 
   it('puts the way back under a name a reader can say', async () => {
     heroOf('brioche');
-    const back = await screen.findByRole('link', { name: 'המחברת' });
-    expect(back).toHaveAttribute('href', '/notebook');
+    /* A button, not a link: back is a history step with the parent screen as
+       its fallback, so it has no single address to link to. */
+    const back = await screen.findByRole('button', { name: 'המחברת' });
     // The chevron is decoration; the name is the accessible name above.
     expect(back.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
   });
@@ -866,5 +869,141 @@ describe('the recipe opens with its photograph, or with nothing at all', () => {
     await user.click(menu);
     expect(menu).toHaveAttribute('aria-expanded', 'true');
     expect(await screen.findByRole('button', { name: /מחיקת/ })).toBeInTheDocument();
+  });
+});
+
+describe('the hero photograph, and where it is looked at (Ahmed, stage 7)', () => {
+  /* `heroOf` above is scoped to its own describe; this is the same recipe
+     with the same photograph, so these cases stand on their own. */
+  const withHero = (recipeId: string) =>
+    renderRoute(<RecipeScreen />, {
+      path: '/recipe/:recipeId',
+      route: `/recipe/${recipeId}`,
+      repository: fakeRepository({
+        /* The double defaults to read-only; the position control is for
+           somebody who may edit, so this session may. */
+        canWrite: true,
+        prefs: prefsAt(240),
+        recipes: [...DEMO_RECIPES],
+        images: [
+          {
+            id: 'i1',
+            recipeId: 'brioche',
+            storagePath: 'brioche/i1.webp',
+            ord: 0,
+            width: 1600,
+            height: 1200,
+            bytes: 120000,
+            caption: '',
+            focalX: 50,
+            focalY: 50,
+            createdAt: '2026-09-17T10:00:00Z',
+          },
+        ],
+      }),
+    });
+
+  /*
+    The hero band is `object-fit: cover`, so the browser crops — and the point
+    it crops FROM is the feature. Without it the crop is the centre of the
+    picture, which on a tray shot from above is often nothing.
+  */
+  const heroImg = () =>
+    document.querySelector('img[aria-hidden="true"]') as HTMLImageElement | null;
+
+  it('crops from the centre when nobody has adjusted it', async () => {
+    withHero('brioche');
+    await waitFor(() => expect(heroImg()).not.toBeNull());
+    /* 50% 50% is exactly what `cover` does on its own, so an untouched photo
+       looks the way it always did. */
+    expect(heroImg()?.style.objectPosition).toBe('50% 50%');
+  });
+
+  it('offers the adjustment, and only to somebody who may edit', async () => {
+    withHero('brioche');
+    expect(await screen.findByRole('button', { name: 'התאמת מיקום התמונה' })).toBeInTheDocument();
+  });
+
+  it('previews on the real hero, stores what was chosen, and says so', async () => {
+    const user = userEvent.setup();
+    withHero('brioche');
+    await user.click(await screen.findByRole('button', { name: 'התאמת מיקום התמונה' }));
+
+    const target = screen.getByRole('button', {
+      name: 'בחירת מיקום התמונה — לחיצה על הנקודה שתישאר במרכז',
+    });
+    /*
+      jsdom gives every element a zero-sized box, so a click's coordinates
+      cannot be turned into a percentage by the component. The geometry is
+      supplied here — a 400×200 band, pressed at (100, 50) — which is the
+      quarter point, 25% across and 25% down.
+    */
+    target.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 400, height: 200 }) as DOMRect;
+    await user.pointer({ target, coords: { clientX: 100, clientY: 50 } });
+    await user.click(target);
+
+    /* The PREVIEW is the hero itself, at the size it really is. */
+    await waitFor(() => expect(heroImg()?.style.objectPosition).toBe('25% 25%'));
+
+    await user.click(screen.getByRole('button', { name: 'שמירת המיקום' }));
+    /* "נשמר" only after the write came back — the personal note's rule. */
+    expect(await screen.findByText('המיקום נשמר')).toBeInTheDocument();
+    /* And the stored value is what the picture now renders. */
+    expect(heroImg()?.style.objectPosition).toBe('25% 25%');
+    expect(
+      screen.queryByRole('button', { name: 'בחירת מיקום התמונה — לחיצה על הנקודה שתישאר במרכז' }),
+    ).toBeNull();
+  });
+
+  it('throws the draft away on cancel and puts the stored point back', async () => {
+    const user = userEvent.setup();
+    withHero('brioche');
+    await user.click(await screen.findByRole('button', { name: 'התאמת מיקום התמונה' }));
+    const target = screen.getByRole('button', {
+      name: 'בחירת מיקום התמונה — לחיצה על הנקודה שתישאר במרכז',
+    });
+    target.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 400, height: 200 }) as DOMRect;
+    await user.pointer({ target, coords: { clientX: 300, clientY: 150 } });
+    await user.click(target);
+    await waitFor(() => expect(heroImg()?.style.objectPosition).toBe('75% 75%'));
+
+    await user.click(screen.getByRole('button', { name: 'ביטול' }));
+    expect(heroImg()?.style.objectPosition).toBe('50% 50%');
+    expect(screen.queryByText('המיקום נשמר')).toBeNull();
+  });
+
+  it('does not offer it to a session that cannot write', async () => {
+    renderRoute(<RecipeScreen />, {
+      path: '/recipe/:recipeId',
+      route: '/recipe/brioche',
+      repository: fakeRepository({
+        canWrite: false,
+        prefs: prefsAt(240),
+        recipes: [...DEMO_RECIPES],
+        images: [
+          {
+            id: 'i1',
+            recipeId: 'brioche',
+            storagePath: 'brioche/i1.webp',
+            ord: 0,
+            width: 1600,
+            height: 1200,
+            bytes: 120000,
+            caption: '',
+            focalX: 50,
+            focalY: 50,
+            createdAt: '2026-09-17T10:00:00Z',
+          },
+        ],
+      }),
+    });
+    /* The picture is there to be looked at; the adjustment is not offered.
+       Ahmed: "אפשר שינוי תמונה רק למי שמורשה לערוך את המתכון." */
+    await waitFor(() =>
+      expect(document.querySelector('img[aria-hidden="true"]')).not.toBeNull(),
+    );
+    expect(screen.queryByRole('button', { name: 'התאמת מיקום התמונה' })).toBeNull();
   });
 });

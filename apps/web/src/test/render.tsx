@@ -253,6 +253,9 @@ export function fakeRepository(opts: FakeRepoOptions = {}): Repository {
         bytes: 120000,
         caption: '',
         createdAt: new Date().toISOString(),
+        /* The centre, which is what `cover` does with no position at all. */
+        focalX: 50,
+        focalY: 50,
       };
       images = [...images, added];
       return added;
@@ -260,6 +263,14 @@ export function fakeRepository(opts: FakeRepoOptions = {}): Repository {
     removeRecipeImage: async (image: RecipeImage) => {
       opts.onRemoveRecipeImage?.(image);
       images = images.filter((i) => i.id !== image.id);
+    },
+    /* Stored, so a test can assert that a position SURVIVES rather than that
+       a call was made. */
+    setRecipeImageFocus: async (image: RecipeImage, focal: { x: number; y: number }) => {
+      const clamp = (n: number) => Math.round(Math.min(100, Math.max(0, n)) * 10) / 10;
+      const next: RecipeImage = { ...image, focalX: clamp(focal.x), focalY: clamp(focal.y) };
+      images = images.map((i) => (i.id === image.id ? next : i));
+      return next;
     },
     signedImageUrl: async (path: string) =>
       opts.signedUrlFails === true ? null : `blob:signed/${path}`,

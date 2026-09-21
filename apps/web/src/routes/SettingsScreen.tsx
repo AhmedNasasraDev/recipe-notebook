@@ -20,7 +20,7 @@
 
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BackLink } from '../components/BackLink.js';
+import { BackControl } from '../components/BackLink.js';
 import { PROFILES, UNIT_GROUPS, unit } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { IdentityCard } from '../features/groups/IdentityCard.js';
@@ -133,7 +133,7 @@ export function SettingsScreen() {
       <header className={styles.head}>
         {/* §4: the way back is at the TOP of an inner screen, not at the end
             of it — it used to be the last thing on the page. */}
-        <BackLink to="/more">עוד</BackLink>
+        <BackControl>עוד</BackControl>
         <h1 className={styles.title}>הגדרות</h1>
       </header>
 

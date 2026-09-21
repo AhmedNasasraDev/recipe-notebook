@@ -136,7 +136,23 @@ export function App() {
                   </OnboardingGate>
                 }
               />
-              <Route path="*" element={<Navigate to="/notebook" replace />} />
+              {/*
+                HOME IS WHERE AN UNKNOWN ADDRESS LANDS, AND WHERE THE APP OPENS.
+
+                This said `/notebook`, and that one line is the whole of what
+                Ahmed reported: "המערכת נפתחת אצלי במחברת המתכונים במקום בבית."
+                Opening the application at its root matches no route, falls
+                through to here, and was sent to the notebook.
+
+                Nothing else was involved — there is no "last tab" to restore
+                and no preference being read, so nothing had to be cleared to
+                fix it and nothing of his was touched. A deep link still opens
+                its own target, because a deep link MATCHES a route above and
+                never reaches this line; and because the redirect only ever
+                fires for an address that resolves to no screen, it cannot
+                pull somebody out of a screen they are working on.
+              */}
+              <Route path="*" element={<Navigate to="/home" replace />} />
             </Routes>
           </AppDataProvider>
         </AuthGate>

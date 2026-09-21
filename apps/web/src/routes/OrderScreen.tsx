@@ -36,7 +36,7 @@
 
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { BackLink } from '../components/BackLink.js';
+import { BackControl } from '../components/BackLink.js';
 import { compute, formatGrams, formatNis } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
@@ -102,7 +102,7 @@ export function OrderScreen() {
     return (
       <div className={styles.missing}>
         <p>המתכון הזה לא נמצא במחברת.</p>
-        <BackLink to="/notebook">המחברת</BackLink>
+        <BackControl>המחברת</BackControl>
       </div>
     );
   }
@@ -116,7 +116,7 @@ export function OrderScreen() {
   return (
     <div className={styles.wrap}>
       <div className={`${styles.topBar} noprint`}>
-        <BackLink to={`/recipe/${recipe.id}`}>המתכון</BackLink>
+        <BackControl>המתכון</BackControl>
         <span className={styles.topTitle}>דף הזמנה</span>
       </div>
 

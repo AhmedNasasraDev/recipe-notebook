@@ -67,6 +67,15 @@ function imageFromRow(row: RecipeImageRow): RecipeImage {
     bytes: row.bytes,
     caption: row.caption,
     createdAt: row.created_at,
+    /*
+      A database that predates migration 0038 has no columns here, and a
+      picture with no stored focal point is a picture nobody has adjusted —
+      which is the centre, which is what `cover` does anyway. So the default
+      is applied in the mapper rather than the screen: one place, and every
+      reader gets a number instead of an undefined.
+    */
+    focalX: row.focal_x ?? 50,
+    focalY: row.focal_y ?? 50,
   };
 }
 import {
@@ -744,6 +753,44 @@ export function createSupabaseRepository({
       }
       const { error } = await client.from('recipe_images').delete().eq('id', image.id);
       if (error) throw new SupabaseRepositoryError('מחיקת התמונה נכשלה', error);
+    },
+
+    async setRecipeImageFocus(
+      image: RecipeImage,
+      focal: { x: number; y: number },
+    ): Promise<RecipeImage> {
+      requireOnline('מיקום התמונה');
+      /*
+        Clamped here as well as in the CHECK constraint, and that is not
+        belt-and-braces for its own sake: the numbers come from a drag
+        gesture, and a gesture that ends a few pixels outside the box produces
+        101. Rejecting that with a 400 would be correct and useless — the
+        person did nothing wrong. Rounded to one decimal because a focal point
+        is not a measurement and 37.4% is already finer than an eye can place.
+      */
+      const clamp = (n: number) => Math.round(Math.min(100, Math.max(0, n)) * 10) / 10;
+      const { data, error } = await client
+        .from('recipe_images')
+        .update({ focal_x: clamp(focal.x), focal_y: clamp(focal.y) })
+        .eq('id', image.id)
+        .select('*')
+        .single();
+      /*
+        42703 is "column does not exist": migration 0038 has not been applied
+        to this database. Said plainly, because the alternative is a save that
+        looks like it worked and a position that is back in the middle after a
+        reload.
+      */
+      if (error) {
+        const missing = (error as { code?: string }).code === '42703';
+        throw new SupabaseRepositoryError(
+          missing
+            ? 'שמירת מיקום התמונה דורשת עדכון של מסד הנתונים (מיגרציה 0038) שעדיין לא הוחל.'
+            : 'שמירת מיקום התמונה נכשלה',
+          error,
+        );
+      }
+      return imageFromRow(data);
     },
 
     /*

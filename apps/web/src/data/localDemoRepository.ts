@@ -242,6 +242,12 @@ export function createLocalDemoRepository(): Repository {
       );
     },
 
+    async setRecipeImageFocus(): Promise<never> {
+      throw new WriteNotAllowedError(
+        'תמונות מתכון נשמרות בשרת, ובהתקנה הזאת אין חיבור לשרת.',
+      );
+    },
+
     async signedImageUrl() {
       return null;
     },

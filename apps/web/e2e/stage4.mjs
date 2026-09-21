@@ -240,6 +240,17 @@ try {
     )) {
       const r = el.getBoundingClientRect();
       if (r.width === 0 || r.height === 0) continue;
+      /*
+        A DELIBERATELY HIDDEN CONTROL OPERATED THROUGH A VISIBLE LABEL IS NOT
+        A SMALL TARGET.
+
+        The photo picker on stage 1 is the standard way to style a file input:
+        the input itself is taken out of the flow by `.visuallyHidden` and the
+        label around it is the 44px control somebody presses. Measuring the
+        input reported a 1px target on a screen whose real one is 44.
+        `responsive.mjs` has skipped these for the same reason since the audit.
+      */
+      if (/visuallyHidden/.test(String(el.className))) continue;
       // Icon buttons are --hit-compact (40px) inside a 44px row, by design.
       if (r.height < 40) {
         const name = el.getAttribute('aria-label') ?? el.textContent?.trim().slice(0, 18);

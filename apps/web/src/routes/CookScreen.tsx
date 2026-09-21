@@ -64,7 +64,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ClockIcon, ThermometerIcon } from '../shell/Icons.js';
-import { BackLink } from '../components/BackLink.js';
+import { BackControl } from '../components/BackLink.js';
 import { compute } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
@@ -345,7 +345,7 @@ export function CookScreen() {
       <div className={styles.missing}>
         <h1 className={styles.missingTitle}>מצב הכנה</h1>
         <p>המתכון הזה לא נמצא במחברת.</p>
-        <BackLink to="/notebook">המחברת</BackLink>
+        <BackControl>המחברת</BackControl>
       </div>
     );
   }
@@ -361,7 +361,7 @@ export function CookScreen() {
         <Link to={`/recipe/${recipe.id}/edit`} className={styles.exit}>
           עריכת המתכון
         </Link>
-        <BackLink to={`/recipe/${recipe.id}`}>חזרה למתכון</BackLink>
+        <BackControl>חזרה למתכון</BackControl>
       </div>
     );
   }
@@ -405,9 +405,9 @@ export function CookScreen() {
     <header className={styles.head}>
       {/* §4/§8: the way out of Cook Mode — the right-hand end of the bar, the
           chevron pointing back, and always reachable, in fullscreen too. */}
-      <BackLink to={`/recipe/${recipe.id}`} className={styles.exitPill}>
+      <BackControl className={styles.exitPill}>
         יציאה
-      </BackLink>
+      </BackControl>
       <button
         type="button"
         className={styles.fsBtn}

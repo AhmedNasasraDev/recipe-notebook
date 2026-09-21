@@ -127,6 +127,8 @@ export interface AppData {
   listRecipeImages(recipeId: string): Promise<RecipeImage[]>;
   addRecipeImage(recipeId: string, file: File | Blob): Promise<RecipeImage>;
   removeRecipeImage(image: RecipeImage): Promise<void>;
+  /** Moves the focal point — two numbers, no re-upload. Migration 0038. */
+  setRecipeImageFocus(image: RecipeImage, focal: { x: number; y: number }): Promise<RecipeImage>;
   signedImageUrl(storagePath: string): Promise<string | null>;
   /** The first photo of each recipe, signed, in one call — for the notebook's
       cards. See the repository interface. */
@@ -434,6 +436,11 @@ export function AppDataProvider({
     (id: string, file: File | Blob) => repo.addRecipeImage(id, file),
     [repo],
   );
+  const setRecipeImageFocus = useCallback(
+    (image: RecipeImage, focal: { x: number; y: number }) =>
+      repo.setRecipeImageFocus(image, focal),
+    [repo],
+  );
   const removeRecipeImage = useCallback(
     (image: RecipeImage) => repo.removeRecipeImage(image),
     [repo],
@@ -500,6 +507,7 @@ export function AppDataProvider({
       recipeThumbs,
       addRecipeImage,
       removeRecipeImage,
+      setRecipeImageFocus,
       signedImageUrl,
       listPlans,
       getPlan,
@@ -540,6 +548,7 @@ export function AppDataProvider({
       recipeThumbs,
       addRecipeImage,
       removeRecipeImage,
+      setRecipeImageFocus,
       signedImageUrl,
       listPlans,
       getPlan,

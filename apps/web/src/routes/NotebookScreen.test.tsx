@@ -208,6 +208,8 @@ describe('the picture on a recipe card', () => {
         height: 1200,
         bytes: 1,
         caption: '',
+        focalX: 50,
+        focalY: 50,
         createdAt: '2026-09-17T10:00:00Z',
       },
     ]);

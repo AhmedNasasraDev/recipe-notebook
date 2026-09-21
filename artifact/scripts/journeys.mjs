@@ -389,7 +389,10 @@ if (should('C')) {
   check('and remembers the step that was marked', /1 מתוך/.test(await text(page)));
 
   // Leave and come back the same way a person would.
-  await page.getByRole('link', { name: 'יציאה' }).click();
+  /* A BUTTON now, not a link. Back is a history step with the parent screen
+     as its fallback, so it has no single address to link to — see
+     apps/web/src/shell/navigation.ts. */
+  await page.getByRole('button', { name: 'יציאה' }).click();
   await page.waitForTimeout(700);
   check('the exit goes to the recipe', /^\/recipe\/brioche/.test(await route(page)), await route(page));
   await page.goBack();

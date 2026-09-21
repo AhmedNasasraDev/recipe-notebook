@@ -439,6 +439,16 @@ describe('stage-11: a plan that cannot be loaded is still a page', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('התוכנית לא נמצאה.');
     // §4's shared back control: the destination's name, with the chevron that
     // points back in an RTL layout.
-    expect(screen.getByRole('link', { name: 'התוכניות' })).toHaveAttribute('href', '/plans');
+    /*
+      A BUTTON, NOT A LINK, AND THAT IS THE FIX RATHER THAN A REGRESSION.
+
+      Back used to be `<BackLink to="/plans">` — an address, hard-coded on
+      every screen, which is why arriving here from anywhere landed you in the
+      plan list. It is `BackControl` now: a history step when there is
+      history, the parent screen when there is not. You cannot link to "the
+      screen I was on", so it is a button, and the name still says where it
+      goes.
+    */
+    expect(screen.getByRole('button', { name: 'התוכניות' })).toBeInTheDocument();
   });
 });

@@ -27,7 +27,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { BackButton, BackLink } from '../components/BackLink.js';
+import { BackButton, BackControl } from '../components/BackLink.js';
+import { RecipeImages } from '../features/images/RecipeImages.js';
+import { useRecipeImages } from '../features/images/useRecipeImages.js';
+import { useGoBack } from '../shell/navigation.js';
 import {
   GN_SIZES,
   PAN_KINDS,
@@ -128,7 +131,52 @@ export function RecipeEditScreen() {
     setCalibrations,
     ready,
     catalog,
+    listRecipeImages,
+    addRecipeImage,
+    removeRecipeImage,
+    setRecipeImageFocus,
+    signedImageUrl,
   } = useAppData();
+
+  /*
+    ── THE PHOTOGRAPH, ON STAGE 1 ──────────────────────────────────────────
+
+    Two states, because a recipe that exists and a recipe that does not are
+    genuinely different problems:
+
+      an EXISTING recipe   the same `RecipeImages` gallery the recipe page
+                           uses, against the same repository. An upload is
+                           immediate and real, and removing one removes one.
+      a NEW recipe         there is no row to hang a file on and no storage
+                           path to put it at, so the chosen file waits here
+                           and `onSave` uploads it as soon as the save returns
+                           an id. The card says so rather than pretending.
+
+    `pendingPhoto` is a File and `pendingUrl` is the object URL used to show
+    it — revoked when it is replaced or cleared, because an object URL that is
+    never revoked is a leak that survives every navigation.
+  */
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  const holdPhoto = (file: File | null) => {
+    setPhotoError(null);
+    setPendingUrl((old) => {
+      if (old !== null) URL.revokeObjectURL(old);
+      return file === null ? null : URL.createObjectURL(file);
+    });
+    setPendingPhoto(file);
+  };
+
+  const editorImages = useRecipeImages({
+    recipeId: recipeId ?? '',
+    list: listRecipeImages,
+    add: addRecipeImage,
+    remove: removeRecipeImage,
+    sign: signedImageUrl,
+    focus: setRecipeImageFocus,
+  });
 
   const isNew = !recipeId;
   const existing = useMemo(
@@ -312,6 +360,43 @@ export function RecipeEditScreen() {
       // does not fire on a form that was just saved successfully.
       setOriginal(draftFromRecipe(saved));
 
+      /*
+        THE PHOTOGRAPH CHOSEN BEFORE THERE WAS A RECIPE TO PUT IT ON.
+
+        A new recipe has no id and no storage path until this moment, so a
+        file picked on stage 1 was held in memory. Now there is a row, so it
+        goes up.
+
+        Awaited, and its failure is reported without losing the save: the
+        recipe IS saved by this point, and telling somebody their recipe
+        failed because a photo did is worse than telling them the photo
+        failed. The file stays in state on a failure, so pressing save again
+        retries the upload rather than the recipe.
+      */
+      if (pendingPhoto !== null) {
+        try {
+          await addRecipeImage(saved.id, pendingPhoto);
+          setPendingPhoto(null);
+          setPhotoError(null);
+        } catch (e: unknown) {
+          setPhotoError(
+            e instanceof Error
+              ? `המתכון נשמר, אבל העלאת התמונה נכשלה: ${e.message}`
+              : 'המתכון נשמר, אבל העלאת התמונה נכשלה.',
+          );
+          /* Stay in the editor so the message is read and the retry is one
+             press away, instead of navigating away from the only place that
+             still holds the file. */
+          if (mode !== 'draft') {
+            setDraftSaved(false);
+            if (isNew) {
+              navigate(`/recipe/${saved.id}/edit`, { replace: true, state: { stage } });
+            }
+            return;
+          }
+        }
+      }
+
       if (mode === 'draft') {
         /*
           A draft keeps the editor open. For a recipe that did not exist yet
@@ -367,10 +452,15 @@ export function RecipeEditScreen() {
         numbers that are numbers; a finished recipe still needs at least one
         ingredient (see `validateDraft(draft, 'draft' | 'final')`). Saving a
         draft keeps you in the editor, on the stage you were on.
-      · PHOTOGRAPHS ARE NOT IN HERE AT ALL. An upload happens immediately and
-        so it lives on the recipe page (see RecipeImages) — which means there
-        is nothing for a stage change to lose, and a photo added to a recipe
-        is untouched by editing it.
+      · PHOTOGRAPHS ARE IN HERE NOW, on the first stage, because Ahmed asked
+        for them there: "ביצירת מתכון ובעריכתו אפשר להעלות תמונה, להחליף
+        אותה… ולהסיר אותה." For a recipe that EXISTS this is the same
+        component the recipe page uses, doing the same immediate upload — so
+        there is still nothing for a stage change to lose. For a recipe that
+        does not exist yet there is no row to attach a file to and no path to
+        upload it under, so the file waits in `pendingPhoto` and is uploaded
+        the moment the first save returns an id. That is the honest shape of
+        it: the picture cannot be stored before the recipe is.
   */
   const stageRefs = useRef<(HTMLElement | null)[]>([null, null, null, null]);
   const startStage = (location.state as { stage?: number } | null)?.stage ?? 0;
@@ -399,9 +489,20 @@ export function RecipeEditScreen() {
     document.querySelector('[class*="content"]')?.scrollTo?.({ top: 0 });
   };
 
+  /*
+    Cancel is the editor's way back, and it keeps the guard it already had —
+    Ahmed: "הגן על שינויים שלא נשמרו באמצעות המנגנון הקיים." What changed is
+    only the DESTINATION: it used to be hard-coded, and now it is the same
+    answer every other screen gets. `useGoBack`'s fallback is `parentOf`,
+    which for `/recipe/:id/edit` is that recipe and for `/recipe/new` is the
+    notebook — the two addresses this line used to name — so nothing moved
+    except that arriving here from Home now returns to Home.
+  */
+  const goBack = useGoBack();
   const onCancel = () => {
     if (dirty && !window.confirm('יש שינויים שלא נשמרו. לצאת בלי לשמור?')) return;
-    navigate(recipeId ? `/recipe/${recipeId}` : '/notebook');
+    if (goBack) goBack();
+    else navigate(recipeId ? `/recipe/${recipeId}` : '/notebook');
   };
 
   if (!isNew && !loaded) {
@@ -410,7 +511,7 @@ export function RecipeEditScreen() {
         <p className={styles.loading}>
           {ready ? 'המתכון הזה לא נמצא במחברת.' : 'טוען…'}
         </p>
-        <BackLink to="/notebook">המחברת</BackLink>
+        <BackControl>המחברת</BackControl>
       </div>
     );
   }
@@ -580,6 +681,80 @@ export function RecipeEditScreen() {
               </span>
             </span>
           </label>
+        </section>
+
+        {/*
+          ── THE PHOTOGRAPH ─────────────────────────────────────────────────
+
+          Ahmed: "ביצירת מתכון ובעריכתו אפשר להעלות תמונה, להחליף אותה,
+          להתאים חיתוך או מיקום ולהסיר אותה."
+
+          Three of the four are here. The fourth — the position — is on the
+          recipe page, on the hero itself, because that is the box the crop
+          actually happens in: adjusting it against a thumbnail in a form
+          would be adjusting it against the wrong shape.
+        */}
+        <section className={styles.card} aria-label="תמונת המתכון">
+          <h2 className={styles.cardTitle}>תמונה</h2>
+          {isNew ? (
+            <>
+              <p className={styles.hint}>
+                אפשר לבחור תמונה עכשיו — היא תועלה ברגע שהמתכון יישמר בפעם
+                הראשונה, כי לפני זה אין עוד מתכון לשמור אותה עליו.
+              </p>
+              {pendingUrl !== null && (
+                <img className={styles.photoPreview} src={pendingUrl} alt="" aria-hidden="true" />
+              )}
+              <div className={styles.photoRow}>
+                <label className={styles.photoPick}>
+                  {pendingPhoto === null ? 'בחירת תמונה' : 'החלפת התמונה'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="visuallyHidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      holdPhoto(file);
+                      /* So picking the same file twice still fires a change. */
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+                {pendingPhoto !== null && (
+                  <button
+                    type="button"
+                    className={styles.cancelBtn}
+                    onClick={() => holdPhoto(null)}
+                  >
+                    הסרת הבחירה
+                  </button>
+                )}
+              </div>
+              {pendingPhoto !== null && (
+                <p className={styles.hint}>
+                  נבחר: <span className="ltr">{pendingPhoto.name}</span>
+                </p>
+              )}
+            </>
+          ) : (
+            /*
+              An existing recipe gets the real gallery, against the real
+              repository — the same component and the same code path the
+              recipe page uses, so an upload here is an upload, not a
+              staging area. `canEdit` is ownership: a group recipe is not
+              the reader's to re-photograph.
+            */
+            <RecipeImages
+              state={editorImages}
+              canWrite={capabilities.canWrite}
+              canEdit={!existing?.['group_id']}
+            />
+          )}
+          {photoError !== null && (
+            <p className={styles.saveWhy} role="alert">
+              {photoError}
+            </p>
+          )}
         </section>
 
         </>

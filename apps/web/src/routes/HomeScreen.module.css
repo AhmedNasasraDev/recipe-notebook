@@ -365,3 +365,60 @@
   margin-block-start: 2px;
   color: var(--c-muted);
 }
+
+/*
+  ── THE QUICK-ACTION ROW ──────────────────────────────────────────────────
+
+  Six entrances, in a grid that is three across on a phone and lays out wider
+  on a tablet without anybody writing a second breakpoint: `auto-fill` with a
+  92px floor does it, and the cards stay the same size as each other because
+  the tracks do.
+
+  A glyph over a word, not beside it — these are targets for a thumb, and the
+  word has to fit at 360px without wrapping in the middle of "חומרי גלם". The
+  whole card is the target, 72px tall, well over the project's 44px floor.
+*/
+.quick {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: var(--gap-in-group);
+}
+
+.quickCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 72px;
+  padding: 10px 6px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  text-decoration: none;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.quickCard:hover {
+  background: var(--c-select);
+}
+
+.quickCard:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.quickGlyph {
+  display: grid;
+  place-items: center;
+  color: var(--c-green);
+}
+
+.quickLabel {
+  font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-mid);
+  text-align: center;
+  line-height: 1.25;
+}

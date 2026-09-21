@@ -27,7 +27,7 @@
 
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BackLink } from '../components/BackLink.js';
+import { BackControl } from '../components/BackLink.js';
 import {
   formatGrams,
   parseLocal,
@@ -287,7 +287,7 @@ export function PasteScreen() {
         </>
       )}
 
-      <BackLink to="/notebook">המחברת</BackLink>
+      <BackControl>המחברת</BackControl>
     </div>
   );
 }

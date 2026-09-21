@@ -21,6 +21,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAppData } from '../app/AppDataProvider.js';
+import { BackControl } from '../components/BackLink.js';
 import styles from './JoinScreen.module.css';
 
 export function JoinScreen() {
@@ -65,6 +66,10 @@ export function JoinScreen() {
   if (declined) {
     return (
       <div className={styles.page}>
+        {/* An invitation is opened from outside the app, so there is usually
+            nothing behind it — `parentOf` sends this one to Home, which is
+            the screen that says what the application is. */}
+        <BackControl />
         <h1 className={styles.title}>ההזמנה נדחתה</h1>
         <p className={styles.lede}>
           לא הצטרפתם לקבוצה, והקישור הזה לא יעבוד יותר. אם זו הייתה טעות, אפשר
@@ -79,6 +84,7 @@ export function JoinScreen() {
 
   return (
     <div className={styles.page}>
+      <BackControl />
       <h1 className={styles.title}>הזמנה לקבוצה</h1>
       <p className={styles.lede}>
         קיבלתם הזמנה להצטרף לקבוצה. אחרי ההצטרפות תראו את הקורסים, את השיעורים

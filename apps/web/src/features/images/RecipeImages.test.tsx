@@ -21,6 +21,8 @@ const image = (over: Partial<RecipeImage> = {}): RecipeImage => ({
   height: 1200,
   bytes: 120000,
   caption: '',
+  focalX: 50,
+  focalY: 50,
   createdAt: '2026-09-17T10:00:00Z',
   ...over,
 });
@@ -32,6 +34,7 @@ function show(
     canWrite?: boolean;
     listRejects?: boolean;
     signReturnsNull?: boolean;
+  focusFails?: boolean;
     addRejects?: string;
     removeRejects?: string;
     onAdd?(file: File | Blob): void;
@@ -54,13 +57,20 @@ function show(
   const sign = vi.fn(async (path: string) =>
     opts.signReturnsNull ? null : `blob:signed/${path}`,
   );
+  /* The focal point writer. Stores, so a test can assert the value that came
+     BACK rather than the one that went in — the clamp lives in the store. */
+  const focus = vi.fn(async (img: RecipeImage, at: { x: number; y: number }) => {
+    if (opts.focusFails) throw new Error('שמירת מיקום התמונה נכשלה');
+    const clamp = (n: number) => Math.round(Math.min(100, Math.max(0, n)) * 10) / 10;
+    return { ...img, focalX: clamp(at.x), focalY: clamp(at.y) };
+  });
   /*
     The fetching lives in `useRecipeImages` now — the recipe page needs the
     same list twice, once for the hero and once for this gallery — so the
     tests drive the pair together, which is exactly how the screen uses them.
   */
   function Harness() {
-    const state = useRecipeImages({ recipeId: 'r1', list, add, remove, sign });
+    const state = useRecipeImages({ recipeId: 'r1', list, add, remove, sign, focus });
     return (
       <RecipeImages
         state={state}

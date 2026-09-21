@@ -1,6 +1,8 @@
+import { useRef } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useAppData } from '../app/AppDataProvider.js';
 import { TabBar } from './TabBar.js';
+import { useScrollMemory } from './useScrollMemory.js';
 import { useSoftKeyboard } from './useSoftKeyboard.js';
 import styles from './AppShell.module.css';
 
@@ -25,6 +27,14 @@ export function AppShell() {
     it comes back exactly as it was the moment the keyboard closes.
   */
   const keyboardOpen = useSoftKeyboard();
+  /*
+    The application scrolls inside this element, not on the document, so
+    coming back to a list would always land at the top — see
+    useScrollMemory.ts. The search and the filter need nothing: the notebook
+    keeps both in the address.
+  */
+  const scroller = useRef<HTMLElement | null>(null);
+  useScrollMemory(scroller);
 
   // §17 / AC #17: the app states plainly where its data comes from. It never
   // presents a local-only session as if it were connected.
@@ -78,7 +88,7 @@ export function AppShell() {
           also a sane measure for a line of Hebrew — while the scroller, the
           banner and the tab bar keep the full width of the frame.
         */}
-        <main className={`${styles.content} hideScrollbar`}>
+        <main ref={scroller} className={`${styles.content} hideScrollbar`}>
           <div className={styles.column}>
             <Outlet />
           </div>

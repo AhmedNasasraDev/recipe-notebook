@@ -591,11 +591,15 @@ describe('§7 Mise en place — the checklist, and the way through it', () => {
     for (const word of [/דלג/, /בכל זאת/, /ללא הכנ/, /התחל ללא/]) {
       expect(screen.queryByText(word)).not.toBeInTheDocument();
     }
+    /*
+      "יציאה" is the way OUT of Cook Mode and it is a button now rather than a
+      link — see PlanningFlow.test.tsx on why back became an action. It is not
+      a second way THROUGH, which is what this case is about: the only control
+      that starts the preparation is still the one that says so.
+    */
     const buttons = screen.getAllByRole('button');
-    expect(buttons.map((b) => b.textContent)).toEqual(['מסך מלא', 'מעבר להכנה']);
-    const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(1);
-    expect(links[0]).toHaveAttribute('href', '/recipe/cake');
+    expect(buttons.map((b) => b.textContent)).toEqual(['יציאה', 'מסך מלא', 'מעבר להכנה']);
+    expect(screen.queryAllByRole('link')).toHaveLength(0);
   });
 
   it('counts what is left, out loud, and stops counting when nothing is', async () => {

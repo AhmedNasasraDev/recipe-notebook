@@ -106,6 +106,7 @@ import {
   EllipsisVertical,
   GraduationCap,
   House,
+  LayoutGrid,
   MessageCircle,
   NotebookText,
   Search,
@@ -287,6 +288,20 @@ export const TOOL_ICON: Readonly<Record<string, (p: { width: number }) => JSX.El
   /* A spoon for the two spoons. At the glyph size, like the beaker beside it. */
   tbsp: ({ width }) => <Spoon width={width} size={SIZE.glyph} />,
   tsp: ({ width }) => <Spoon width={width} size={SIZE.glyph} />,
+};
+
+/**
+ * The quick-action row on Home. Every entry is a screen that exists — the
+ * notebook, the categories inside it, the ingredient centre, the measuring
+ * tools, the groups and the production planning.
+ */
+export const QUICK_ICON: Readonly<Record<string, (p: IconProps) => JSX.Element>> = {
+  notebook: glyph(NotebookText, SIZE.glyph),
+  categories: glyph(LayoutGrid, SIZE.glyph),
+  ingredients: glyph(Wheat, SIZE.glyph),
+  tools: glyph(Beaker, SIZE.glyph),
+  groups: glyph(Users, SIZE.glyph),
+  plans: glyph(ClipboardList, SIZE.glyph),
 };
 
 export const MENU_ICON: Readonly<Record<string, (p: IconProps) => JSX.Element>> = {

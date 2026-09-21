@@ -1529,3 +1529,89 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+/*
+  ── ADJUSTING WHERE THE PHOTOGRAPH IS LOOKED AT ────────────────────────────
+
+  `.focusTarget` is the whole hero band while the panel is open: a press on it
+  chooses the point that stays in the middle of the crop. It is a real button
+  with a real accessible name (see RecipeScreen.tsx), laid over the picture but
+  UNDER the top bar — `z-index` 1 against the bar's own stacking — so back and
+  the menu keep working while the position is being chosen.
+*/
+.focusTarget {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: crosshair;
+}
+
+/* The chosen point, drawn so it reads on a dark photograph and a light one:
+   a white ring with a dark outline, which no single colour manages. */
+.focusDot {
+  position: absolute;
+  inline-size: 22px;
+  block-size: 22px;
+  margin-inline-start: -11px;
+  margin-block-start: -11px;
+  border: 2px solid var(--c-white);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(23, 26, 24, 0.55),
+    inset 0 0 0 1px rgba(23, 26, 24, 0.55);
+  pointer-events: none;
+}
+
+.focusBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-in-group);
+  margin-block-start: 10px;
+}
+
+.focusBtn,
+.focusBtnPrimary {
+  min-height: var(--hit-compact);
+  padding-inline: 14px;
+  border-radius: var(--r-control);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-mid);
+  cursor: pointer;
+}
+
+.focusBtn {
+  border: 1px solid var(--c-line);
+  background: var(--c-paper);
+  color: var(--c-ink);
+}
+
+.focusBtnPrimary {
+  border: 1px solid var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+}
+
+.focusBtnPrimary:disabled {
+  border-color: var(--c-off-bg);
+  background: var(--c-off-bg);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+.focusHint {
+  flex: 1 1 200px;
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+  line-height: 1.4;
+}
+
+.focusOk {
+  font-size: var(--fs-meta);
+  color: var(--c-green-ink);
+}

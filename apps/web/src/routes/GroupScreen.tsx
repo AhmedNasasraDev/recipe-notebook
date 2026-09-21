@@ -23,7 +23,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { BackLink } from '../components/BackLink.js';
+import { BackControl } from '../components/BackLink.js';
 import { ChatIcon, ChevronIcon, LessonsIcon } from '../shell/Icons.js';
 import { useAppData } from '../app/AppDataProvider.js';
 import { GroupChat } from '../features/groups/GroupChat.js';
@@ -103,7 +103,7 @@ export function GroupScreen() {
         <p className={styles.notice}>
           הקבוצה אינה קיימת, או שאין לחשבון הזה גישה אליה.
         </p>
-        <BackLink to="/groups">לכל הקבוצות</BackLink>
+        <BackControl>לכל הקבוצות</BackControl>
         {problem !== null && (
           <p className={styles.problem} role="alert">
             {problem}
@@ -133,7 +133,7 @@ export function GroupScreen() {
     */
     <div className={styles.page}>
       <header className={styles.head}>
-        <BackLink to="/groups">לכל הקבוצות</BackLink>
+        <BackControl>לכל הקבוצות</BackControl>
         <h1 className={styles.title}>{group.name}</h1>
         {group.kind !== '' && <p className={styles.kind}>{group.kind}</p>}
         <p className={styles.meta}>
