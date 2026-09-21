@@ -56,6 +56,15 @@ export default tseslint.config(
         which type-checks it with Deno's own checker.
       */
       'supabase/functions/**',
+
+      /*
+        The FIGMA BUILD SCRIPTS (see figma/README.md). They run inside Figma's
+        plugin sandbox against the `figma` global, with top-level await and no
+        module system — the type-aware rules have no program for them and would
+        report the environment rather than the code. They have their own
+        checker: `npm run figma:check`.
+      */
+      'figma/**',
     ],
   },
 
