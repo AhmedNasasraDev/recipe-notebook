@@ -511,28 +511,6 @@ export function RecipeScreen() {
       <CalcNotice state={calc} />
 
       {/*
-        ── §5 photographs ────────────────────────────────────────────────
-        On the recipe page rather than in the edit form: an upload happens
-        immediately, and an immediate action inside a form whose promise is
-        "nothing happens until you save" means cancelling the edit leaves the
-        photo behind. RecipeImages.tsx has the longer version.
-
-        `canEdit` is ownership, not the profile: a member reading a group
-        recipe may see its photos and may not add to them, which is what
-        migration 0029's storage policies enforce anyway.
-      */}
-      <RecipeImages
-        recipeId={recipe.id}
-        canWrite={capabilities.canWrite}
-        canEdit={!recipe.group_id}
-        list={listRecipeImages}
-        add={addRecipeImage}
-        remove={removeRecipeImage}
-        sign={signedImageUrl}
-      />
-
-
-      {/*
         §14 Cook Mode. Its own row above the edit actions and not inside them:
         this is the button you press to START WORKING, and it should not be one
         of four identical boxes next to "מחיקה". A recipe with no steps has
@@ -714,6 +692,37 @@ export function RecipeScreen() {
           ))}
         </ol>
       </section>
+
+      {/*
+        ── §5 photographs ────────────────────────────────────────────────
+
+        DESIGN PASS: BELOW THE WORK, NOT ABOVE IT.
+
+        This card used to sit between the recipe's name and "מצב הכנה". On a
+        phone that put an empty dashed placeholder across the first screen, so
+        the button that starts the cooking, the quantities and the ingredients
+        all began below the fold. A photograph is a reference you check, not
+        the thing you came for — it reads after the steps. Nothing about the
+        card changed: same component, same permissions, same upload.
+
+        On the recipe page rather than in the edit form: an upload happens
+        immediately, and an immediate action inside a form whose promise is
+        "nothing happens until you save" means cancelling the edit leaves the
+        photo behind. RecipeImages.tsx has the longer version.
+
+        `canEdit` is ownership, not the profile: a member reading a group
+        recipe may see its photos and may not add to them, which is what
+        migration 0029's storage policies enforce anyway.
+      */}
+      <RecipeImages
+        recipeId={recipe.id}
+        canWrite={capabilities.canWrite}
+        canEdit={!recipe.group_id}
+        list={listRecipeImages}
+        add={addRecipeImage}
+        remove={removeRecipeImage}
+        sign={signedImageUrl}
+      />
 
       {recipe.notes && <p className={styles.recipeNote}>{recipe.notes}</p>}
 

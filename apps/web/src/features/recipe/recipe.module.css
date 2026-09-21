@@ -1263,7 +1263,10 @@
   font-size: var(--fs-body-lg);
   font-weight: 600;
   text-decoration: none;
-  box-shadow: 0 6px 16px color-mix(in srgb, var(--c-text) 18%, transparent);
+  /* DESIGN PASS: the lift was 18% of the ink at 16px of blur, which on a light
+     page read as a dark smudge under the one green control. A button this size
+     does not need to be told twice that it is the primary one. */
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--c-text) 10%, transparent);
 }
 
 .cookBtn:hover {

@@ -1,13 +1,24 @@
 /* §2 screen 2 "בית". Tiles and rows from the §16 tokens; nothing new. */
 
+/*
+  DESIGN PASS: THE HOME SCREEN READS AS CARDS, LIKE THE REST OF THE APP.
+
+  Every other screen in the application puts its sections on white surfaces
+  over the cream page — the recipe, "עוד", the settings. This one was built as
+  full-bleed blocks separated by hairlines, which is the shape of a settings
+  list: correct information, wrong voice, and on a phone it made the first
+  screen look like a menu rather than a kitchen's own page. The sections below
+  are the same sections with the same content; only the container changed.
+*/
 .wrap {
   display: flex;
   flex-direction: column;
+  gap: var(--gap-in-group);
+  padding: 16px var(--pad-card) 24px;
 }
 
 .head {
-  padding: 20px 20px 14px;
-  border-block-end: 1px solid var(--c-line);
+  padding-block-end: 2px;
 }
 
 .title {
@@ -25,18 +36,21 @@
 }
 
 .section,
-.resume {
-  padding: 16px 20px;
-  border-block-end: 1px solid var(--c-line);
+.resume,
+.start {
   display: flex;
   flex-direction: column;
   gap: var(--gap-in-group);
+  padding: var(--pad-card);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card-lg);
+  background: var(--c-paper);
 }
 
 .sectionTitle {
   font-family: var(--font-display);
   font-size: 18px;
-  font-weight: 600;
+  font-weight: var(--fw-title);
   letter-spacing: normal;
   line-height: 1.3;
   color: var(--c-ink);
@@ -56,7 +70,7 @@
   padding: 12px 14px;
   border: 1px solid var(--c-line);
   border-radius: var(--r-card);
-  background: var(--c-paper);
+  background: var(--c-app-bg);
   text-decoration: none;
 }
 
@@ -88,10 +102,13 @@
 }
 
 /* ── categories ──────────────────────────────────────────────────────────── */
+/* Inside the card the tiles have 32px less width to share, so the column floor
+   comes down with it — otherwise a two-word category wraps and the row grows a
+   line taller than its neighbour. */
 .tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: var(--gap-in-group);
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: var(--gap-tight);
 }
 
 .tile {
@@ -99,16 +116,16 @@
   flex-direction: column;
   gap: 2px;
   min-height: var(--hit-min);
-  padding: 12px 14px;
+  padding: 12px;
   border: 1px solid var(--c-line);
   border-radius: var(--r-card);
-  background: var(--c-white);
+  background: var(--c-app-bg);
   text-decoration: none;
 }
 
 .tileName {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   font-family: var(--font-display);
   font-size: var(--fs-body);
   font-weight: 600;
@@ -125,20 +142,25 @@
 .bases {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-tight);
   list-style: none;
 }
 
+/* Inside a white card, a row does not need a second surface of its own — it
+   needs a line under it. Same target height, one layer less. */
 .baseRow {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: var(--gap-in-group);
   min-height: var(--hit-compact);
-  padding: 9px 12px;
-  border-radius: var(--r-card);
-  background: var(--c-paper);
+  padding-block: 10px;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 60%, transparent);
   text-decoration: none;
+}
+
+.bases li:last-child .baseRow,
+.quickList li:last-child .quickRow {
+  border-block-end: 0;
 }
 
 .baseName {
@@ -167,12 +189,9 @@
    it. The search field is full width with its own visible label; the new
    recipe button is the one filled control here, so there is never a question
    about which of the two is the loud one. */
+/* `.start` shares the card rule above; what is left here is its own rhythm. */
 .start {
-  padding: 16px 20px;
-  border-block-end: 1px solid var(--c-line);
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-in-group);
+  gap: var(--gap-between-groups);
 }
 
 .searchForm {
@@ -226,7 +245,9 @@
   align-items: center;
   justify-content: center;
   min-height: 52px;
-  border-radius: var(--r-control);
+  /* The same shape as "מצב הכנה" on the recipe page: in this application a
+     filled pill is the control that starts something. */
+  border-radius: var(--r-pill);
   background: var(--c-green);
   color: var(--c-white);
   font-family: var(--font-body);
@@ -244,7 +265,6 @@
 .quickList {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-tight);
   list-style: none;
 }
 
@@ -254,9 +274,8 @@
   align-items: baseline;
   gap: var(--gap-in-group);
   min-height: var(--hit-min);
-  padding: 9px 12px;
-  border-radius: var(--r-card);
-  background: var(--c-paper);
+  padding-block: 10px;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 60%, transparent);
   text-decoration: none;
 }
 
@@ -276,7 +295,9 @@
    `aria-hidden` in the markup: the name is right beside it. */
 .tileIcon {
   display: inline-flex;
+  flex: none;
   margin-inline-end: 8px;
+  /* Aligned to the first line of a name that may take two. */
+  margin-block-start: 2px;
   color: var(--c-muted);
-  vertical-align: -6px;
 }

@@ -48,12 +48,35 @@
   box-shadow: 0 0 0 2px var(--c-green-bg);
 }
 
+/*
+  DESIGN PASS: THE ROW SCROLLS, AND IT SHOULD LOOK LIKE IT.
+
+  The category chips overflow on a phone — that is correct, there are seven of
+  them — but the last chip was clipped flush against the viewport edge, which
+  reads as a broken layout rather than as "there is more this way". Scroll
+  padding keeps a chip's full pill inside the gutter at both ends, and snapping
+  means a flick lands on a chip instead of halfway through one. The scrollbar
+  is hidden because on a touch screen it covers the chips it describes.
+*/
 .chips {
   display: flex;
   gap: 7px;
   overflow-x: auto;
   padding-inline: var(--pad-card);
   padding-block: 2px;
+  scroll-padding-inline: var(--pad-card);
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  overscroll-behavior-inline: contain;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip,
+.chipOn {
+  scroll-snap-align: end;
 }
 .chip,
 .chipOn {
@@ -76,7 +99,9 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-in-group);
+  /* One notch more air between cards than inside them, so a card reads as one
+     object rather than as a stripe in a list. */
+  gap: 12px;
   padding-inline: var(--pad-card);
 }
 
