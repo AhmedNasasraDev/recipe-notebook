@@ -4,8 +4,7 @@
   A file that is passed around has to say what it is on its own: this is a
   trial version with sample data, the saving is local to this browser, and
   there is no account and no sync. So the notice opens on the first visit, and
-  a small "גרסת ניסוי · סימולציה מקומית" strip keeps it one press away
-  afterwards.
+  a small "גרסת ניסוי" strip keeps it one press away afterwards.
 
   THE SAVING LINE IS MEASURED, NOT PROMISED.
 
@@ -64,17 +63,18 @@ export function DemoNotice({ storage }: { storage: StorageState }) {
         className={styles.pill}
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
-        aria-label="גרסת ניסוי — סימולציה מקומית. מה זה?"
+        aria-label="גרסת ניסוי — מה זה?"
       >
         {/*
-          THE STRIP SAYS WHICH KIND OF THING THIS IS, IN THE WORDS ASKED FOR.
-          Ahmed: "הצג בגרסת הניסוי חיווי ברור ״סימולציה מקומית״ שאינו מכסה
-          פקדים. אל תציג אותה כחיבור לשרת אמיתי." "גרסת ניסוי" alone says it
-          is a trial without saying that nothing behind it is real, so the
-          strip carries both — it is the one marker that is on every screen,
-          and the sheet it opens says precisely what is saved and what is not.
+          THE WORDS "סימולציה מקומית" WERE HERE AND ARE GONE.
+
+          They were added at Ahmed's request one round and removed at his
+          request the next: "הסר לחלוטין … הפס העליון עם הכיתוב «סימולציה
+          מקומית»". What stays is the control itself, which he did not ask
+          about and which predates that text — one press opens the sheet that
+          still states exactly what this file is and what it does not save.
         */}
-        גרסת ניסוי · סימולציה מקומית
+        גרסת ניסוי
       </button>
 
       {open && (

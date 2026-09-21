@@ -17,13 +17,16 @@ export function AppShell() {
   // session, a dropped connection and data served from the offline mirror are
   // each a different promise about whether a save will stick, so each one says
   // so — describeBackend() in AppDataProvider writes the sentence.
+  /*
+    'simulated' is deliberately ABSENT from this list. Ahmed asked for the
+    trial's disclosure box removed from every screen — "אל תחליף אותם בבאנר
+    או בהודעה אחרת" — so the element is not rendered rather than emptied:
+    nothing is mounted, so nothing takes space and nothing shifts. The
+    simulation is unchanged; only the sentence about it is gone. The three
+    states below are real product states and stay exactly as they were.
+  */
   const showBackendNote =
     capabilities.source === 'local-demo' ||
-    // The trial, which works and saves locally but is not a server (§3 of
-    // Ahmed's stage-3 list). It used to report itself as `supabase`, and this
-    // banner — the application's own disclosure — was therefore suppressed in
-    // the one build where a reader has no other way of knowing.
-    capabilities.source === 'simulated' ||
     capabilities.servingFromCache ||
     !capabilities.online;
 

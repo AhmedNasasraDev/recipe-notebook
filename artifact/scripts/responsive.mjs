@@ -241,61 +241,22 @@ try {
         const small = targets.filter((t) => t.h < 24).sort((a, b) => a.h - b.h);
         const smallest = targets.sort((a, b) => a.h - b.h)[0] ?? null;
         /*
-          The viewer's own "סימולציה מקומית" badge is the one thing on the page
-          that is not the product, and it is `position: fixed` — so it is
-          measured, not assumed: it must never sit on top of a CONTROL. (It
-          does overlap the empty left end of the group screens' right-aligned
-          `h1` box at phone widths, which covers no glyph and, with
-          `pointer-events: none`, steals no tap.)
+          THE SIMULATION STRIP IS GONE, AND THAT IS WHAT IS MEASURED NOW.
+
+          A fixed 18px strip used to sit across the top of this page reading
+          "סימולציה מקומית", and this file held it to "covers no control" on
+          every screen at every size. Ahmed asked for it removed outright,
+          together with the 20px the app frame gave up for it.
+
+          A coverage check against an element that no longer exists can never
+          fail — which is exactly how 18 checks here went quiet once already.
+          So the check is inverted: the strip must be ABSENT, and the app must
+          start at the very top of the viewport with nothing inset for it. If
+          anything re-adds either, this fails loudly.
         */
         const badge = document.querySelector('.simBadge');
-        const bb = badge ? badge.getBoundingClientRect() : null;
-        const covered = [];
-        if (bb) {
-          document.querySelectorAll('a[href], button, input, [role="tab"]').forEach((el) => {
-            if (el.closest('.simBadge')) return;
-            const r = el.getBoundingClientRect();
-            if (r.width === 0 || r.height === 0) return;
-            /*
-              ONLY THE VISIBLE PART OF A CONTROL CAN BE COVERED.
-
-              `getBoundingClientRect` reports geometry, not visibility. A chat
-              message scrolled above its scroller still answers with a negative
-              `top`, and the strip at the top of the page was reported as
-              covering a reply button that is clipped out of sight, 30px above
-              the app's own top edge. So the rect is clipped by every scroll
-              container over it, the way the screen clips it, and an element
-              with nothing left is not on the page as far as this check goes.
-            */
-            let cl = 0;
-            let ct = 0;
-            let cr = document.documentElement.clientWidth;
-            let cb = document.documentElement.clientHeight;
-            for (let n = el.parentElement; n; n = n.parentElement) {
-              const ns = getComputedStyle(n);
-              if (!/(auto|scroll|hidden)/.test(`${ns.overflowY} ${ns.overflowX}`)) continue;
-              const nr = n.getBoundingClientRect();
-              cl = Math.max(cl, nr.left);
-              ct = Math.max(ct, nr.top);
-              cr = Math.min(cr, nr.right);
-              cb = Math.min(cb, nr.bottom);
-            }
-            const vis = {
-              left: Math.max(r.left, cl),
-              top: Math.max(r.top, ct),
-              right: Math.min(r.right, cr),
-              bottom: Math.min(r.bottom, cb),
-            };
-            if (vis.right <= vis.left || vis.bottom <= vis.top) return;
-            const hit = !(
-              vis.right < bb.left ||
-              vis.left > bb.right ||
-              vis.bottom < bb.top ||
-              vis.top > bb.bottom
-            );
-            if (hit) covered.push(`${el.tagName}«${(el.textContent || '').trim().slice(0, 18)}»`);
-          });
-        }
+        const shell = document.querySelector('[class*="outer"]') ?? document.querySelector('#root');
+        const shellTop = shell ? Math.round(shell.getBoundingClientRect().top) : null;
 
         /*
           THE CHAT'S TWO EDGES MUST STAY ON SCREEN (finding F27)
@@ -364,7 +325,8 @@ try {
             last && send
               ? last.getBoundingClientRect().bottom <= send.getBoundingClientRect().top + 1
               : null,
-          badgeCovers: [...new Set(covered)],
+          badgeGone: badge === null,
+          shellTop,
           overflowX: doc.scrollWidth - doc.clientWidth,
           wide: [...new Set(wide)].slice(0, 4),
           tabBottom: tab ? Math.round(tab.getBoundingClientRect().bottom) : null,
@@ -382,10 +344,11 @@ try {
       check(`${tag}: no horizontal page scroll`, m.overflowX <= 1, `${m.overflowX}px`);
       check(`${tag}: nothing is wider than the viewport`, m.wide.length === 0, m.wide.join(' · '));
       check(`${tag}: right-to-left`, m.dir === 'rtl', m.dir);
+      check(`${tag}: no simulation strip on the page`, m.badgeGone);
       check(
-        `${tag}: the simulation badge covers no control`,
-        m.badgeCovers.length === 0,
-        m.badgeCovers.join(' · '),
+        `${tag}: and nothing is inset for one — the app starts at the top`,
+        m.shellTop === 0,
+        `${m.shellTop}px`,
       );
       /*
         And the presence of the gate is itself a check on the weighing screen,

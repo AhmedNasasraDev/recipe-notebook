@@ -86,57 +86,27 @@ const page = `<title>מחברת מתכונים</title>
    gets the screen it expects. */
 html, body { height: 100%; margin: 0; }
 /*
-  THE BADGE GETS A BAND OF ITS OWN.
+  THERE IS NO BADGE HERE ANY MORE, AND NO BAND FOR ONE.
 
-  It used to float in the top-left corner over the application. That corner was
-  empty until the design pass gave the recipe screen a menu button there, and
-  responsive.mjs — which holds this badge to "covers no control" on ten screens
-  at six sizes — caught it immediately. Every other corner is taken too: the
-  back control at the top right, the tab bar along the bottom, cards out to
-  both edges in the middle.
+  A fixed 18px strip used to sit across the top reading "סימולציה מקומית", and
+  the app frame was given the viewport MINUS 20px so a fixed overlay could not
+  collide with a control. Ahmed asked for the strip removed outright, and
+  explicitly: "אל תשאיר שטח ריק, ריווח או היסט שנוספו עבורם". So the inset
+  went with it — #root, the outer element and the frame are all back to the
+  whole viewport, which is the size the product's own frame is designed for.
 
-  So it stops floating. The strip is 18px of the viewport that the app frame no
-  longer occupies, which is why the frame's height is the viewport MINUS it: a
-  fixed overlay cannot collide with something it is not on top of.
+  What is NOT removed with it: the simulation itself. The repository still
+  reports its source as 'simulated', nothing about saving changed, and no
+  replacement banner was put in its place. The page simply no longer says so.
 */
-/* 20px of inset for an 18px strip: two screens put a back link flush against
-   the top of the app, and an element that merely TOUCHES the strip counts as
-   covered by responsive.mjs — rightly, since a hairline of dark grey over a
-   control is still over it. */
-#root { height: calc(100% - 20px); min-height: 0; margin-block-start: 20px; }
+#root { height: 100%; min-height: 0; }
 /*
-  The shell measures ITSELF against the viewport — min-height 100dvh on the
-  outer element and height 100dvh on the frame — so moving #root down is not
-  enough on its own: at 1440×900 the frame stayed 900px tall, started 18px
-  lower, and put the tab bar 18px below the fold (measured). The same 18px
-  comes off both. The selectors match the hashed CSS-module names, which all
-  contain the source name.
+  The ":root" padding reset is a different problem, and it stays. The artifact
+  skeleton pads :root by the phone's safe-area insets, and the product's frame
+  asks for 100dvh INSIDE that padding, so the sum overflows the viewport by
+  exactly the inset and the tab bar goes under the edge.
 */
-[class*="outer"] { min-height: calc(100dvh - 20px) !important; }
-[class*="frame"] { height: calc(100dvh - 20px) !important; }
 :root { padding: 0 !important; }
-
-.simBadge {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  /* RTL: the text sits at the right-hand end, where reading starts. */
-  justify-content: flex-start;
-  z-index: 9;
-  /* Cannot intercept a tap, ever. */
-  pointer-events: none;
-  padding-inline: 10px;
-  background: rgba(23, 26, 24, 0.55);
-  color: #fff;
-  font: 500 10px/1.4 'Heebo', system-ui, sans-serif;
-  letter-spacing: 0.02em;
-  opacity: 0.75;
-}
-@media print { .simBadge { display: none; } }
 
 /* ── the product's built stylesheet, verbatim ─────────────────────────── */
 ${cssText}
@@ -147,7 +117,6 @@ ${cssText}
   document.documentElement.setAttribute('dir', 'rtl');
   document.documentElement.setAttribute('lang', 'he');
 </script>
-<span class="simBadge" title="Backend מדומה. הנתונים והפעולות מקומיים לדפדפן הזה ואינם נשמרים בשרת.">סימולציה מקומית</span>
 <div id="root"></div>
 <script type="module" src="./${js}"></script>
 `;

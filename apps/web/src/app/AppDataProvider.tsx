@@ -194,16 +194,17 @@ function describeBackend(caps: RepositoryCapabilities): string {
   }
 
   /*
-    THE TRIAL SAYS WHAT IT IS — PRECISELY, NOT VAGUELY.
+    'simulated' HAS NO SENTENCE HERE ANY MORE.
 
-    What is saved, what is not, and where: the three things somebody trying
-    the file actually needs. The photographs are the one thing that does not
-    survive a reload (they are object URLs in the page, not files in a
-    bucket), so they are named rather than covered by "some things".
+    It used to return one — "סימולציה מקומית. אין חשבון ואין שרת: …" — and
+    AppShell drew it as a box on every screen. Ahmed asked for that box gone
+    from the interface, so `showBackendNote` no longer includes 'simulated'
+    and this branch would be dead text. The trial still discloses what it is,
+    but in its own "גרסת ניסוי" sheet, not as a box over the product.
+
+    The source value itself is untouched: 'simulated' still means no account
+    and no server, and nothing here claims otherwise.
   */
-  if (caps.source === 'simulated') {
-    return 'סימולציה מקומית. אין חשבון ואין שרת: המתכונים כאן הם נתוני דוגמה, מה שתשנו נשמר בדפדפן הזה בלבד (תמונות — עד רענון), ואין סנכרון בין מכשירים.';
-  }
 
   const s = supabaseStatus();
   if (!s.configured && s.reason === 'service-role-key-in-browser') {

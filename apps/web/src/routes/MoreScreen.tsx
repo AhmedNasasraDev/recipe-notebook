@@ -132,11 +132,14 @@ export function MoreScreen() {
           </p>
         ) : (
           <p className={styles.note}>
+            {/* No 'simulated' branch: the line that started "סימולציה מקומית"
+                was removed at Ahmed's request. This slot always held one
+                sentence, so the trial falls through to the existing default —
+                which is true (there is no account) and is not a new banner
+                and not a claim that anything is saved to a server. */}
             {capabilities.source === 'local-demo'
               ? 'אין חיבור לשרת בהתקנה הזאת, ולכן אין חשבון. מוצגים מתכוני הדמו לקריאה בלבד.'
-              : capabilities.source === 'simulated'
-                ? 'סימולציה מקומית: אין חשבון ואין שרת. מה שנשמר כאן נשמר בדפדפן הזה בלבד.'
-                : 'לא מחוברים לחשבון.'}
+              : 'לא מחוברים לחשבון.'}
           </p>
         )}
       </footer>

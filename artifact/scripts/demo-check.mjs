@@ -84,7 +84,7 @@ try {
   check('closing it lands on the notebook', (await page.getByRole('heading', { name: 'מחברת מתכונים' }).count()) === 1);
   check(
     'the notice stays one press away',
-    (await page.getByRole('button', { name: 'גרסת ניסוי — סימולציה מקומית. מה זה?' }).count()) === 1,
+    (await page.getByRole('button', { name: 'גרסת ניסוי — מה זה?' }).count()) === 1,
   );
   const cards = await page.locator('a[href^="/recipe/"]').count();
   check('the sample notebook is there', cards >= 5, `${cards} recipe links`);
@@ -136,7 +136,7 @@ try {
   }
   await page.setViewportSize({ width: 402, height: 874 });
   check(
-    'the "סימולציה מקומית" strip covers no control, on any screen at any size',
+    'the "גרסת ניסוי" strip covers no control, on any screen at any size',
     overlaps.length === 0,
     overlaps.slice(0, 3).join(' | ') || '11 screens × 4 sizes',
   );
