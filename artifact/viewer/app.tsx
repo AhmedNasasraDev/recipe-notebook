@@ -45,7 +45,7 @@ import { AppDataProvider } from '../../apps/web/src/app/AppDataProvider.js';
 
 import { AppRoutes } from './routes.js';
 import { createViewerRepository, setSelfDisplayName } from './fixtures.js';
-import { SimUserBar, useActiveSimUser } from './SimUserBar.js';
+import { installSimSeam, useActiveSimUser } from './simUser.js';
 import '../../apps/web/src/styles/tokens.css';
 import '../../apps/web/src/styles/global.css';
 
@@ -157,11 +157,17 @@ setSelfDisplayName('אחמד נסאסרה');
 
   `AppDataProvider` already takes `repository` and `userId` — the injection
   point screen tests are written against. The viewer builds a repository for
-  whoever the switcher says is acting (see ./SimUserBar.tsx), so switching
-  person changes both props and nothing else: every screen below re-reads,
-  exactly as it would after a sign-in, because that is all that changed as far
-  as the product can tell. The router is NOT remounted, so the switch happens
-  where you are standing and leaves you in the conversation.
+  whoever the seam says is acting (see ./simUser.ts), so switching person
+  changes both props and nothing else: every screen below re-reads, exactly as
+  it would after a sign-in, because that is all that changed as far as the
+  product can tell. The router is NOT remounted, so the switch happens where
+  you are standing and leaves you in the conversation.
+
+  There is no CONTROL for it any more. The dashed grey bar that used to sit
+  above the chat was removed at Ahmed's request; the switch itself stayed,
+  because the chat's 55 permission checks are held by being able to answer as
+  somebody else. It is a `window` seam now — invisible, console-only, and
+  documented in simUser.ts.
 */
 function Viewer() {
   const activeUserId = useActiveSimUser();
@@ -172,13 +178,15 @@ function Viewer() {
       <AuthProvider client={null}>
         <AppDataProvider repository={repository} userId={activeUserId}>
           <InspectorBridge />
-          <SimUserBar />
           <AppRoutes authPreview />
         </AppDataProvider>
       </AuthProvider>
     </MemoryRouter>
   );
 }
+
+/* Viewer plumbing, installed once before the first render. */
+installSimSeam();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

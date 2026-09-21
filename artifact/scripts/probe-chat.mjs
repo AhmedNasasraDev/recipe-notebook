@@ -109,8 +109,25 @@ const readChat = () =>
     }));
   }, CHAT);
 
+/*
+  WHO IS ACTING — THROUGH THE VIEWER'S SEAM, NOT THROUGH A CONTROL.
+
+  There used to be a dashed grey bar above the chat with a chip per member,
+  and this clicked one. Ahmed asked for that bar removed, so the switch is a
+  `window` seam now (artifact/viewer/simUser.ts) and this drives it by the
+  same Hebrew name a person would have read off the chip.
+
+  `actAs` returns the id it settled on, or null when nothing matched, and the
+  null is thrown here rather than ignored: a typo used to fail as a Playwright
+  timeout, which said what happened. Silently leaving the previous person
+  acting would make every check after it pass for the wrong reason.
+*/
 const switchTo = async (label) => {
-  await page.click(`[data-artifact-tool="active-sim-user"] button:has-text("${label}")`);
+  const id = await page.evaluate(
+    (who) => window.__recipeNotebookViewerSim.actAs(who),
+    label,
+  );
+  if (id === null) throw new Error(`no simulated member matches "${label}"`);
   await page.waitForTimeout(500);
 };
 
@@ -133,26 +150,33 @@ try {
 
   check('the chat opens from the group screen', (await page.$(CHAT)) !== null);
 
-  const bar = await page.evaluate(() => {
-    const host = document.querySelector('[data-artifact-tool="active-sim-user"]');
-    if (!host) return null;
-    const chat = document.querySelector('section[aria-label="צ׳אט הקבוצה"]');
-    return {
-      caption: host.querySelector('p')?.textContent ?? '',
-      people: [...host.querySelectorAll('button')].map((b) => b.textContent?.trim()),
-      pressed: [...host.querySelectorAll('button[aria-pressed="true"]')].map((b) =>
-        b.textContent?.trim(),
-      ),
-      aboveTheChat: host.nextElementSibling === chat,
-    };
-  });
-  check('the switcher is above the chat and says what it is', bar?.aboveTheChat === true, bar?.caption);
-  check(
-    'it offers this group’s four members with the product’s own role labels',
-    bar?.people.length === 4 && bar.people.every((p) => / — /.test(p)),
-    (bar?.people ?? []).join(' · '),
+  /*
+    ── NO TEST TOOL IS VISIBLE ON THE PAGE ───────────────────────────────
+
+    This block used to measure the switcher bar: that it sat directly above
+    the chat, that it listed four members, that it said what it was. The bar
+    is gone at Ahmed's request, so the assertion is inverted — nothing in the
+    page may look like a tool — and the facts that mattered are read from the
+    seam that replaced it. Checking the absence matters: a portal that comes
+    back, or a stray host element left behind by the observer that used to
+    watch for the chat, would otherwise be invisible to this suite.
+  */
+  const leftovers = await page.evaluate(() => ({
+    hosts: document.querySelectorAll('[data-artifact-tool]').length,
+    words: /משתמש פעיל בסימולציה|כלי בדיקה/.test(document.body.innerText),
+  }));
+  check('no test tool is rendered in the page', leftovers.hosts === 0 && !leftovers.words);
+
+  const roster = await page.evaluate(() =>
+    window.__recipeNotebookViewerSim.participants('group-course'),
   );
-  check('אחמד is the active person to begin with', bar?.pressed?.[0]?.startsWith('אחמד') === true, bar?.pressed?.join());
+  check(
+    'the seam offers this group’s four members, with the product’s own roles',
+    roster.length === 4 && roster.every((p) => typeof p.role === 'string' && p.role !== ''),
+    roster.map((p) => `${p.displayName || '(no name)'}/${p.role}`).join(' · '),
+  );
+  const first = await page.evaluate(() => window.__recipeNotebookViewerSim.active());
+  check('אחמד is the active person to begin with', first === 'viewer-me', first);
 
   /* ── 2. the student writes ────────────────────────────────────────────── */
   const before = (await readChat()).length;
@@ -421,12 +445,11 @@ try {
   await page.waitForTimeout(900);
   await page.click('button[role="tab"]:has-text("צ׳אט")');
   await page.waitForTimeout(600);
-  const team = await page.evaluate(() => {
-    const host = document.querySelector('[data-artifact-tool="active-sim-user"]');
-    return [...(host?.querySelectorAll('button') ?? [])].map((b) => b.textContent?.trim());
-  });
+  const team = await page.evaluate(() =>
+    window.__recipeNotebookViewerSim.participants('group-team').map((p) => p.displayName),
+  );
   check(
-    'the switcher follows the group — three people here, not four',
+    'the roster is per group — three people here, not four',
     team.length === 3 && team.some((t) => t.includes('דנה')),
     team.join(' · '),
   );

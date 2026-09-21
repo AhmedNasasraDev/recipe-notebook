@@ -9,6 +9,8 @@ import {
   ICON_STROKE,
   MENU_ICON,
   SendIcon,
+  SPOON_PATH,
+  SpoonIcon,
   TAB_ICON,
   TOOL_ICON,
 } from './Icons.js';
@@ -30,19 +32,63 @@ const source = readFileSync(join(HERE, 'Icons.tsx'), 'utf8');
 */
 describe('the icon set', () => {
   it('draws nothing by hand', () => {
-    /* The whole point: no geometry in this file. If a glyph is missing from
-       the catalogue the answer is a different catalogue entry, not a path. */
-    for (const tag of ['<path', '<circle', '<ellipse', '<rect', '<polyline', '<polygon', '<line']) {
+    /*
+      No geometry in this file except ONE path, and that one is checked against
+      the library it came from in the case below. If a glyph is missing from a
+      catalogue the answer is a different catalogue, not a drawing.
+    */
+    for (const tag of ['<circle', '<ellipse', '<rect', '<polyline', '<polygon', '<line']) {
       expect(source).not.toContain(tag);
     }
-    expect(source).not.toMatch(/\bd="[Mm]/);
+    expect(source.match(/<path/g) ?? []).toHaveLength(1);
+    expect(source.match(/\bd=\{?/g)?.filter((m) => m === 'd={') ?? []).toHaveLength(1);
   });
 
-  it('imports from exactly one family', () => {
+  it('takes the one borrowed glyph from Hugeicons, byte for byte', () => {
+    /*
+      THE CLAIM "THIS IS THE LIBRARY'S SPOON" IS A FACT, NOT A COMMENT.
+
+      Lucide has no spoon — searched, all 1,748 names — and Ahmed asked for one
+      from another library. This reads the published `spoon` out of
+      `@iconify-json/hugeicons` and compares it to the string the application
+      ships. Anybody who "tidies up" that path, or replaces it with something
+      drawn by hand, fails here with a diff.
+    */
+    const set = JSON.parse(
+      readFileSync(
+        join(HERE, '..', '..', '..', '..', 'node_modules', '@iconify-json', 'hugeicons', 'icons.json'),
+        'utf8',
+      ),
+    ) as { icons: Record<string, { body: string }> };
+    const published = /d="([^"]+)"/.exec(set.icons['spoon']!.body)?.[1];
+    expect(published).toBeTruthy();
+    expect(SPOON_PATH).toBe(published);
+  });
+
+  it('imports from exactly one family at runtime', () => {
+    /* The Hugeicons package is a devDependency read by the test above; nothing
+       is imported from it here, so the bundle carries one icon library. */
     const families = [...source.matchAll(/from '([^']+)'/g)]
       .map((m) => m[1]!)
       .filter((m) => !m.startsWith('.') && m !== 'react');
     expect([...new Set(families)]).toEqual(['lucide-react']);
+  });
+
+  it('draws the spoon at the set\'s own weight, at either size', () => {
+    /* The borrowed glyph does not get Lucide's `absoluteStrokeWidth`, so the
+       same arithmetic is done by hand — and therefore measured. */
+    const { container } = render(
+      <>
+        <SpoonIcon />
+        {TOOL_ICON['tbsp']?.({ width: ICON_STROKE.rest })}
+      </>,
+    );
+    const [inline, big] = [...container.querySelectorAll('svg')];
+    expect(inline?.getAttribute('width')).toBe('20');
+    expect(Number(inline?.getAttribute('stroke-width'))).toBeCloseTo(2.1, 5);
+    expect(big?.getAttribute('width')).toBe('24');
+    expect(Number(big?.getAttribute('stroke-width'))).toBeCloseTo(1.75, 5);
+    expect(inline?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('has no emoji in it', () => {

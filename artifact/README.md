@@ -15,7 +15,7 @@ was asked for separately). `git log -1 --stat` is the check.
 | `index.html` | the **ARTIFACT INSPECTOR** — the audit shell: route rail, width switcher, traceability, and the three reports. Published as an Artifact. |
 | `app.html` + `viewer/app.tsx` | the mount point that renders the PRODUCT's own screens, unmodified, with a fixture repository. |
 | `viewer/fixtures.ts` | **ARTIFACT FIXTURE — NOT PRODUCTION DATA.** Also the simulation session: one §10 world, several people in it. |
-| `viewer/SimUserBar.tsx` | **ARTIFACT TEST TOOL — NOT PART OF THE PRODUCT'S UI.** «משתמש פעיל בסימולציה», above the chat. |
+| `viewer/simUser.ts` | **VIEWER PLUMBING, NO UI.** Which member the viewer acts as. The visible bar it replaced («משתמש פעיל בסימולציה», above the chat) was removed at Ahmed's request; the switch stayed as a `window` seam, because the chat's permission checks are held by being able to answer as somebody else. |
 | `tsconfig.json` | typecheck for the viewer (`npx tsc -p artifact`). The product's own tsconfig does not include this directory. |
 | `vite.config.ts` | builds `app.html` → `dist/` (the product's own build config is untouched). |
 | `inventory.json` | the audit's single source of data. The reports and the page are both rendered from it. |

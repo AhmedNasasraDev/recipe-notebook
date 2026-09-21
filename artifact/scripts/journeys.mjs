@@ -621,17 +621,24 @@ if (should('K')) {
   await page.getByRole('tab', { name: /צ׳אט/ }).click();
   await page.waitForTimeout(700);
   check('the chat opens', (await page.locator('section[aria-label="צ׳אט הקבוצה"]').count()) > 0);
-  const bar = page.locator('[data-artifact-tool="active-sim-user"]');
-  check('the simulation user switcher is above it', (await bar.count()) > 0);
-  check(
-    'and it is labelled as a test tool, not as a feature',
-    /כלי בדיקה של ה־Artifact/.test((await bar.textContent()) ?? ''),
-  );
+  /*
+    The two checks that used to be here measured the switcher BAR — that it
+    sat above the chat and that it was labelled as a test tool. Ahmed asked
+    for that bar removed, so they became the opposite: nothing on this page
+    may look like a tool. The switch itself is a `window` seam now
+    (artifact/viewer/simUser.ts), and the smoke below still uses it.
+  */
+  const leftovers = await page.evaluate(() => ({
+    hosts: document.querySelectorAll('[data-artifact-tool]').length,
+    words: /משתמש פעיל בסימולציה|כלי בדיקה/.test(document.body.innerText),
+  }));
+  check('no test tool is rendered above the chat', leftovers.hosts === 0 && !leftovers.words);
   await page.fill('#chat-draft', 'בדיקת מסירה מהאודיט.');
   await page.getByRole('button', { name: 'שליחה' }).click();
   await page.waitForTimeout(600);
   check('a message sends and appears', (await text(page)).includes('בדיקת מסירה מהאודיט'));
-  await bar.getByRole('button', { name: /נועה/ }).click();
+  const acting = await page.evaluate(() => window.__recipeNotebookViewerSim.actAs('נועה'));
+  check('the seam can act as somebody else', acting !== null, acting ?? 'no match');
   await page.waitForTimeout(700);
   check(
     'switching person keeps the conversation',

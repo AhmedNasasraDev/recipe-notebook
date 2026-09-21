@@ -1,13 +1,15 @@
 /*
-  THE ICON SET — ONE LIBRARY, ONE WEIGHT, ONE GRID, EVERY GLYPH IN THE APP.
+  THE ICON SET — ONE WEIGHT, ONE GRID, AND NOTHING DRAWN BY HAND.
 
   ─────────────────────────────────────────────────────────────────────────────
   WHICH LIBRARY, AND WHY
 
-  Lucide (`lucide-react`, ISC). It is the only icon dependency in the project
-  and every glyph below comes from its published catalogue — 1,748 icons in
-  the installed version — through its own React components. Nothing here is a
-  hand-drawn path any more.
+  Lucide (`lucide-react`, ISC) for every glyph but one. It is the project's
+  only icon dependency at runtime, and the glyphs come out of its published
+  catalogue — 1,748 icons in the installed version — through its own React
+  components. The exception is the spoon, which Lucide does not have; it comes
+  from Hugeicons, verbatim and verified by the test suite, and the section
+  below says exactly why and how. Nothing in this file is a path I drew.
 
   Ahmed asked: "בדוק איזו ספריית אייקונים קיימת בפרויקט… אם הסט הקיים אינו
   מתאים, בחר ספרייה מקצועית אחת והשתמש בה בעקביות." The project had none —
@@ -56,15 +58,35 @@
              re-drawn path.
 
   ─────────────────────────────────────────────────────────────────────────────
-  THE ONE PLACE THE CATALOGUE HAS NO ANSWER
+  THE ONE GLYPH THAT COMES FROM SOMEWHERE ELSE, AND WHY
 
-  A spoon. All 1,748 names were searched: Lucide has `utensils`,
-  `utensils-crossed` and `soup`, and no spoon at all. The tablespoon and
-  teaspoon entries on the measuring-tools screen therefore use `Utensils`,
-  which reads as "a cutlery-sized measure" beside `Beaker`'s "a graduated
-  vessel" — and in Hebrew כף and כפית are literally cutlery. Drawing a spoon
-  would have been the one hand-made path in the set, which is the thing this
-  file exists to stop.
+  A spoon. Lucide does not have one — all 1,748 names in the installed version
+  were searched, and it offers `utensils` (a fork and a knife), `soup` (a
+  bowl) and nothing else. The measuring-tools screen needs a כף and a כפית, so
+  `Utensils` stood in for both, and Ahmed said no: "בחר כפית מספרייה אחרת."
+
+  So five more catalogues were searched by name, not by eye:
+
+    Phosphor      9,161 icons   no spoon
+    Solar         8,433 icons   no spoon
+    Iconoir       1,682 icons   no spoon
+    Fluent       20,239 icons   only `spatula-spoon`, and filled
+    MDI           7,638 icons   `silverware-spoon` — filled, wrong style
+    Hugeicons     6,091 icons   `spoon`  ← this one
+
+  Hugeicons it is: a real spoon, and drawn to the same conventions as Lucide —
+  a 24×24 grid, `fill="none"`, `stroke="currentColor"`, round caps, a 1.5
+  stroke that this file normalises to the set's own 1.75. MIT, free set,
+  author Hugeicons.
+
+  THE PATH BELOW IS THE LIBRARY'S, COPIED VERBATIM, AND THAT IS TESTED.
+
+  `@iconify-json/hugeicons` is a devDependency for exactly one reason:
+  `Icons.test.tsx` reads the published `spoon` out of it and asserts that the
+  string below is identical. So "this is the library's glyph and not something
+  I drew" is a fact the suite checks on every run, rather than a claim in a
+  comment. Nothing is imported from it at runtime — the package is 6,091
+  icons of JSON and the application needs one path.
 
   Every icon is `aria-hidden`. The name of each destination and action lives
   on its control, in Hebrew, where a screen reader expects it.
@@ -93,7 +115,6 @@ import {
   Thermometer,
   Trash2,
   Users,
-  Utensils,
   Wheat,
   type LucideIcon,
 } from 'lucide-react';
@@ -175,8 +196,39 @@ export const ThermometerIcon = inlineGlyph(Thermometer);
 /** The time chip, and the timer controls. */
 export const ClockIcon = inlineGlyph(Clock);
 
-/** A cutlery-sized measure — see the header on why this is not a spoon. */
-export const SpoonIcon = inlineGlyph(Utensils);
+/**
+ * A spoon — כף and כפית on the measuring-tools screen.
+ *
+ * Hugeicons' `spoon`, verbatim (see the header). It is not a Lucide component,
+ * so it goes through the same wrapper by hand: the same box, the same stroke
+ * from `STROKE`, the same `aria-hidden`.
+ */
+export const SPOON_PATH =
+  'M21.105 2.895c-1.715-1.716-5.447-.765-7.377 1.165c-1.04 1.04-1.345 2.152-1.136 3.226c.21 1.08.19 2.299-.613 3.052L2.503 19.24a1.597 1.597 0 1 0 2.257 2.257l8.902-9.476c.753-.802 1.972-.823 3.052-.613c1.074.209 2.186-.095 3.226-1.136c1.93-1.93 2.88-5.661 1.165-7.377Z';
+
+function Spoon({ width = ICON_STROKE.rest, size = SIZE.inline }: { width?: number; size?: number }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      /* The same arithmetic Lucide's `absoluteStrokeWidth` does, so this glyph
+         is the same apparent weight as every other one at either size. */
+      strokeWidth={(width * 24) / size}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable={false}
+    >
+      <path d={SPOON_PATH} />
+    </svg>
+  );
+}
+
+export const SpoonIcon = Spoon;
 
 /** צ׳אט. */
 export const ChatIcon = inlineGlyph(MessageCircle);
@@ -232,8 +284,9 @@ export const CATEGORY_ICON: Readonly<Record<string, (p: IconProps) => JSX.Elemen
  */
 export const TOOL_ICON: Readonly<Record<string, (p: { width: number }) => JSX.Element>> = {
   cup: glyph(Beaker, SIZE.glyph),
-  tbsp: glyph(Utensils, SIZE.glyph),
-  tsp: glyph(Utensils, SIZE.glyph),
+  /* A spoon for the two spoons. At the glyph size, like the beaker beside it. */
+  tbsp: ({ width }) => <Spoon width={width} size={SIZE.glyph} />,
+  tsp: ({ width }) => <Spoon width={width} size={SIZE.glyph} />,
 };
 
 export const MENU_ICON: Readonly<Record<string, (p: IconProps) => JSX.Element>> = {
