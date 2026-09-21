@@ -19,16 +19,21 @@
   nothing in the product itself is this size.
 */
 .pill {
+  /* The strip above the app — see the note in artifact/demo.html for why it is
+     a band and not a corner. It is still a button: pressing it opens the
+     sheet that says what this version is. */
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
   z-index: 60;
   min-height: 18px;
-  display: inline-flex;
+  block-size: 20px;
+  display: flex;
   align-items: center;
-  padding: 0 7px;
+  justify-content: flex-start;
+  padding: 0 10px;
   border: 0;
-  border-end-end-radius: 7px;
   background: var(--c-accent);
   color: var(--c-surface);
   font-family: var(--font-body);

@@ -6,9 +6,8 @@ import styles from './TabBar.module.css';
  * §2: four tabs — בית · מחברת · קבוצות · עוד — and `tabOf()`, which maps a deep
  * screen back to the tab it belongs to.
  *
- * Only מחברת is implemented in this stage. The other three are shown as
- * explicitly pending rather than as working links: a tab that silently does
- * nothing is the shape of dishonesty that AC #17 rules out.
+ * Each tab carries its glyph AND its name, at every width. A tab that is not
+ * built says so in its name rather than leading somewhere that apologises.
  */
 interface TabDef {
   to: string;
@@ -76,16 +75,19 @@ export function TabBar() {
             .filter(Boolean)
             .join(' ')}
           /*
-            THE NAME LIVES HERE NOW.
+            THE NAME IS ON SCREEN, AND IT IS ALSO THE ACCESSIBLE NAME.
 
-            The label came off the bar and moved onto the link: `aria-label`
-            is the accessible name, `title` is the browser's own tooltip on a
-            pointer, and `.tip` below is the one that also appears on keyboard
-            focus — which `title` never does. A tab that is not built says so
-            in the name rather than in a caption nobody can see.
+            The bar was glyphs with the word moved into `aria-label` and a
+            desktop-only tooltip. Ahmed asked for both together — icon AND
+            word, on every size — so the word is real text inside the link
+            now, which makes it the link's accessible name by itself. There is
+            no `aria-label` and no `title`: either one would be a second copy
+            of a name that is already visible, and a mismatch between what is
+            written and what is announced is the bug WCAG 2.5.3 is about.
+
+            A tab that is not built keeps saying so in its name, in text only
+            a screen reader reads — the sighted cue is the dot below.
           */
-          aria-label={tab.ready ? tab.label : `${tab.label} — בהכנה`}
-          title={tab.ready ? tab.label : `${tab.label} — בהכנה`}
           aria-current={current === tab.to ? 'page' : undefined}
         >
           <span className={styles.glyph}>
@@ -93,11 +95,9 @@ export function TabBar() {
               width: current === tab.to ? ICON_STROKE.active : ICON_STROKE.rest,
             })}
           </span>
-          {/* Desktop only, and hidden from assistive tech: the accessible name
-              above already says this, and saying it twice is worse than not
-              showing it at all. */}
-          <span className={styles.tip} aria-hidden="true">
+          <span className={styles.label}>
             {tab.label}
+            {!tab.ready && <span className="visuallyHidden"> — בהכנה</span>}
           </span>
           {!tab.ready && <span className={styles.pendingDot} aria-hidden="true" />}
         </NavLink>

@@ -246,6 +246,12 @@ export function createLocalDemoRepository(): Repository {
       return null;
     },
 
+    /* Nothing is stored, so no card has a photograph of its own — and the
+       notebook falls back to the category pictures. */
+    async recipeThumbs() {
+      return {};
+    },
+
     async listCalibrations() {
       return normalizeCalibrations(await mirror.readCalibrations());
     },

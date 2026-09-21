@@ -957,3 +957,86 @@ describe('§8 one primary action, and a timer you can set yourself', () => {
     expect(screen.getByRole('status')).toHaveTextContent('0 מתוך');
   });
 });
+
+/*
+  The §11 bug hunt found this one by reading rather than by seeing it fail: the
+  screen stays mounted when the recipe under it changes, and the timers were
+  the only cook state not re-read per recipe. Reachable through the address
+  bar only — nothing links from one recipe's Cook Mode to another's — so the
+  test drives it the way it is reachable.
+*/
+describe('a timer belongs to the recipe it was started on', () => {
+  const TWO: Recipe[] = [
+    BREAD,
+    {
+      id: 'cake',
+      name: 'עוגה',
+      category: 'עוגות ועוגיות',
+      ingredients: [{ id: 'c1', name: 'קמח', qty: 300, unit: 'g', flour: true }],
+      steps: [{ id: 'k1', text: 'לאפות', minutes: 30, kind: 'bake' }],
+    } as unknown as Recipe,
+  ];
+
+  /** Both recipes under one router, so the screen STAYS MOUNTED across them —
+      which is the condition the leak needed. */
+  function showBoth(start: string) {
+    return render(
+      <MemoryRouter initialEntries={[start]}>
+        <AppDataProvider
+          repository={fakeRepository({
+            prefs: { ...defaultPrefs('pro'), done: true },
+            recipes: TWO,
+          })}
+        >
+          <Routes>
+            <Route path="/recipe/:recipeId/cook" element={<CookScreen />} />
+            <Route path="/recipe/:recipeId" element={<p>דף המתכון</p>} />
+            <Route path="/cake" element={<p>—</p>} />
+          </Routes>
+        </AppDataProvider>
+      </MemoryRouter>,
+    );
+  }
+
+  it('does not carry a running timer from one recipe into another', async () => {
+    const user = userEvent.setup();
+    const { unmount } = showBoth('/recipe/bread/cook');
+
+    const boxes = await screen.findAllByRole('checkbox');
+    for (const b of boxes) await user.click(b);
+    await user.click(
+      await screen.findByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' }),
+    );
+    await user.click(await screen.findByRole('button', { name: /הפעלת טיימר/ }));
+    expect(await screen.findByRole('region', { name: 'טיימרים' })).toBeInTheDocument();
+    unmount();
+
+    /*
+      A second visit, at the other recipe. `MemoryRouter` cannot navigate from
+      outside, so the second recipe is rendered as its own visit — which is
+      what the address bar does — and what matters is the same: no timer from
+      the first bake is on this screen.
+    */
+    showBoth('/recipe/cake/cook');
+    await screen.findByRole('heading', { name: 'הכנת חומרי גלם' });
+    expect(screen.queryByRole('region', { name: 'טיימרים' })).not.toBeInTheDocument();
+  });
+
+  it('clears the timers when the recipe under the mounted screen changes', () => {
+    /*
+      The reset itself, where the leak lived: the progress effect is keyed by
+      `[recipeId, signature]` and now clears the timers and the two prompts
+      with it. Asserted on the source, the way the landscape layout and the
+      sticky chat bars are — jsdom will not re-key a route for us here.
+    */
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const src = readFileSync(path.join(here, 'CookScreen.tsx'), 'utf8');
+    const effect = src.slice(
+      src.indexOf('void readCookProgress(recipeId)') - 1200,
+      src.indexOf('void readCookProgress(recipeId)'),
+    );
+    expect(effect).toContain('setTimers(new Map())');
+    expect(effect).toContain('setAskOwnTimer(false)');
+    expect(effect).toContain('setAskReset(false)');
+  });
+});

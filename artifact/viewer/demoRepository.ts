@@ -113,18 +113,26 @@ export async function createDemoRepository(userId: string): Promise<DemoReposito
     if (saved.prefs) await base.savePrefs(saved.prefs);
     if (saved.calibrations.length) await base.saveCalibrations(saved.calibrations);
     for (const item of saved.catalog) await base.saveCatalogItem(item as CatalogItem);
+    /*
+      NO `if (saved.catalog.length)` GUARD — THAT GUARD WAS THE BUG.
+
+      The sweep removes whatever the snapshot does not carry. Skipping it when
+      the snapshot is EMPTY meant that deleting every ingredient in the trial
+      and reloading brought the seeded fixture catalogue back: the emptied
+      list came back as demo data, which is precisely the failure the design
+      package asked us to look for. An empty `keptKeys` is a legitimate
+      answer — it means everything was deleted — and the loop below already
+      handles it correctly. The recipes above never had the guard, which is
+      the contrast that showed these two were an oversight.
+    */
     const keptKeys = new Set(saved.catalog.map((i) => i.key));
-    if (saved.catalog.length) {
-      for (const item of await base.listCatalog()) {
-        if (!keptKeys.has(item.key)) await base.deleteCatalogItem(item.key);
-      }
+    for (const item of await base.listCatalog()) {
+      if (!keptKeys.has(item.key)) await base.deleteCatalogItem(item.key);
     }
     for (const plan of saved.plans) await base.savePlan(plan as ProductionPlan);
     const keptPlans = new Set(saved.plans.map((p) => p.id));
-    if (saved.plans.length) {
-      for (const summary of await base.listPlans()) {
-        if (!keptPlans.has(summary.id)) await base.deletePlan(summary.id);
-      }
+    for (const summary of await base.listPlans()) {
+      if (!keptPlans.has(summary.id)) await base.deletePlan(summary.id);
     }
     if (typeof saved.displayName === 'string' && saved.displayName.trim() !== '') {
       displayName = saved.displayName;

@@ -288,6 +288,20 @@ export interface RecipeImageRepository {
    * Null is a real answer: the photo exists and this caller may not see it.
    */
   signedImageUrl(storagePath: string): Promise<string | null>;
+  /**
+   * THE FIRST PHOTOGRAPH OF EACH OF THESE RECIPES, SIGNED, IN ONE ROUND TRIP.
+   *
+   * For lists. The notebook shows a recipe's own picture on its card, and
+   * doing that with `listRecipeImages` + `signedImageUrl` would be two
+   * requests per row — a hundred requests for a notebook of fifty recipes,
+   * on a phone, to draw fifty thumbnails. This is one select over the rows
+   * and one batch of signatures.
+   *
+   * A recipe with no photograph, or one whose photograph this caller may not
+   * see, is simply absent from the result: the caller falls back to whatever
+   * it shows when there is no picture, and never to a broken image.
+   */
+  recipeThumbs(recipeIds: readonly string[]): Promise<Record<string, string>>;
 }
 
 /**

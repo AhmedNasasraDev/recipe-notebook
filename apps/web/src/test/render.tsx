@@ -264,6 +264,21 @@ export function fakeRepository(opts: FakeRepoOptions = {}): Repository {
     signedImageUrl: async (path: string) =>
       opts.signedUrlFails === true ? null : `blob:signed/${path}`,
 
+    /* The list version: the first photo of each recipe, signed, in one call.
+       Same double, same rules — a recipe with no photo, or one that cannot be
+       signed, is simply absent. */
+    recipeThumbs: async (recipeIds: readonly string[]) => {
+      if (opts.signedUrlFails === true) return {};
+      const out: Record<string, string> = {};
+      for (const id of recipeIds) {
+        const first = images
+          .filter((i) => i.recipeId === id)
+          .sort((a, b) => a.ord - b.ord)[0];
+        if (first) out[id] = `blob:signed/${first.storagePath}`;
+      }
+      return out;
+    },
+
     getPrivateNote: async (recipeId: string) => notes[recipeId] ?? null,
     savePrivateNote: async (recipeId: string, body: string) => {
       if (body.trim() === '') delete notes[recipeId];

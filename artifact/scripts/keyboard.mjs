@@ -157,7 +157,15 @@ try {
     (await page.locator('#r-name-error').textContent()) ?? '',
   );
 
-  // ── the bottom bar: glyphs, names, targets, and two marks not one ──────
+  /*
+    ── THE BOTTOM BAR: A GLYPH AND ITS NAME, TARGETS, AND TWO MARKS ────────
+
+    Ahmed asked for the icon AND the word on every tab, at every width, so
+    three of these checks are the reverse of what they used to assert: the
+    name is DRAWN (it was `display: none` below 700px), it is the link's own
+    accessible name, and there is no `aria-label` or `title` repeating it —
+    two copies of one name is the WCAG 2.5.3 mismatch.
+  */
   await page.goto(`${BASE}?k=${Date.now()}#/notebook`, { waitUntil: 'load' });
   await page.waitForTimeout(1000);
 
@@ -167,7 +175,9 @@ try {
     const links = [...nav.querySelectorAll('a')];
     return {
       count: links.length,
-      names: links.map((a) => a.getAttribute('aria-label')),
+      // The accessible name, whatever it comes from — the visible word now.
+      names: links.map((a) => (a.textContent ?? '').trim()),
+      ariaLabels: links.map((a) => a.getAttribute('aria-label')),
       hrefs: links.map((a) => a.getAttribute('href')),
       titles: links.map((a) => a.getAttribute('title')),
       // Ahmed asked for 48×48 on every one of them.
@@ -200,9 +210,18 @@ try {
   });
 
   check('the bar has the four §2 destinations, in order', bar?.hrefs.join(' ') === '/home /notebook /groups /more', bar?.hrefs.join(' ') ?? 'no bar');
-  check('each one keeps its Hebrew name for a screen reader', bar?.names.join(' ') === 'בית מחברת קבוצות עוד', bar?.names.join(' ') ?? '');
-  check('and a tooltip on a pointer', bar?.titles.every((t) => t && t.length > 0) === true);
-  check('no label is drawn on a phone — the bar is glyphs', bar?.drawnText === '', `«${bar?.drawnText}»`);
+  check('each one carries its Hebrew name', bar?.names.join(' ') === 'בית מחברת קבוצות עוד', bar?.names.join(' ') ?? '');
+  check(
+    'and the name is DRAWN on a phone, beside the glyph',
+    bar?.drawnText === 'בית מחברת קבוצות עוד',
+    `«${bar?.drawnText}»`,
+  );
+  check(
+    'the name is said once: no aria-label and no title repeating it',
+    bar?.ariaLabels.every((l) => l === null) === true &&
+      bar?.titles.every((t) => t === null) === true,
+    `aria-label ${bar?.ariaLabels.join('/')} · title ${bar?.titles.join('/')}`,
+  );
   check(
     'every tap target is at least 48×48',
     bar?.boxes.every((b) => b.w >= 48 && b.h >= 48) === true,
@@ -242,7 +261,14 @@ try {
   const barFocus = await focused(page);
   check('a tab takes keyboard focus and shows a ring', barFocus?.ring === true, barFocus?.name ?? '—');
 
-  // ── and on a desktop, the name appears on hover AND on keyboard focus ──
+  /*
+    ── AND ON A DESKTOP THE SAME NAME IS THERE, VISIBLE, NOT A TOOLTIP ─────
+
+    The bar used to hide its labels below 700px and show a tooltip on hover
+    and on focus instead. The labels are permanent now, so what is measured
+    here is that the desktop bar is the phone bar — the word drawn, in the
+    accessible name, with nothing appearing or disappearing on hover.
+  */
   const wide = await browser.newContext({ viewport: { width: 1280, height: 860 } });
   const deskPage = await wide.newPage();
   await deskPage.route('**/*', (r) =>
@@ -251,32 +277,35 @@ try {
   await deskPage.goto(`${BASE}?k=${Date.now()}#/notebook`, { waitUntil: 'load' });
   await deskPage.waitForTimeout(1000);
 
-  const tipOf = () =>
+  const labelOf = () =>
     deskPage.evaluate(() => {
       const a = document.querySelector('nav[aria-label="ניווט ראשי"] a[href="/groups"]');
-      const tip = [...(a?.querySelectorAll('span') ?? [])].find(
+      const label = [...(a?.querySelectorAll('span') ?? [])].find(
         (s) => (s.textContent ?? '').trim() === 'קבוצות',
       );
-      if (!tip) return null;
-      const cs = getComputedStyle(tip);
-      return { display: cs.display, opacity: Number(cs.opacity), hidden: tip.getAttribute('aria-hidden') };
+      if (!label) return null;
+      const cs = getComputedStyle(label);
+      return {
+        display: cs.display,
+        opacity: Number(cs.opacity),
+        hidden: label.getAttribute('aria-hidden'),
+        name: (a?.textContent ?? '').trim(),
+      };
     });
 
-  const atRest = await tipOf();
-  check('on a desktop the tooltip exists but stays out of the way', atRest?.display !== 'none' && atRest?.opacity === 0, JSON.stringify(atRest));
+  const deskLabel = await labelOf();
+  check(
+    'on a desktop the name is drawn too, at full opacity',
+    deskLabel?.display !== 'none' && deskLabel?.opacity === 1,
+    JSON.stringify(deskLabel),
+  );
+  check(
+    'it is not hidden from assistive tech — it IS the accessible name',
+    deskLabel?.hidden === null && deskLabel?.name === 'קבוצות',
+  );
   await deskPage.hover('nav[aria-label="ניווט ראשי"] a[href="/groups"]');
   await deskPage.waitForTimeout(250);
-  check('it appears on hover', (await tipOf())?.opacity === 1);
-  await deskPage.mouse.move(10, 10);
-  await deskPage.waitForTimeout(250);
-  await deskPage.evaluate(() => {
-    document.querySelector('nav[aria-label="ניווט ראשי"] a[href="/groups"]')?.focus();
-  });
-  await deskPage.keyboard.press('Shift+Tab');
-  await deskPage.keyboard.press('Tab');
-  await deskPage.waitForTimeout(250);
-  check('and on keyboard focus, which `title` alone never does', (await tipOf())?.opacity === 1);
-  check('the tooltip is hidden from assistive tech — the name is on the link', atRest?.hidden === 'true');
+  check('and hovering changes nothing about it', (await labelOf())?.opacity === 1);
   await wide.close();
 
   check('no page error in the whole run', errors.length === 0, errors.slice(0, 2).join(' | '));

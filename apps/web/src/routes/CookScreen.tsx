@@ -224,6 +224,24 @@ export function CookScreen() {
     if (!recipeId) return;
     let cancelled = false;
     setRestored(false);
+    /*
+      THE TIMERS AND THE TWO SMALL DIALOGS BELONG TO THE RECIPE TOO.
+
+      Everything else here is re-read per recipe; the running timers, the
+      personal-timer prompt and the reset question were the only cook state
+      that was not, because they live in component state keyed by STEP INDEX
+      and this screen stays mounted when the recipe under it changes. A timer
+      started on step 2 of one recipe would still be counting on step 2 of the
+      next — the same class of leak as the scale that used to follow a
+      duplicate to its copy (see RecipeScreen).
+
+      Reachable today only by editing the address bar, since nothing links
+      from one recipe's Cook Mode to another's. Closed anyway: it costs three
+      lines, and the next link that gets added would inherit the bug.
+    */
+    setTimers(new Map());
+    setAskOwnTimer(false);
+    setAskReset(false);
     void readCookProgress(recipeId)
       .then((saved) => {
         if (cancelled) return;

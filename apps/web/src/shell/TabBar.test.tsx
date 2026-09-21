@@ -39,13 +39,12 @@ describe('§2 tabOf — a deep screen highlights the tab that owns it', () => {
 
 describe('the tab bar tells the truth about what is built', () => {
   /*
-    THE LABELS MOVED; THEY DID NOT GO.
+    THE LABELS ARE BACK ON SCREEN.
 
-    The bar is glyphs now, so "is the name on screen?" is the wrong question
-    and `getByText` is the wrong tool — it would also find the desktop
-    tooltip, which is decoration. What has to hold is that each destination is
-    still a link with its Hebrew name, in §2's order, pointing where it always
-    did.
+    Ahmed asked for the glyph and the word together, so the name is visible
+    text inside each link — which makes it the accessible name too. These
+    assertions hold both halves: the word is on screen, in §2's order, and the
+    link is addressable by it.
   */
   it('renders all four §2 tabs, named, in order, to the same addresses', () => {
     render(
@@ -54,12 +53,14 @@ describe('the tab bar tells the truth about what is built', () => {
       </MemoryRouter>,
     );
     const links = screen.getAllByRole('link');
-    expect(links.map((a) => a.getAttribute('aria-label'))).toEqual([
+    // The name comes from the visible text now, not from an `aria-label`.
+    expect(links.map((a) => a.textContent?.trim())).toEqual([
       'בית',
       'מחברת',
       'קבוצות',
       'עוד',
     ]);
+    for (const a of links) expect(a).not.toHaveAttribute('aria-label');
     expect(links.map((a) => a.getAttribute('href'))).toEqual([
       '/home',
       '/notebook',
@@ -102,19 +103,22 @@ describe('the tab bar tells the truth about what is built', () => {
     expect(Number(here.querySelector('svg')!.getAttribute('stroke-width'))).toBeGreaterThan(2);
   });
 
-  it('the tooltip is decoration: the name a screen reader gets is on the link', () => {
+  it('says the name once — on screen, and that is the name that is announced', () => {
     render(
       <MemoryRouter initialEntries={['/notebook']}>
         <TabBar />
       </MemoryRouter>,
     );
     const link = screen.getByRole('link', { name: 'קבוצות' });
-    expect(link).toHaveAttribute('title', 'קבוצות');
-    // The visible tip repeats the word for a pointer and for keyboard focus,
-    // and is hidden from assistive tech so it is not announced twice.
-    const tip = [...link.querySelectorAll('span')].find((s) => s.textContent === 'קבוצות');
-    expect(tip).toBeTruthy();
-    expect(tip!.getAttribute('aria-hidden')).toBe('true');
+    // No `title` and no `aria-label`: with the word on screen, either one
+    // would be a second copy of the same name — and a mismatch between what
+    // is written and what is announced is the WCAG 2.5.3 bug.
+    expect(link).not.toHaveAttribute('title');
+    expect(link).not.toHaveAttribute('aria-label');
+    // The word is visible text, not hidden from assistive tech.
+    const label = [...link.querySelectorAll('span')].find((x) => x.textContent === 'קבוצות');
+    expect(label).toBeTruthy();
+    expect(label!.getAttribute('aria-hidden')).toBeNull();
   });
 
   it('marks nothing as pending, because nothing is', () => {

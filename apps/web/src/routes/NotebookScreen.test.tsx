@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { defaultPrefs } from '@recipe-notebook/engine';
 import { NotebookScreen } from './NotebookScreen.js';
 import { fakeRepository, renderRoute } from '../test/render.js';
+import type { RecipeImage } from '../data/repository.js';
+import { DEMO_RECIPES } from '../data/demoRecipes.js';
 
 const render = (pro = true) =>
   renderRoute(<NotebookScreen />, {
@@ -179,5 +181,47 @@ describe('stage-10 audit: the card costs what the recipe page costs', () => {
     const card = await screen.findByText('לחם לבן');
     // 2 units × 500 g — the stored yield, printed as the engine returns it.
     expect(card.closest('a')!).toHaveTextContent("2 יח'");
+  });
+});
+
+/*
+  Ahmed's rule for the cards: the recipe's OWN photograph when it has one, and
+  the category picture only as a stand-in. Both halves are worth a test — the
+  fallback is the one that will be wrong silently.
+*/
+describe('the picture on a recipe card', () => {
+  const withImages = (images: RecipeImage[]) =>
+    renderRoute(<NotebookScreen />, {
+      path: '/notebook',
+      route: '/notebook',
+      repository: fakeRepository({ recipes: [...DEMO_RECIPES], images }),
+    });
+
+  it('uses the recipe\'s own photograph when there is one', async () => {
+    withImages([
+      {
+        id: 'i1',
+        recipeId: 'brioche',
+        storagePath: 'brioche/i1.webp',
+        ord: 0,
+        width: 1600,
+        height: 1200,
+        bytes: 1,
+        caption: '',
+        createdAt: '2026-09-17T10:00:00Z',
+      },
+    ]);
+    const card = await screen.findByRole('link', { name: /בריוש נאנטר/ });
+    await waitFor(() =>
+      expect(card.querySelector('img')).toHaveAttribute('src', 'blob:signed/brioche/i1.webp'),
+    );
+  });
+
+  it('falls back to the category photograph when the recipe has none', async () => {
+    withImages([]);
+    const card = await screen.findByRole('link', { name: /בריוש נאנטר/ });
+    const img = card.querySelector('img');
+    // The handoff's own doughs photograph, bundled with the app.
+    expect(img?.getAttribute('src')).toMatch(/doughs/);
   });
 });

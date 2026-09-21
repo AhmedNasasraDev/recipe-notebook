@@ -517,6 +517,12 @@ const simUpdateProfile = (userId: string, patch: Partial<GroupMember>): void => 
 let recipes: Recipe[] = [...DEMO_RECIPES];
 let catalog: CatalogItem[] = [...CATALOG];
 let plans: ProductionPlan[] = [PLAN];
+/* Counters for the ids this fixture mints — see `listRecipes` below for the
+   defect they replace. They only ever go up, so a delete cannot free an id for
+   the next row to collide with. */
+let recipeSeq = 0;
+let planSeq = 0;
+let imageSeq = 0;
 const notes: Record<string, string> = {
   brioche: 'לישה ארוכה מדי — הבצק מתחמם. לעצור בשלב הצלקת.',
 };
@@ -732,12 +738,28 @@ export function createViewerRepository(activeUserId: string = VIEWER_USER_ID): R
     capabilities,
 
     // Recipes: the demo five, writable in memory so the edit form can be used.
+    /*
+      ── IDS THAT ARE NEVER HANDED OUT TWICE ────────────────────────────────
+
+      These three used to be `fixture-recipe-${recipes.length + 1}` and its
+      cousins for plans and photographs — and the length of a list is not an
+      identity. Delete a recipe and create another and the new one takes the
+      id of a row that still exists; `saveRecipe` filters by id before it
+      appends, so the older recipe is REPLACED, silently, in the trial version
+      people are handed. The same arithmetic gave two photographs one storage
+      path, and `objectUrls` is keyed by that path, so the older picture
+      started showing the newer one.
+
+      A counter is not reused after a delete, which is the whole point. The
+      prefix differs from the seeded rows' so a counter can never land on a
+      fixture either.
+    */
     listRecipes: async () => [...recipes],
     getRecipe: async (id: string) => recipes.find((r) => r.id === id) ?? null,
     saveRecipe: async (recipe: Recipe) => {
       const saved =
         !recipe.id || recipe.id.startsWith('new-')
-          ? { ...recipe, id: `fixture-recipe-${recipes.length + 1}` }
+          ? { ...recipe, id: `fixture-new-recipe-${(recipeSeq += 1)}` }
           : recipe;
       recipes = [...recipes.filter((r) => r.id !== saved.id), saved];
       return saved;
@@ -794,7 +816,7 @@ export function createViewerRepository(activeUserId: string = VIEWER_USER_ID): R
     getPlan: async (id: string) => plans.find((p) => p.id === id) ?? null,
     savePlan: async (plan: ProductionPlan) => {
       const saved =
-        plan.id === '' ? { ...plan, id: `fixture-plan-${plans.length + 1}` } : plan;
+        plan.id === '' ? { ...plan, id: `fixture-new-plan-${(planSeq += 1)}` } : plan;
       plans = [...plans.filter((p) => p.id !== saved.id), saved];
       return saved;
     },
@@ -856,9 +878,9 @@ export function createViewerRepository(activeUserId: string = VIEWER_USER_ID): R
       const converted = await convertToWebp(file);
       if (!converted.ok) throw new WriteNotAllowedError(convertErrorText(converted));
       const image: RecipeImage = {
-        id: `fixture-image-${images.length + 1}`,
+        id: `fixture-new-image-${(imageSeq += 1)}`,
         recipeId,
-        storagePath: `${recipeId}/fixture-${images.length + 1}.webp`,
+        storagePath: `${recipeId}/fixture-new-${imageSeq}.webp`,
         ord: images.filter((i) => i.recipeId === recipeId).length,
         width: converted.width,
         height: converted.height,

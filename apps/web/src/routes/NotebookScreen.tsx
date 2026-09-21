@@ -17,7 +17,44 @@ import styles from './NotebookScreen.module.css';
  * a button that lies is worse than a button that is absent.
  */
 export function NotebookScreen() {
-  const { recipes, categories, prefs, capabilities, catalog } = useAppData();
+  const { recipes, categories, prefs, capabilities, catalog, recipeThumbs } = useAppData();
+
+  /*
+    ── THE CARD SHOWS THE RECIPE'S OWN PHOTOGRAPH ─────────────────────────
+
+    Ahmed: "בכרטיס מתכון הצג את התמונה האישית שלו כשקיימת; תמונת הקטגוריה היא
+    חלופה בלבד." So the first photograph of each recipe is fetched for the
+    whole list in ONE round trip (`recipeThumbs` — one select over the image
+    rows and one batch of signatures) rather than two requests per row, which
+    is why the cards carried the category picture until now.
+
+    Three states, in order: the recipe's own photograph; the category's
+    photograph; the category's glyph on a cream tile. A recipe whose photo
+    cannot be signed — one this account may not see — is simply missing from
+    the map and falls back with the rest, instead of showing a broken image.
+
+    The list re-reads when the set of recipe IDS changes, not on every render
+    of `recipes`: editing a name must not re-sign fifty URLs.
+  */
+  const thumbIds = useMemo(
+    () => recipes.map((r) => String(r.id ?? '')).filter((id) => id !== ''),
+    [recipes],
+  );
+  const thumbKey = thumbIds.join(',');
+  const [thumbs, setThumbs] = useState<Readonly<Record<string, string>>>({});
+  useEffect(() => {
+    if (thumbKey === '') return;
+    let cancelled = false;
+    void recipeThumbs(thumbKey.split(','))
+      .then((map) => {
+        if (!cancelled) setThumbs(map);
+      })
+      // Decoration on a list that has to render anyway.
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [thumbKey, recipeThumbs]);
 
   /*
     The category filter is addressable: `/notebook?category=לחמים`.
@@ -220,17 +257,28 @@ export function NotebookScreen() {
                   {/*
                     DESIGN HANDOFF: A PICTURE AT THE START OF THE ROW.
 
-                    The handoff's rows open with a photograph of the dish. The
-                    package ships no per-recipe photographs and the notebook
-                    does not load a recipe's own images to draw a list (that
-                    would be a request per row), so the thumbnail illustrates
-                    the CATEGORY — which is the line printed directly under the
-                    name, so picture and label agree. A category with no
-                    photograph gets its glyph on a cream tile instead of an
-                    empty box.
+                    The recipe's OWN photograph when it has one; the category's
+                    picture when it does not; the category's glyph on a cream
+                    tile when the category has no picture either. See
+                    `thumbs` above for how one round trip serves the whole
+                    list.
                   */}
                   <span className={styles.thumb} aria-hidden="true">
                     {(() => {
+                      const own = thumbs[String(r.id ?? '')];
+                      if (own !== undefined) {
+                        return (
+                          <img
+                            className={styles.thumbPhoto}
+                            src={own}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            width={72}
+                            height={72}
+                          />
+                        );
+                      }
                       const photo = categoryPhoto(r.category);
                       if (photo) {
                         return (

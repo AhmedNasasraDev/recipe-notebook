@@ -1,12 +1,12 @@
 /*
-  THE BOTTOM BAR — ICONS ONLY, IN THE CREAM-AND-CHOCOLATE DRESS.
+  THE BOTTOM BAR — A GLYPH AND ITS NAME, IN THE SAGE-AND-CREAM DRESS.
 
   WHAT CHANGED AND WHAT DID NOT
 
   The four destinations, their order and their addresses are exactly what §2
-  specifies; only the label's PRESENTATION moved, from a caption under the
-  glyph to the link's accessible name (see TabBar.tsx). Nothing about the
-  navigation itself was touched.
+  specifies. The name is back UNDER the glyph, on every width: Ahmed asked for
+  the icon and the word together, which is also what the handoff draws. It is
+  real text, so it is the link's accessible name as well — see TabBar.tsx.
 
   The colours are the pastry tokens, used directly rather than by re-binding
   §16's names — the bar sits outside the recipe page, so a re-binding here
@@ -39,8 +39,9 @@
 .tab {
   flex: 1;
   /* Ahmed asked for 48×48 — above the project's own 44px floor, and this is a
-     control pressed with a thumb while holding a bowl. */
-  min-height: 48px;
+     control pressed with a thumb while holding a bowl. With the caption back
+     the tab is taller than that, which only helps. */
+  min-height: 52px;
   min-width: 48px;
   border: 0;
   background: transparent;
@@ -60,8 +61,10 @@
 .glyph {
   display: grid;
   place-items: center;
-  inline-size: 46px;
-  block-size: 34px;
+  /* The pill is wider than it is tall and narrower than the tab, so four of
+     them read as a row of marks rather than as four boxes. */
+  inline-size: 44px;
+  block-size: 28px;
   border-radius: var(--r-pill);
   color: inherit;
 }
@@ -82,39 +85,25 @@
 }
 
 /*
-  THE TOOLTIP — POINTER AND KEYBOARD.
+  THE NAME UNDER THE GLYPH.
 
-  `title` covers a mouse; it never appears on focus, which is exactly the case
-  a keyboard user is in. So the name is also drawn here, above the bar, on
-  hover AND on `:focus-visible`, and only where there is a real pointer and
-  room for it — on a phone the label would cover the screen it belongs to.
+  Small — this is a caption, not a heading — and it never wraps or shrinks the
+  glyph: at 360px the four words are בית, מחברת, קבוצות and עוד, which fit
+  side by side at 11px with the 48px targets intact (measured in the browser
+  at 360, 390 and 402).
+
+  The active tab's name is heavier as well as darker, so the state is carried
+  by weight, by the filled glyph and by colour — never by colour alone.
 */
-.tip {
-  display: none;
+.label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
-@media (min-width: 700px) {
-  .tip {
-    display: block;
-    position: absolute;
-    inset-block-end: calc(100% + 6px);
-    inset-inline-start: 50%;
-    transform: translateX(50%);
-    padding: 4px 10px;
-    border-radius: var(--r-pill);
-    background: var(--c-text);
-    color: var(--c-surface);
-    font-size: var(--fs-meta-lg);
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 120ms ease;
-  }
-
-  .tab:hover .tip,
-  .tab:focus-visible .tip {
-    opacity: 1;
-  }
+.active .label {
+  font-weight: var(--fw-title);
 }
 
 /*

@@ -746,6 +746,57 @@ export function createSupabaseRepository({
       if (error) throw new SupabaseRepositoryError('מחיקת התמונה נכשלה', error);
     },
 
+    /*
+      One select and one batch of signatures — see the interface for why this
+      exists beside `listRecipeImages`. `ord` then `created_at` is the same
+      order the gallery uses, so the card's picture is the one the recipe page
+      opens with.
+    */
+    async recipeThumbs(recipeIds: readonly string[]): Promise<Record<string, string>> {
+      const ids = [...new Set(recipeIds)].filter((id) => id !== '');
+      if (ids.length === 0) return {};
+
+      const { data, error } = await client
+        .from('recipe_images')
+        .select('recipe_id, storage_path, ord, created_at')
+        .in('recipe_id', ids)
+        .order('ord', { ascending: true })
+        .order('created_at', { ascending: true });
+
+      // A thumbnail is decoration on a list that has to render anyway: a
+      // failure here leaves the cards with their category picture, and does
+      // not take the notebook down.
+      if (error || !data) return {};
+
+      const first = new Map<string, string>();
+      for (const row of data) {
+        const id = String(row.recipe_id);
+        const path = String(row.storage_path);
+        if (!first.has(id)) first.set(id, path);
+      }
+      if (first.size === 0) return {};
+
+      const paths = [...first.values()];
+      const { data: signed, error: signError } = await client.storage
+        .from(RECIPE_IMAGE_BUCKET)
+        .createSignedUrls(paths, 600);
+      if (signError || !signed) return {};
+
+      const urlByPath = new Map<string, string>();
+      for (const item of signed) {
+        // `path` comes back as given; an item can carry an error instead of a
+        // URL, which is the "this account may not see it" case.
+        if (item.signedUrl && item.path) urlByPath.set(item.path, item.signedUrl);
+      }
+
+      const out: Record<string, string> = {};
+      for (const [id, path] of first) {
+        const url = urlByPath.get(path);
+        if (url !== undefined) out[id] = url;
+      }
+      return out;
+    },
+
     async signedImageUrl(storagePath: string): Promise<string | null> {
       /*
         Ten minutes. Long enough for a recipe page to stay usable while someone

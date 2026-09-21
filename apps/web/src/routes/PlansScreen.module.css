@@ -1,6 +1,15 @@
+/*
+  THE SCREEN'S OWN GUTTER.
+
+  It had none: every child carried its own, and the header did not — so the
+  title and (since §4) the back control sat flush against the top and the side
+  of the frame. Measured by demo-check.mjs, which found the trial's "גרסת
+  ניסוי" strip touching the back control here and nowhere else.
+*/
 .page {
   display: grid;
   gap: 14px;
+  padding: 14px var(--pad-card) 24px;
 }
 
 .head {

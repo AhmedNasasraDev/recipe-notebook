@@ -128,6 +128,9 @@ export interface AppData {
   addRecipeImage(recipeId: string, file: File | Blob): Promise<RecipeImage>;
   removeRecipeImage(image: RecipeImage): Promise<void>;
   signedImageUrl(storagePath: string): Promise<string | null>;
+  /** The first photo of each recipe, signed, in one call — for the notebook's
+      cards. See the repository interface. */
+  recipeThumbs(recipeIds: readonly string[]): Promise<Record<string, string>>;
   listPlans(): Promise<PlanSummary[]>;
   getPlan(id: string): Promise<ProductionPlan | null>;
   savePlan(plan: ProductionPlan): Promise<ProductionPlan>;
@@ -415,6 +418,10 @@ export function AppDataProvider({
     (path: string) => repo.signedImageUrl(path),
     [repo],
   );
+  const recipeThumbs = useCallback(
+    (ids: readonly string[]) => repo.recipeThumbs(ids),
+    [repo],
+  );
 
   const getPrivateNote = useCallback((id: string) => repo.getPrivateNote(id), [repo]);
   const savePrivateNote = useCallback(
@@ -466,6 +473,7 @@ export function AppDataProvider({
       getPrivateNote,
       savePrivateNote,
       listRecipeImages,
+      recipeThumbs,
       addRecipeImage,
       removeRecipeImage,
       signedImageUrl,
@@ -504,6 +512,7 @@ export function AppDataProvider({
       getPrivateNote,
       savePrivateNote,
       listRecipeImages,
+      recipeThumbs,
       addRecipeImage,
       removeRecipeImage,
       signedImageUrl,

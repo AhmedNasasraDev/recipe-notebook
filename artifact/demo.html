@@ -17,8 +17,32 @@
         padding: 0;
         background: #f7f5ef;
       }
+      /*
+        THE TRIAL'S "גרסת ניסוי" CONTROL GETS A BAND OF ITS OWN.
+
+        It used to float in the top-left corner over the application. That
+        corner was empty until the design pass gave the recipe screen a menu
+        button there, and artifact/scripts/demo-check.mjs — which holds the
+        pill to "covers no control" on every screen at every size — caught it
+        at once. Every other corner is taken too: the back control at the top
+        right, the tab bar along the bottom.
+
+        So it stops floating: 20px of the viewport that the app no longer
+        occupies. The frame measures itself against the VIEWPORT (100dvh), so
+        the same 20px has to come off it as well — moving #root alone would
+        push the tab bar below the fold. The selectors match the hashed
+        CSS-module names, which all contain the source name.
+      */
       #root {
-        min-height: 100%;
+        height: calc(100% - 20px);
+        min-height: 0;
+        margin-block-start: 20px;
+      }
+      [class*='outer'] {
+        min-height: calc(100dvh - 20px) !important;
+      }
+      [class*='frame'] {
+        height: calc(100dvh - 20px) !important;
       }
       /* Shown only until the bundle runs — and if it never does (a browser too
          old for ES modules), this is what the person reads instead of a blank
