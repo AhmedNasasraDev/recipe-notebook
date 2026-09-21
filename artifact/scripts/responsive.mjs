@@ -237,7 +237,43 @@ try {
             if (el.closest('.simBadge')) return;
             const r = el.getBoundingClientRect();
             if (r.width === 0 || r.height === 0) return;
-            const hit = !(r.right < bb.left || r.left > bb.right || r.bottom < bb.top || r.top > bb.bottom);
+            /*
+              ONLY THE VISIBLE PART OF A CONTROL CAN BE COVERED.
+
+              `getBoundingClientRect` reports geometry, not visibility. A chat
+              message scrolled above its scroller still answers with a negative
+              `top`, and the strip at the top of the page was reported as
+              covering a reply button that is clipped out of sight, 30px above
+              the app's own top edge. So the rect is clipped by every scroll
+              container over it, the way the screen clips it, and an element
+              with nothing left is not on the page as far as this check goes.
+            */
+            let cl = 0;
+            let ct = 0;
+            let cr = document.documentElement.clientWidth;
+            let cb = document.documentElement.clientHeight;
+            for (let n = el.parentElement; n; n = n.parentElement) {
+              const ns = getComputedStyle(n);
+              if (!/(auto|scroll|hidden)/.test(`${ns.overflowY} ${ns.overflowX}`)) continue;
+              const nr = n.getBoundingClientRect();
+              cl = Math.max(cl, nr.left);
+              ct = Math.max(ct, nr.top);
+              cr = Math.min(cr, nr.right);
+              cb = Math.min(cb, nr.bottom);
+            }
+            const vis = {
+              left: Math.max(r.left, cl),
+              top: Math.max(r.top, ct),
+              right: Math.min(r.right, cr),
+              bottom: Math.min(r.bottom, cb),
+            };
+            if (vis.right <= vis.left || vis.bottom <= vis.top) return;
+            const hit = !(
+              vis.right < bb.left ||
+              vis.left > bb.right ||
+              vis.bottom < bb.top ||
+              vis.top > bb.bottom
+            );
             if (hit) covered.push(`${el.tagName}«${(el.textContent || '').trim().slice(0, 18)}»`);
           });
         }

@@ -28,6 +28,8 @@ import { VersionHistory } from '../features/recipe/VersionHistory.js';
 import { PanCard } from '../features/recipe/PanCard.js';
 import { PrivateNote } from '../features/recipe/PrivateNote.js';
 import { RecipeImages } from '../features/images/RecipeImages.js';
+import { useRecipeImages } from '../features/images/useRecipeImages.js';
+import { BackIcon, MenuDotsIcon } from '../shell/Icons.js';
 import {
   forgetRecipeLocally,
   noteRecipeOpened,
@@ -144,6 +146,21 @@ export function RecipeScreen() {
 
   /* Where "התאמה" in the pan card sends the screen: the card it changes. */
   const scaleRef = useRef<HTMLElement | null>(null);
+  /* Where the hero's menu button sends it: the actions it opens. */
+  const moreRef = useRef<HTMLDetailsElement | null>(null);
+
+  /*
+    §5's photographs, fetched ONCE for the whole page: the hero at the top
+    shows the first one, the gallery below the steps manages all of them. See
+    `useRecipeImages` for why the fetch was lifted out of the gallery.
+  */
+  const imageState = useRecipeImages({
+    recipeId: recipeId ?? '',
+    list: listRecipeImages,
+    add: addRecipeImage,
+    remove: removeRecipeImage,
+    sign: signedImageUrl,
+  });
 
   const [scaleFor, setScaleFor] = useState(recipeId);
   if (scaleFor !== recipeId) {
@@ -339,7 +356,8 @@ export function RecipeScreen() {
       <div className={styles.missing}>
         <p>המתכון הזה לא נמצא במחברת.</p>
         <Link to="/notebook" className={styles.backLink}>
-          ← המחברת
+          <BackIcon />
+          המחברת
         </Link>
       </div>
     );
@@ -470,16 +488,97 @@ export function RecipeScreen() {
      "how much flour", printed by both screens. */
   const label = (row: ComputedRow) => rowLabel(row, view, factor, prefs);
 
+  /*
+    The hero is the FIRST photograph, and only once it has a signed URL:
+    `undefined` is "not signed yet" and `null` is "this account may not see
+    it" (§5). Neither is a picture, and neither is drawn as an empty frame.
+  */
+  const heroImage = imageState.load === 'ready' ? (imageState.images[0] ?? null) : null;
+  const heroUrl = heroImage ? (imageState.urls[heroImage.id] ?? null) : null;
+
   return (
     <div className={styles.page}>
-      <div className={styles.topBar}>
-        <Link to="/notebook" className={`${styles.backLink} nowrap`}>
-          ← המחברת
-        </Link>
+      {/*
+        ── the hero ───────────────────────────────────────────────────────
+
+        The handoff asks for a wide photograph at the top, about a quarter to
+        a third of the screen, scrolling with the page, with the back and menu
+        buttons on it on backgrounds you can actually read — and, when the
+        recipe has no photograph, NO enormous empty rectangle.
+
+        So the bar is always the same bar. Over a photograph it floats on it
+        in opaque chips; with no photograph it is simply the row it has always
+        been, and nothing is reserved for a picture that does not exist.
+
+        While the list is still loading nothing is reserved either: a skeleton
+        the height of a hero would flash on every recipe that has no
+        photograph, which is most of them. The cost is one reflow on the
+        recipes that do have one — see `useRecipeImages`.
+      */}
+      <div className={heroUrl ? styles.hero : styles.heroBare}>
+        {heroUrl && (
+          /*
+            DECORATIVE, DELIBERATELY. This is the SAME photograph the gallery
+            below the steps lists, with its caption and its alt text. Naming it
+            twice makes a screen reader read one picture twice on every recipe;
+            the hero is the visual presentation of something already announced.
+          */
+          <img
+            className={styles.heroPhoto}
+            src={heroUrl}
+            alt=""
+            aria-hidden="true"
+            onError={() => heroImage && imageState.broken(heroImage)}
+          />
+        )}
+        <div className={styles.topBar}>
+          {/* RTL: back is on the RIGHT — first in the source — and its chevron
+              points the way back, which in Hebrew is rightwards. */}
+          <Link to="/notebook" className={`${styles.backLink} nowrap`}>
+            <BackIcon />
+            המחברת
+          </Link>
+          <button
+            type="button"
+            className={styles.menuBtn}
+            aria-expanded={showMore}
+            aria-controls="recipe-more"
+            aria-label="עוד פעולות על המתכון"
+            onClick={() => {
+              const next = !showMore;
+              setShowMore(next);
+              if (next) {
+                // After the panel has opened, so the scroll lands on the
+                // panel and not on where it used to end.
+                requestAnimationFrame(() =>
+                  // Optional call: `scrollIntoView` does not exist in jsdom,
+                  // and a button that opens a panel must not throw in a test.
+                  moreRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' }),
+                );
+              }
+            }}
+          >
+            <MenuDotsIcon />
+          </button>
+        </div>
       </div>
 
+      {/*
+        The identity block, as the handoff draws it: the name, the category it
+        belongs to, and what the recipe makes — centred under the picture. The
+        category is a link to the notebook filtered by it, because on paper it
+        is a label and here it is the way back to its neighbours.
+      */}
       <header className={styles.header}>
         <h1 className={styles.title}>{recipe.name}</h1>
+        {recipe.category && (
+          <Link
+            to={`/notebook?category=${encodeURIComponent(String(recipe.category))}`}
+            className={styles.categoryPill}
+          >
+            {recipe.category}
+          </Link>
+        )}
         <p className={styles.meta}>
           <span className="ltr">
             {computed.unitsActual
@@ -715,13 +814,9 @@ export function RecipeScreen() {
         migration 0029's storage policies enforce anyway.
       */}
       <RecipeImages
-        recipeId={recipe.id}
+        state={imageState}
         canWrite={capabilities.canWrite}
         canEdit={!recipe.group_id}
-        list={listRecipeImages}
-        add={addRecipeImage}
-        remove={removeRecipeImage}
-        sign={signedImageUrl}
       />
 
       {recipe.notes && <p className={styles.recipeNote}>{recipe.notes}</p>}
@@ -766,6 +861,8 @@ export function RecipeScreen() {
       </div>
 
       <details
+        id="recipe-more"
+        ref={moreRef}
         className={styles.more}
         open={showMore}
         onToggle={(e) => setShowMore(e.currentTarget.open)}

@@ -172,6 +172,37 @@ export function ChevronIcon({ width = 1.8 }: { width?: number }) {
   );
 }
 
+/**
+ * The back chevron.
+ *
+ * THE DIRECTION IS THE POINT. The application is Hebrew and right-to-left, so
+ * the page you came from is to the RIGHT — the handoff is explicit about it:
+ * the back control sits on the right of the bar and its chevron points that
+ * way. The screens used to print a literal "←", which is the Latin reading of
+ * "back" and points at the page you are going to next.
+ */
+export function BackIcon({ width = 1.8 }: { width?: number }) {
+  return (
+    <svg {...base(width)} width={20} height={20}>
+      <path d="M10 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+/**
+ * The menu button on the recipe hero — three dots stacked, so it is not
+ * mistaken for the "עוד" TAB, whose dots are in a row.
+ */
+export function MenuDotsIcon({ width = 1.8 }: { width?: number }) {
+  return (
+    <svg {...base(width)} width={20} height={20}>
+      <circle cx="12" cy="5.6" r="1.1" />
+      <circle cx="12" cy="12" r="1.1" />
+      <circle cx="12" cy="18.4" r="1.1" />
+    </svg>
+  );
+}
+
 /* ── categories, on the home screen ──────────────────────────────────────
    The tiles carried emojis — 🥖, 🍫 — which render as a different artist's
    work in a different style, in colour, beside a set of line glyphs. Ahmed

@@ -105,11 +105,18 @@
   padding-inline: var(--pad-card);
 }
 
+/*
+  DESIGN HANDOFF: THE ROW IS A PICTURE, A NAME AND A WAY IN.
+
+  Right to left: the category thumbnail, the recipe's name with its own line of
+  facts under it, and a chevron that points the way Hebrew reads. The card
+  itself is the link — there is no second target inside it.
+*/
 .card {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: var(--pad-card);
+  align-items: center;
+  gap: var(--gap-in-group);
+  padding: 10px 12px;
   background: var(--c-paper);
   border: 1px solid var(--c-line);
   border-radius: var(--r-card);
@@ -117,8 +124,48 @@
   color: var(--c-ink);
   min-height: var(--hit-min);
 }
+
 .card:hover {
   border-color: var(--c-sand);
+}
+
+.thumb {
+  flex: none;
+  inline-size: 72px;
+  block-size: 72px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--r-check);
+  background: var(--c-neutral-bg);
+}
+
+.thumbPhoto {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbGlyph {
+  display: grid;
+  place-items: center;
+  color: var(--c-muted);
+}
+
+.cardBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardChevron {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--c-muted);
 }
 
 .cardName {

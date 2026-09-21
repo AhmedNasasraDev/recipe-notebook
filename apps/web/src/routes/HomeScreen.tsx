@@ -33,6 +33,7 @@ import {
   readFavorites,
 } from '../data/offlineMirror.js';
 import { CATEGORY_ICON, ICON_STROKE } from '../shell/Icons.js';
+import { categoryPhoto } from '../features/categories/categoryImage.js';
 import { timeLabelOf } from '../features/recipe/recipeTime.js';
 import styles from './HomeScreen.module.css';
 
@@ -316,28 +317,51 @@ export function HomeScreen() {
           <div className={styles.tiles}>
             {categories
               .filter((c) => (counts.get(c) ?? 0) > 0)
-              .map((c) => (
-                <Link
-                  key={c}
-                  to={`/notebook?category=${encodeURIComponent(c)}`}
-                  className={styles.tile}
-                >
-                  <span className={styles.tileName}>
-                    {/* Decoration beside the name, never instead of it, and
-                        hidden from a screen reader that already reads it. */}
-                    {CATEGORY_ICON[c] && (
-                      <span className={styles.tileIcon} aria-hidden="true">
-                        {CATEGORY_ICON[c]?.({ width: ICON_STROKE.menu })}
-                      </span>
+              .map((c) => {
+                /*
+                  DESIGN HANDOFF: A CATEGORY IS A PICTURE WITH A NAME UNDER IT.
+
+                  The photograph is decoration beside a name that is already
+                  read, so it is `aria-hidden` and the link keeps its text.
+                  A category the handoff shipped no photograph for keeps the
+                  glyph tile — the fallback is the old card, not a grey box.
+                */
+                const photo = categoryPhoto(c);
+                return (
+                  <Link
+                    key={c}
+                    to={`/notebook?category=${encodeURIComponent(c)}`}
+                    className={photo ? styles.photoTile : styles.tile}
+                  >
+                    {photo && (
+                      <img
+                        className={styles.tilePhoto}
+                        src={photo.small}
+                        srcSet={`${photo.small} 320w, ${photo.large} 640w`}
+                        sizes="(min-width: 700px) 320px, 45vw"
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        decoding="async"
+                        width={320}
+                        height={320}
+                      />
                     )}
-                    {c}
-                  </span>
-                  <span className={styles.tileCount}>
-                    <span className="ltr">{counts.get(c)}</span>{' '}
-                    {counts.get(c) === 1 ? 'מתכון' : 'מתכונים'}
-                  </span>
-                </Link>
-              ))}
+                    <span className={photo ? styles.tileCaption : styles.tileName}>
+                      {!photo && CATEGORY_ICON[c] && (
+                        <span className={styles.tileIcon} aria-hidden="true">
+                          {CATEGORY_ICON[c]?.({ width: ICON_STROKE.menu })}
+                        </span>
+                      )}
+                      <span className={styles.tileTitle}>{c}</span>
+                      <span className={styles.tileCount}>
+                        <span className="ltr">{counts.get(c)}</span>{' '}
+                        {counts.get(c) === 1 ? 'מתכון' : 'מתכונים'}
+                      </span>
+                    </span>
+                  </Link>
+                );
+              })}
           </div>
         )}
       </section>

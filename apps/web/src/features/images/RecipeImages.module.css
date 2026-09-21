@@ -102,39 +102,34 @@
 }
 
 /*
-  THE EMPTY STATE IS A FRAME, NOT A BUTTON FLOATING IN A CARD.
+  THE EMPTY STATE IS A CONTROL, NOT A HOLE IN THE PAGE.
 
-  The brief: when a recipe has no photograph, show something clean and
-  designed, and never a stock cake that is not this recipe's. So it is an
-  empty plate — a dashed caramel frame with the one action centred in it —
-  which reads as "a picture goes here" and says nothing untrue about the
-  recipe. Once there IS a photograph the button goes back to being a quiet
-  control under it (`.grid ~ .addBtn`).
+  It used to be a 108px dashed frame — "a picture goes here" — drawn on every
+  recipe with no photograph. The handoff is explicit that a recipe without a
+  picture must not show a large empty rectangle, so what is left is the one
+  thing that was ever pressable: the button. The first photograph now opens
+  the page as a hero (see recipe.module.css), which is where the reader looks
+  for a picture; this card is where they are managed.
 */
 .addBtn {
-  align-self: stretch;
-  display: flex;
+  align-self: flex-start;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 108px;
+  min-height: var(--hit-min);
   padding-inline: 16px;
-  border: 1px dashed var(--c-line);
-  border-radius: var(--r-card);
-  background: color-mix(in srgb, var(--c-line) 12%, transparent);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-paper);
   color: var(--c-ink);
-  font-size: var(--fs-body);
+  font-size: var(--fs-secondary);
   font-weight: 600;
   cursor: pointer;
 }
 
-/* There is already a photograph on the page: the control steps back. */
-.grid ~ .addBtn {
-  align-self: flex-start;
-  min-height: var(--hit-min);
-  border-style: solid;
-  border-radius: var(--r-pill);
-  background: var(--c-paper);
-  font-size: var(--fs-secondary);
+.addBtn:focus-within {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
 }
 
 .removeBtn {

@@ -9,6 +9,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RecipeImages } from './RecipeImages.js';
+import { useRecipeImages } from './useRecipeImages.js';
 import type { RecipeImage } from '../../data/repository.js';
 
 const image = (over: Partial<RecipeImage> = {}): RecipeImage => ({
@@ -53,17 +54,22 @@ function show(
   const sign = vi.fn(async (path: string) =>
     opts.signReturnsNull ? null : `blob:signed/${path}`,
   );
-  render(
-    <RecipeImages
-      recipeId="r1"
-      canEdit={opts.canEdit ?? true}
-      canWrite={opts.canWrite ?? true}
-      list={list}
-      add={add}
-      remove={remove}
-      sign={sign}
-    />,
-  );
+  /*
+    The fetching lives in `useRecipeImages` now — the recipe page needs the
+    same list twice, once for the hero and once for this gallery — so the
+    tests drive the pair together, which is exactly how the screen uses them.
+  */
+  function Harness() {
+    const state = useRecipeImages({ recipeId: 'r1', list, add, remove, sign });
+    return (
+      <RecipeImages
+        state={state}
+        canEdit={opts.canEdit ?? true}
+        canWrite={opts.canWrite ?? true}
+      />
+    );
+  }
+  render(<Harness />);
   return { list, add, remove, sign };
 }
 

@@ -4,6 +4,8 @@ import { compute, formatGrams, type Computed } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
 import { timeLabelOf } from '../features/recipe/recipeTime.js';
+import { categoryPhoto } from '../features/categories/categoryImage.js';
+import { CATEGORY_ICON, ChevronIcon, ICON_STROKE } from '../shell/Icons.js';
 import styles from './NotebookScreen.module.css';
 
 /**
@@ -215,25 +217,66 @@ export function NotebookScreen() {
             return (
               <li key={r.id}>
                 <Link to={`/recipe/${r.id}`} className={styles.card}>
-                  <span className={styles.cardName}>{r.name}</span>
-                  <span className={styles.cardMeta}>
-                    {r.category} · <span className="ltr">{yieldLabel}</span>
-                    {time && (
-                      <>
-                        {' · '}
-                        <span className="ltr">{time}</span>
-                      </>
-                    )}
+                  {/*
+                    DESIGN HANDOFF: A PICTURE AT THE START OF THE ROW.
+
+                    The handoff's rows open with a photograph of the dish. The
+                    package ships no per-recipe photographs and the notebook
+                    does not load a recipe's own images to draw a list (that
+                    would be a request per row), so the thumbnail illustrates
+                    the CATEGORY — which is the line printed directly under the
+                    name, so picture and label agree. A category with no
+                    photograph gets its glyph on a cream tile instead of an
+                    empty box.
+                  */}
+                  <span className={styles.thumb} aria-hidden="true">
+                    {(() => {
+                      const photo = categoryPhoto(r.category);
+                      if (photo) {
+                        return (
+                          <img
+                            className={styles.thumbPhoto}
+                            src={photo.small}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            width={72}
+                            height={72}
+                          />
+                        );
+                      }
+                      const Glyph = CATEGORY_ICON[r.category ?? ''];
+                      return (
+                        <span className={styles.thumbGlyph}>
+                          {Glyph ? <Glyph width={ICON_STROKE.menu} /> : null}
+                        </span>
+                      );
+                    })()}
                   </span>
-                  <span className={styles.badges}>
-                    {r.isSub && <span className={styles.badgeSub}>מתכון בסיס</span>}
-                    {r.locked && <span className={styles.badgeLocked}>נוסחה מאושרת</span>}
-                    {r.versionOf && <span className={styles.badgeVersion}>גרסה</span>}
-                    {(r.tags ?? []).map((t) => (
-                      <span key={t} className={styles.badgeTag}>
-                        {t}
-                      </span>
-                    ))}
+                  <span className={styles.cardBody}>
+                    <span className={styles.cardName}>{r.name}</span>
+                    <span className={styles.cardMeta}>
+                      {r.category} · <span className="ltr">{yieldLabel}</span>
+                      {time && (
+                        <>
+                          {' · '}
+                          <span className="ltr">{time}</span>
+                        </>
+                      )}
+                    </span>
+                    <span className={styles.badges}>
+                      {r.isSub && <span className={styles.badgeSub}>מתכון בסיס</span>}
+                      {r.locked && <span className={styles.badgeLocked}>נוסחה מאושרת</span>}
+                      {r.versionOf && <span className={styles.badgeVersion}>גרסה</span>}
+                      {(r.tags ?? []).map((t) => (
+                        <span key={t} className={styles.badgeTag}>
+                          {t}
+                        </span>
+                      ))}
+                    </span>
+                  </span>
+                  <span className={styles.cardChevron} aria-hidden="true">
+                    <ChevronIcon width={ICON_STROKE.menu} />
                   </span>
                 </Link>
               </li>

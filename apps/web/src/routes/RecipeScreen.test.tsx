@@ -789,3 +789,81 @@ describe('§2 the way to the label and the order sheet', () => {
     );
   });
 });
+
+/*
+  ── the design pass: the hero at the top of the recipe ─────────────────────
+
+  The handoff puts a wide photograph at the top of the recipe, with the back
+  and menu buttons on it, and is explicit that a recipe WITHOUT a photograph
+  must not show a large empty rectangle in its place. These tests hold both
+  halves of that, plus the RTL direction of the back control, which is the
+  thing that is easiest to reintroduce by accident.
+*/
+describe('the recipe opens with its photograph, or with nothing at all', () => {
+  const heroOf = (recipeId: string) =>
+    renderRoute(<RecipeScreen />, {
+      path: '/recipe/:recipeId',
+      route: `/recipe/${recipeId}`,
+      repository: fakeRepository({
+        prefs: prefsAt(240),
+        recipes: [...DEMO_RECIPES],
+        images: [
+          {
+            id: 'i1',
+            recipeId: 'brioche',
+            storagePath: 'brioche/i1.webp',
+            ord: 0,
+            width: 1600,
+            height: 1200,
+            bytes: 120000,
+            caption: '',
+            createdAt: '2026-09-17T10:00:00Z',
+          },
+        ],
+      }),
+    });
+
+  it('shows the first photograph above the name', async () => {
+    heroOf('brioche');
+    const title = await screen.findByRole('heading', { name: 'בריוש נאנטר' });
+    // One photograph, drawn twice: the hero at the top and the gallery below
+    // the steps. The hero has no accessible name on purpose — `alt=""` takes
+    // it out of the accessibility tree, which is why it is reached through the
+    // DOM here and not through a role query.
+    await screen.findByRole('img', { name: 'תמונה של המתכון' });
+    const shown = document.querySelectorAll('img');
+    expect(shown).toHaveLength(2);
+    const hero = shown[0]!;
+    expect(hero).toHaveAttribute('src', 'blob:signed/brioche/i1.webp');
+    expect(hero).toHaveAttribute('aria-hidden', 'true');
+    // DOCUMENT_POSITION_FOLLOWING: the title comes after the picture.
+    expect(hero.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('shows no picture frame at all on a recipe that has none', async () => {
+    heroOf('pastrycream');
+    await screen.findByRole('heading', { name: 'קרם פטיסייר וניל' });
+    // The gallery below the steps has finished loading — so this is the empty
+    // state, not a picture that has not arrived yet.
+    await screen.findByText(/הוספת תמונה|אין תמונות למתכון הזה/);
+    expect(document.querySelectorAll('img')).toHaveLength(0);
+  });
+
+  it('puts the way back under a name a reader can say', async () => {
+    heroOf('brioche');
+    const back = await screen.findByRole('link', { name: 'המחברת' });
+    expect(back).toHaveAttribute('href', '/notebook');
+    // The chevron is decoration; the name is the accessible name above.
+    expect(back.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('opens the actions from the menu button on the hero', async () => {
+    const user = userEvent.setup();
+    heroOf('brioche');
+    const menu = await screen.findByRole('button', { name: 'עוד פעולות על המתכון' });
+    expect(menu).toHaveAttribute('aria-expanded', 'false');
+    await user.click(menu);
+    expect(menu).toHaveAttribute('aria-expanded', 'true');
+    expect(await screen.findByRole('button', { name: /מחיקת/ })).toBeInTheDocument();
+  });
+});

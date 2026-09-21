@@ -26,105 +26,27 @@
 //     reflows under the reader as each URL resolves;
 //   · a URL that expires while the page is open leaves a broken image, so
 //     `onError` re-signs once rather than showing a torn icon forever.
+//
+// The fetching itself moved to `useRecipeImages` when the design pass put the
+// first photograph at the top of the page as a hero: one list, one set of
+// signed URLs, read by the hero and by this gallery. See that file.
 
-import { useCallback, useEffect, useState } from 'react';
-import type { RecipeImage } from '../../data/repository.js';
+import { useState } from 'react';
+import type { RecipeImagesState } from './useRecipeImages.js';
 import { MAX_EDGE } from './convert.js';
 import styles from './RecipeImages.module.css';
 
 interface Props {
-  recipeId: string;
+  /** The one list the page fetched — see `useRecipeImages`. */
+  state: RecipeImagesState;
   canWrite: boolean;
   /** false on a recipe the account does not own — a group recipe, for instance */
   canEdit: boolean;
-  list(recipeId: string): Promise<RecipeImage[]>;
-  add(recipeId: string, file: File | Blob): Promise<RecipeImage>;
-  remove(image: RecipeImage): Promise<void>;
-  sign(storagePath: string): Promise<string | null>;
 }
 
-type Load = 'loading' | 'ready' | 'failed';
-
-export function RecipeImages({
-  recipeId,
-  canWrite,
-  canEdit,
-  list,
-  add,
-  remove,
-  sign,
-}: Props) {
-  const [images, setImages] = useState<readonly RecipeImage[]>([]);
-  const [load, setLoad] = useState<Load>('loading');
-  const [urls, setUrls] = useState<Readonly<Record<string, string | null>>>({});
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function RecipeImages({ state, canWrite, canEdit }: Props) {
+  const { images, load, urls, busy, error } = state;
   const [confirmId, setConfirmId] = useState<string | null>(null);
-
-  const signAll = useCallback(
-    async (list_: readonly RecipeImage[]) => {
-      const pairs = await Promise.all(
-        list_.map(async (i) => [i.id, await sign(i.storagePath)] as const),
-      );
-      setUrls((prev) => ({ ...prev, ...Object.fromEntries(pairs) }));
-    },
-    [sign],
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoad('loading');
-    void list(recipeId)
-      .then(async (found) => {
-        if (cancelled) return;
-        setImages(found);
-        setLoad('ready');
-        await signAll(found);
-      })
-      .catch(() => {
-        if (!cancelled) setLoad('failed');
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [recipeId, list, signAll]);
-
-  const onPick = async (file: File) => {
-    setError(null);
-    setBusy(true);
-    try {
-      const added = await add(recipeId, file);
-      setImages((prev) => [...prev, added]);
-      await signAll([added]);
-    } catch (e) {
-      // The repository already turns a conversion failure into a sentence a
-      // baker can act on (convertErrorText). Showing it beats a generic line.
-      setError(e instanceof Error ? e.message : 'העלאת התמונה נכשלה.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const onRemove = async (image: RecipeImage) => {
-    setError(null);
-    setBusy(true);
-    try {
-      await remove(image);
-      setImages((prev) => prev.filter((i) => i.id !== image.id));
-      setConfirmId(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'מחיקת התמונה נכשלה.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  /** Re-sign once when a URL has expired mid-session. */
-  const onBroken = (image: RecipeImage) => {
-    void sign(image.storagePath).then((url) => {
-      setUrls((prev) => (prev[image.id] === url ? prev : { ...prev, [image.id]: url }));
-    });
-  };
 
   if (load === 'loading') {
     return (
@@ -195,7 +117,7 @@ export function RecipeImages({
                          real description the honest alt is the subject. */
                       alt={image.caption || 'תמונה של המתכון'}
                       loading="lazy"
-                      onError={() => onBroken(image)}
+                      onError={() => state.broken(image)}
                     />
                   )}
                 </div>
@@ -207,7 +129,7 @@ export function RecipeImages({
                       <button
                         type="button"
                         className={styles.confirmYes}
-                        onClick={() => void onRemove(image)}
+                        onClick={() => state.drop(image)}
                         disabled={busy}
                       >
                         {busy ? 'מוחק…' : 'למחוק'}
@@ -259,7 +181,7 @@ export function RecipeImages({
                 // fires a change event — otherwise a failed upload cannot be
                 // retried without picking a different photo.
                 e.target.value = '';
-                if (file) void onPick(file);
+                if (file) state.pick(file);
               }}
             />
           </label>

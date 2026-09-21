@@ -107,8 +107,10 @@
    line taller than its neighbour. */
 .tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
-  gap: var(--gap-tight);
+  /* Two to a row on a phone, as the handoff has it; more only when there is
+     genuinely room for them. */
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--gap-in-group);
 }
 
 .tile {
@@ -123,17 +125,70 @@
   text-decoration: none;
 }
 
+/* ── the handoff's category cards ───────────────────────────────────────
+   A square photograph with the name on a white strip under it, two to a row
+   on a phone, and the whole card is the link. The photograph never replaces
+   the name: it sits above it, `aria-hidden`, and a category with no photo
+   keeps the glyph tile below. */
+.photoTile {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-paper);
+  text-decoration: none;
+}
+
+.tilePhoto {
+  inline-size: 100%;
+  /*
+    `block-size: auto` is doing real work, not tidying up. The tag carries
+    width=320 height=320 so the browser reserves the box before the file
+    arrives — and those attributes map to a presentational `height: 320px`,
+    which `aspect-ratio` cannot override because the height is then not auto.
+    Measured: every tile came out 140×320 instead of 140×140, and the first
+    screen of the application was two portraits. Releasing the height is what
+    lets the ratio below decide.
+  */
+  block-size: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  background: var(--c-neutral-bg);
+}
+
+.tileCaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+}
+
+.tileTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+  color: var(--c-ink);
+  line-height: 1.3;
+}
+
 .tileName {
   display: flex;
   align-items: flex-start;
+  flex-wrap: wrap;
+  column-gap: 2px;
   font-family: var(--font-display);
   font-size: var(--fs-body);
-  font-weight: 600;
+  font-weight: var(--fw-title);
   color: var(--c-ink);
 }
 
 .tileCount {
+  flex-basis: 100%;
+  font-family: var(--font-body);
   font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-body);
   color: var(--c-muted);
   font-variant-numeric: tabular-nums;
 }

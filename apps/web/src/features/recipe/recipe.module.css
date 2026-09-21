@@ -14,17 +14,90 @@
   background: var(--c-app-bg);
 }
 
+/*
+  ── THE HERO ─────────────────────────────────────────────────────────────
+
+  The handoff's recipe screen opens with a wide photograph, roughly a quarter
+  to a third of the phone, scrolling with the page, and the two controls sit
+  ON it. Two rules govern what is below:
+
+   · the picture bleeds to the edges of the frame, so the negative margins
+     undo `.page`'s padding rather than a second column being introduced;
+   · a recipe with no photograph gets NO box at all — `.heroBare` is the bar
+     on its own, which is what this screen had before the picture existed.
+*/
+.hero {
+  position: relative;
+  margin-inline: calc(var(--pad-card) * -1);
+  margin-block-start: -12px;
+  overflow: hidden;
+  border-end-start-radius: var(--r-card-lg);
+  border-end-end-radius: var(--r-card-lg);
+  background: var(--c-neutral-bg);
+}
+
+.heroPhoto {
+  display: block;
+  inline-size: 100%;
+  /* About a third of a phone screen, and never more than a third of a tall
+     one: the quantities have to start above the fold. */
+  block-size: clamp(170px, 30vh, 300px);
+  object-fit: cover;
+}
+
+.hero .topBar {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  padding: 10px var(--pad-card);
+}
+
+.heroBare {
+  display: contents;
+}
+
+/*
+  The bar itself: back on the RIGHT (first in the source, which in RTL is the
+  right-hand end) and the menu on the left, as the handoff draws it.
+*/
 .topBar {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+}
+
+.backLink,
+.menuBtn {
+  min-height: var(--hit-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  /* Opaque, not a tint: over a photograph a translucent chip is a lottery on
+     what is behind it, and the handoff asks for backgrounds you can read. */
+  background: var(--c-white);
+  color: var(--c-ink);
+  border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+  border-radius: var(--r-pill);
+  text-decoration: none;
+  font-size: var(--fs-secondary);
 }
 
 .backLink {
-  min-height: var(--hit-compact);
-  display: inline-flex;
-  align-items: center;
-  font-size: var(--fs-body);
-  color: var(--c-muted);
-  text-decoration: none;
+  padding-inline: 14px 10px;
+}
+
+.menuBtn {
+  /* A square target, at the 44px floor like everything else. */
+  inline-size: var(--hit-min);
+  padding: 0;
+}
+
+.backLink:focus-visible,
+.menuBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
 }
 
 .missing {
@@ -36,8 +109,39 @@
   color: var(--c-muted);
 }
 
+/*
+  Centred, which nothing else in the application is.
+
+  The handoff draws the recipe's identity — name, category, yield — centred
+  under the photograph, and it earns the exception: it is a title page, not a
+  list, and under a full-bleed picture a right-aligned line leaves the left
+  half of the hero hanging. Everything BELOW it stays right-aligned, because
+  that is reading.
+*/
 .header {
   padding-block: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.categoryPill {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-compact);
+  padding-inline: 12px;
+  border-radius: var(--r-pill);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-meta-lg);
+  text-decoration: none;
+}
+
+.categoryPill:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
 }
 .title {
   font-family: var(--font-display);
@@ -49,13 +153,13 @@
   overflow-wrap: anywhere;
 }
 .meta {
-  margin-top: 8px;
+  margin-top: 0;
   font-size: var(--fs-secondary);
   color: var(--c-muted);
   line-height: 1.6;
 }
 .lockedNote {
-  margin-top: 6px;
+  margin-top: 0;
   display: inline-block;
   font-size: var(--fs-meta-lg);
   padding: 3px 9px;
