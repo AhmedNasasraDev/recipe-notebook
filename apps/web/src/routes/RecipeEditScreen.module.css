@@ -644,3 +644,112 @@
   color: var(--c-amber);
   line-height: 1.5;
 }
+
+/*
+  ── §6: THE STAGE STEPPER ────────────────────────────────────────────────
+
+  Four stages across the top — פרטים, חומרי גלם, אופן ההכנה, סיכום — with the
+  one you are in filled, the ones behind you marked as passed, and each of
+  them a control that takes you there. It is sticky because it is also the
+  answer to "where am I in this form", which is the question a long form
+  makes people ask.
+
+  A stage is a real target (44px) and never relies on colour alone: the filled
+  circle, the heavier label and `aria-current="step"` all say the same thing.
+*/
+.stepper {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+  padding-block: 8px;
+  background: var(--c-app-bg);
+  /* On a 360px phone four labels do not fit side by side; they scroll rather
+     than wrap into a second row that moves the form down. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.stepper::-webkit-scrollbar {
+  display: none;
+}
+
+.stageBtn {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--hit-min);
+  padding: 4px 10px;
+  border: 0;
+  border-radius: var(--r-card);
+  background: transparent;
+  color: var(--c-muted);
+  font: inherit;
+  font-size: var(--fs-meta-lg);
+  cursor: pointer;
+}
+
+.stageNum {
+  display: grid;
+  place-items: center;
+  inline-size: 26px;
+  block-size: 26px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-paper);
+  font-size: var(--fs-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.stageLabel {
+  white-space: nowrap;
+}
+
+.stageOn {
+  color: var(--c-green-ink);
+  font-weight: var(--fw-title);
+}
+
+.stageOn .stageNum {
+  border-color: var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+}
+
+/* A stage you have already been past: the tint, not the fill. */
+.stagePast .stageNum {
+  border-color: var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+}
+
+.stageBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: -2px;
+}
+
+/* The way on, at the end of a stage. Quiet: the loud control on this screen
+   is the save, and this one only moves the page. */
+.nextStage {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  padding-inline: 16px;
+  border: 1px solid var(--c-green);
+  border-radius: var(--r-pill);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font: inherit;
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nextStage:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}

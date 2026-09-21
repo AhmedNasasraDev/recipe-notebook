@@ -312,3 +312,31 @@ describe('with no connection', () => {
     expect(screen.getByRole('button', { name: 'מחיקת חמאה 82%' })).toBeDisabled();
   });
 });
+
+/*
+  §10 of the handoff: "מחירים: חיפוש, יצירה ועריכה, יחידת מחיר ברורה". The
+  screen had creation, editing and the unit; the search is new.
+*/
+describe('the search over the catalogue', () => {
+  it('narrows the list to what the name contains, and says so when nothing does', async () => {
+    const user = userEvent.setup();
+    show({
+      catalog: [
+        item(),
+        item({ id: 'c2', key: 'סוכר', name: 'סוכר', price: 2.5, priceUnit: 'ק"ג' }),
+      ],
+    });
+    await screen.findByText('חמאה 82%');
+
+    await user.type(screen.getByLabelText('חיפוש חומר גלם'), 'חמאה');
+    expect(screen.getByText('חמאה 82%')).toBeInTheDocument();
+    expect(screen.queryByText('סוכר')).not.toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText('חיפוש חומר גלם'));
+    await user.type(screen.getByLabelText('חיפוש חומר גלם'), 'זעפרן');
+    expect(await screen.findByText(/אין חומר גלם שהשם שלו מכיל/)).toBeInTheDocument();
+    // And the catalogue is still there, one clear away.
+    await user.clear(screen.getByLabelText('חיפוש חומר גלם'));
+    expect(await screen.findByText('חמאה 82%')).toBeInTheDocument();
+  });
+});

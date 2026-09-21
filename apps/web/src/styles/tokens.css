@@ -111,8 +111,16 @@
   --fs-screen-title: 24px;
   --fs-recipe-title: 27px;
   /* §14: the two sizes the kitchen screen is read at, from across a counter. */
-  --fs-cook-body: 25px;
-  --fs-cook-step: 54px;
+  /*
+    §10's text size, as one number. The kitchen screen's two type sizes are
+    both multiplied by it, so "גדול" makes the instruction and the weights
+    bigger together and nothing else in the application moves. The default is
+    1 — the size Cook Mode has always been — and the screen sets it from the
+    device's own choice (see data/offlineMirror.ts).
+  */
+  --cook-text-scale: 1;
+  --fs-cook-body: calc(25px * var(--cook-text-scale));
+  --fs-cook-step: calc(54px * var(--cook-text-scale));
 
   /*
     WEIGHT, IN ONE PLACE.
@@ -158,6 +166,10 @@
   /* §15: hit targets ≥ 44px. Non-negotiable — this is a kitchen app. */
   --hit-min: 44px;
   --hit-compact: 40px;
+  /* §9: how tall the chat's one-line composer may grow before it scrolls
+     inside itself — about four lines, after which the conversation above it
+     matters more than seeing the whole draft at once. */
+  --chat-input-max: 108px;
 
   /* ── device frame ─────────────────────────────────────────────────────── */
   --frame-w: 402px;

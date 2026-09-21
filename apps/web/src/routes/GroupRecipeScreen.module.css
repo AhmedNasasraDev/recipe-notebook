@@ -8,11 +8,6 @@
   gap: 6px;
 }
 
-.back {
-  justify-self: start;
-  font-size: var(--fs-meta);
-  color: var(--c-green);
-}
 
 .title {
   font-family: var(--font-display);

@@ -22,7 +22,8 @@
 // purchase list and this screen reads the frozen one. The banner says so.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { BackLink } from '../components/BackLink.js';
 import {
   compute,
   formatGrams,
@@ -78,7 +79,6 @@ const newItem = (): PlanItem => ({
 
 export function PlanScreen() {
   const { planId } = useParams();
-  const navigate = useNavigate();
   const {
     recipes,
     catalog,
@@ -235,9 +235,7 @@ export function PlanScreen() {
         <p className={styles.error} role="alert">
           {loadError}
         </p>
-        <Link to="/plans" className={styles.secondary}>
-          חזרה לתוכניות
-        </Link>
+        <BackLink to="/plans">התוכניות</BackLink>
       </div>
     );
   }
@@ -258,6 +256,7 @@ export function PlanScreen() {
   return (
     <div className={styles.page}>
       <header className={styles.head}>
+        <BackLink to="/plans">התוכניות</BackLink>
         <h1 className={styles.title}>{plan.name || 'תוכנית ייצור'}</h1>
         <p className={styles.lede}>
           כל מה שמתחת מחושב מהמתכונים ומהמחירים שבמרכז חומרי הגלם. בתוכנית עצמה
@@ -783,14 +782,9 @@ export function PlanScreen() {
       </section>
 
       <div className={styles.actions}>
-        <button
-          type="button"
-          className={styles.secondary}
-          onClick={() => navigate('/plans')}
-          aria-label="חזרה לרשימת התוכניות"
-        >
-          חזרה לתוכניות
-        </button>
+        <BackLink to="/plans" aria-label="חזרה לרשימת התוכניות">
+          התוכניות
+        </BackLink>
       </div>
     </div>
   );

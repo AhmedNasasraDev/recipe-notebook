@@ -65,6 +65,9 @@
   white-space: nowrap;
 }
 
+/* "עריכת המתכון" on the two dead-end states, and nothing else: the way OUT of
+   Cook Mode is components/BackLink now (§4), on this screen as on every
+   other. */
 .exit {
   display: inline-flex;
   align-items: center;
@@ -74,6 +77,12 @@
   color: var(--c-cook-text);
   font-size: var(--fs-secondary);
   text-decoration: none;
+  flex: none;
+}
+
+/* The one thing the shared control needs on this screen: it must not be
+   squeezed by the recipe's name beside it. */
+.exitPill {
   flex: none;
 }
 
@@ -203,13 +212,25 @@
   cursor: pointer;
 }
 
-/* Ticked, and still legible: a finished line has to be readable at a glance to
-   answer "what is left". Caramel with the surface's colour on it — the app's
-   action colour is chocolate, which on this screen is nothing at all. */
+/*
+  TICKED, AND STILL LEGIBLE — §7, WHICH THIS ROW WAS BREAKING.
+
+  A finished line used to be filled with the action colour itself: dark sage
+  with the surface colour on it. The handoff is explicit about that exact
+  thing — "רקע ירוק עדין לרכיב שהוכן. אין שורות ירוקות כהות או מחיקת טקסט
+  שמקשה לקרוא את המשקל" — and it is right: half the list is finished most of
+  the time, and reading 500 גרם off a dark block while holding a scale is
+  harder than it needs to be.
+
+  So a ticked row is the palette's own SELECTION tint with the ordinary ink on
+  it, and the sage moves to the border and the tick. The weight is unchanged
+  and the text keeps its colour, so "what is left" is answered by two things
+  at once — the fill and the mark in the box — and never by colour alone.
+*/
 .miseRowOn {
-  border-color: var(--c-cook-accent);
-  background: var(--c-cook-accent);
-  color: var(--c-cook-on-accent);
+  border-color: var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-cook-text);
 }
 
 .miseBox {
@@ -221,7 +242,7 @@
 }
 
 .miseRowOn .miseBox {
-  accent-color: var(--c-cook-text);
+  accent-color: var(--c-green);
 }
 
 .miseName {
@@ -236,6 +257,11 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   flex: none;
+  /* The handoff separates the weight from the name with a hairline — worth
+     copying: it is the column the eye runs down while weighing. `inline-start`
+     is the edge facing the name in either direction. */
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid color-mix(in srgb, var(--c-cook-line) 70%, transparent);
 }
 
 .miseHint {
@@ -245,7 +271,47 @@
 }
 
 .miseRowOn .miseHint {
-  color: var(--c-cook-text);
+  color: var(--c-cook-muted);
+}
+
+/*
+  §7: "איפוס סימונים משני ומוגן מאובדן בטעות". Secondary — an outlined
+  control under the list, never beside the thing that starts the work — and it
+  asks first, because a mis-tap here means weighing a whole list again.
+*/
+.resetRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-tight);
+  align-items: center;
+}
+
+.reset {
+  min-height: var(--hit-compact);
+  padding-inline: 14px;
+  border: 1px solid var(--c-cook-line);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--c-cook-muted);
+  font: inherit;
+  font-size: var(--fs-secondary);
+  cursor: pointer;
+}
+
+.resetConfirm {
+  border-color: var(--c-green);
+  color: var(--c-green-ink);
+  background: var(--c-green-bg);
+}
+
+.reset:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.resetAsk {
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
 }
 
 /* ── the progress line and the gate, pinned to the bottom ────────────────
@@ -343,8 +409,41 @@
 }
 
 .stepMeta {
-  font-size: var(--fs-secondary);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-tight);
+  align-items: center;
+}
+
+/*
+  §8's chips: the temperature and the time, each as one readable object on the
+  selection tint — this is the information a cook checks from two steps away,
+  and it used to be a line of grey small print under the instruction.
+*/
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--hit-compact);
+  padding-inline: 12px;
+  border-radius: var(--r-pill);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The kind of step — עבודה, אפייה — is context rather than a number. */
+.chipQuiet {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-compact);
+  padding-inline: 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--c-cook-line);
   color: var(--c-cook-muted);
+  font-size: var(--fs-secondary);
 }
 
 .mark,
@@ -368,17 +467,79 @@
   color: var(--c-cook-on-accent);
 }
 
-.timerStart {
+/* The two ways to start a timer on a step, side by side and wrapping on a
+   narrow phone: the recipe's own time, and the one you set yourself (§8). */
+.timerRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-tight);
+  align-items: center;
+}
+
+.timerStart,
+.timerGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   min-height: var(--hit-min);
   padding: 10px 16px;
   border: 1px solid var(--c-cook-line);
-  border-radius: var(--r-control);
+  border-radius: var(--r-pill);
   background: transparent;
   color: var(--c-cook-text);
   font-family: var(--font-body);
   font-size: var(--fs-secondary);
   cursor: pointer;
   align-self: flex-start;
+}
+
+.timerStart:disabled {
+  /* Legible while it is off, like every other disabled control here. */
+  color: var(--c-cook-muted);
+  background: var(--c-neutral-bg);
+  cursor: default;
+}
+
+.timerGhost {
+  color: var(--c-cook-muted);
+  border-style: dashed;
+}
+
+.timerStart:focus-visible,
+.timerGhost:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.ownTimer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-tight);
+  align-items: center;
+}
+
+.ownLabel {
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+}
+
+.ownInput {
+  inline-size: 5.5ch;
+  min-height: var(--hit-min);
+  padding-inline: 10px;
+  border: 1px solid var(--c-cook-line);
+  border-radius: var(--r-control);
+  background: var(--c-cook-raised);
+  color: var(--c-cook-text);
+  font: inherit;
+  font-size: var(--fs-body-lg);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.ownInput:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 1px;
 }
 
 /* ── the parallel timers ──────────────────────────────────────────────── */
@@ -618,41 +779,95 @@
     font-size: var(--fs-secondary);
   }
 
-  /* One step at a time, with the instruction taking the room. The numeral
-     shrinks from 54px to a compact figure beside the text rather than a
-     headline above it. */
+  /*
+    §8: "לרוחב בפריסה מותאמת עם הוראה מימין וטיימר/מידע משמאל".
+
+    Two columns, and which is which follows the writing direction rather than
+    a hard-coded side: the instruction takes the first column — the right, in
+    Hebrew — and the facts and controls take the second. The numeral rides
+    with the instruction, as a figure beside it rather than a headline over
+    it, because on a short screen the height belongs to the words.
+
+    The instruction column scrolls on its own, so a long step is read by
+    scrolling the text and never by pushing the controls off the screen.
+  */
   .stepBox {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: minmax(0, 1.35fr) minmax(190px, 1fr);
+    grid-template-areas:
+      'text facts'
+      'text mark'
+      'text timer';
     align-items: start;
-    column-gap: 14px;
-    row-gap: 6px;
-    /* Long instructions scroll here instead of being cut or shrunk. */
-    overflow-y: auto;
+    column-gap: 18px;
+    row-gap: 8px;
+    overflow: hidden;
     min-block-size: 0;
   }
 
   .stepNum {
-    font-size: 28px;
-    grid-row: 1 / span 2;
+    font-size: 26px;
+    grid-area: text;
+    align-self: start;
   }
 
   .stepText {
+    grid-area: text;
+    /* The numeral sits in the same cell, so the text is indented past it
+       rather than overlapping it. `padding-inline-start` is the right in
+       Hebrew and the left anywhere else. */
+    padding-inline-start: 40px;
     font-size: 21px;
     line-height: 1.45;
+    overflow-y: auto;
+    max-block-size: 100%;
   }
 
   .stepMeta {
-    grid-column: 2;
+    grid-area: facts;
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  /* Marking, the timer and the ingredient list stay reachable, and stay out
-     of the middle of the screen. */
+  /* The facts column reads as one card, like the handoff draws it. */
+  .chip,
+  .chipQuiet {
+    justify-content: center;
+  }
+
   .mark,
   .markOn {
-    grid-column: 1 / -1;
+    grid-area: mark;
     min-height: 48px;
-    margin-block-start: 2px;
+    align-self: start;
+  }
+
+  .timerRow {
+    grid-area: timer;
+    align-self: start;
+  }
+
+  /*
+    The facts column has about 200px of height in landscape and three things
+    to fit in it — the chips, the mark and the two ways to start a timer — so
+    each one gives up its portrait padding. Measured: at the portrait sizes
+    the personal-timer control was clipped by the step box.
+  */
+  .chip,
+  .chipQuiet {
+    min-height: 36px;
+    font-size: var(--fs-body);
+  }
+
+  .timerStart,
+  .timerGhost {
+    min-height: 38px;
+    padding: 6px 12px;
+    font-size: var(--fs-meta-lg);
+  }
+
+  .ownInput {
+    min-height: 38px;
   }
 
   .miseTitle {

@@ -26,7 +26,8 @@
 // sentence, instead of showing a button that cannot work (AC #17).
 
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { BackLink } from '../components/BackLink.js';
 import {
   formatGrams,
   parseLocal,
@@ -286,9 +287,7 @@ export function PasteScreen() {
         </>
       )}
 
-      <Link to="/notebook" className={styles.back}>
-        ← המחברת
-      </Link>
+      <BackLink to="/notebook">המחברת</BackLink>
     </div>
   );
 }

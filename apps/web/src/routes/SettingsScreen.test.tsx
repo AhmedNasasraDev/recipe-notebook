@@ -9,12 +9,20 @@
 // `touchedUnits` rule (a unit list the user chose is not quietly undone by a
 // profile change), and that changing a password demands the current one.
 
-import { describe, expect, it } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { memoryIdb, resetMemoryIdb } from '../test/memoryIdb.js';
+
+/* The text-size setting is DEVICE storage, and jsdom has no IndexedDB — so
+   the mirror's own code stays under test and only the store beneath it is
+   replaced. See test/memoryIdb.ts. */
+vi.mock('idb-keyval', () => memoryIdb());
+beforeEach(() => resetMemoryIdb());
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { defaultPrefs, type MeasurementPrefs } from '@recipe-notebook/engine';
 import { SettingsScreen } from './SettingsScreen.js';
+import { readCookTextSize } from '../data/offlineMirror.js';
 import { AppDataProvider } from '../app/AppDataProvider.js';
 import { AuthProvider } from '../auth/AuthProvider.js';
 import { fakeRepository } from '../test/render.js';
@@ -223,5 +231,29 @@ describe('the account block', () => {
     show({ canWrite: false, anonymous: true });
     expect(await screen.findByText(/על המכשיר הזה בלבד/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'שינוי סיסמה' })).not.toBeInTheDocument();
+  });
+});
+
+/*
+  §10 of the handoff: a text-size setting that really takes effect. It is
+  device storage rather than the account (see data/offlineMirror.ts), so these
+  tests drive the real store through the mirror — the same one Cook Mode
+  reads.
+*/
+describe('the size of the text in Cook Mode', () => {
+  it('saves the choice and shows it back, with a preview at that size', async () => {
+    const user = userEvent.setup();
+    show();
+    const panel = await screen.findByRole('region', { name: 'גודל הטקסט במצב הכנה' });
+
+    const large = within(panel).getByRole('button', { name: 'גדול' });
+    expect(large).toHaveAttribute('aria-pressed', 'false');
+    await user.click(large);
+    await waitFor(() => expect(large).toHaveAttribute('aria-pressed', 'true'));
+
+    // What Cook Mode will read.
+    expect(await readCookTextSize()).toBe('large');
+    // And the preview carries the scale, not just the words.
+    expect(panel).toHaveTextContent('תצוגה מקדימה');
   });
 });

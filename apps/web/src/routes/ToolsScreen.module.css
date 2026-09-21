@@ -9,7 +9,11 @@
 }
 
 .head {
-  padding: 20px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 20px;
   border-block-end: 1px solid var(--c-line);
 }
 
@@ -144,13 +148,41 @@
   cursor: pointer;
 }
 
-.back {
-  align-self: flex-start;
-  margin: 16px 20px 24px;
-  min-height: var(--hit-min);
-  display: inline-flex;
-  align-items: center;
-  color: var(--c-green);
+
+/* §10's card head: the glyph, the tool's name, and the volume it holds. */
+.toolHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.toolIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--r-check);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+}
+
+.toolNames {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.toolMlLabel {
   font-size: var(--fs-meta-lg);
-  font-weight: 600;
+  color: var(--c-muted);
+}
+
+.toolMl {
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-title);
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
 }

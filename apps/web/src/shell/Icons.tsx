@@ -203,6 +203,82 @@ export function MenuDotsIcon({ width = 1.8 }: { width?: number }) {
   );
 }
 
+/** A thermometer — the temperature chip in Cook Mode. */
+export function ThermometerIcon({ width = 1.8 }: { width?: number }) {
+  return (
+    <svg {...base(width)} width={18} height={18}>
+      <path d="M13.8 13.6V5.4a1.8 1.8 0 0 0-3.6 0v8.2a3.4 3.4 0 1 0 3.6 0z" />
+      <path d="M12 16.4v-5" />
+    </svg>
+  );
+}
+
+/** A clock — the time chip, and the timer controls. */
+export function ClockIcon({ width = 1.8 }: { width?: number }) {
+  return (
+    <svg {...base(width)} width={18} height={18}>
+      <circle cx="12" cy="12.4" r="7.2" />
+      <path d="M12 8.6v4l2.6 1.6" />
+    </svg>
+  );
+}
+
+/**
+ * A tablespoon / teaspoon — the measuring-tools screen.
+ *
+ * The first drawing had a near-round bowl (rx 3.9, ry 4.6) on a short stem
+ * and read as a MAGNIFYING GLASS at the 26px it is rendered at — measured on
+ * the screen, not guessed. A spoon is an elongated bowl on a long handle, so
+ * the bowl is now half as wide as it is tall and the handle runs most of the
+ * box.
+ */
+export function SpoonIcon({ width = 1.8 }: { width?: number }) {
+  return (
+    <svg {...base(width)} width={26} height={26}>
+      {/* A small bowl on a long handle — the ratio is what stops it reading
+          as a lens. */}
+      <ellipse cx="17" cy="7" rx="2.1" ry="3.6" transform="rotate(42 17 7)" />
+      <path d="M15 9.6 4.4 20.2" />
+    </svg>
+  );
+}
+
+/** צ׳אט — a speech bubble, for the group's two tabs. */
+export function ChatIcon({ width = 1.8 }: { width?: number }) {
+  return (
+    <svg {...base(width)} width={20} height={20}>
+      <path d="M20 12.2c0 3.5-3.6 6.4-8 6.4-.9 0-1.8-.1-2.6-.4L4.6 20l1.2-3.3C4.7 15.5 4 13.9 4 12.2 4 8.7 7.6 5.8 12 5.8s8 2.9 8 6.4z" />
+    </svg>
+  );
+}
+
+/** שיעורים — the open book the notebook tab uses, at the menu weight. */
+export function LessonsIcon({ width = 1.8 }: { width?: number }) {
+  return (
+    <svg {...base(width)} width={20} height={20}>
+      <path d="M12 7.6C10.7 6.3 8.8 5.6 6.8 5.6c-.9 0-1.8.1-2.6.4v12c.8-.3 1.7-.4 2.6-.4 2 0 3.9.7 5.2 2" />
+      <path d="M12 7.6c1.3-1.3 3.2-2 5.2-2 .9 0 1.8.1 2.6.4v12c-.8-.3-1.7-.4-2.6-.4-2 0-3.9.7-5.2 2" />
+      <path d="M12 7.6v12" />
+    </svg>
+  );
+}
+
+/**
+ * The chat's send control — a paper plane, drawn on the same grid and at the
+ * same weight as every other glyph here. Filled rather than outlined: it is
+ * the one control inside the composer capsule and it carries the action
+ * colour, so an outline would read as a disabled state.
+ */
+export function SendIcon({ width = 1.8 }: { width?: number }) {
+  return (
+    <svg {...base(width)} width={20} height={20}>
+      {/* RTL: the plane points the way the text runs, to the left. */}
+      <path d="M20 5 4 11.6l6.4 2.2L20 5z" />
+      <path d="M20 5l-9.6 8.8.5 5.2 2.9-3.9" />
+    </svg>
+  );
+}
+
 /* ── categories, on the home screen ──────────────────────────────────────
    The tiles carried emojis — 🥖, 🍫 — which render as a different artist's
    work in a different style, in colour, beside a set of line glyphs. Ahmed
@@ -268,6 +344,17 @@ export const CATEGORY_ICON: Readonly<Record<string, (p: IconProps) => JSX.Elemen
   שוקולד: DropIcon,
   'עוגות ועוגיות': CakeIcon,
   קינוחים: CakeIcon,
+};
+
+/**
+ * The three measuring tools, keyed by the preference they set. `JugIcon` is
+ * the same glyph the "עוד" menu uses for this screen, so the card and the
+ * entry that leads to it are drawn with one hand.
+ */
+export const TOOL_ICON: Readonly<Record<string, (p: { width: number }) => JSX.Element>> = {
+  cup: JugIcon,
+  tbsp: SpoonIcon,
+  tsp: SpoonIcon,
 };
 
 export const MENU_ICON: Readonly<Record<string, (p: IconProps) => JSX.Element>> = {

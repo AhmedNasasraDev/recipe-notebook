@@ -8,7 +8,11 @@
 }
 
 .head {
-  padding: 20px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 20px;
   border-block-end: 1px solid var(--c-line);
 }
 
@@ -273,13 +277,28 @@
   line-height: 1.6;
 }
 
-.back {
-  align-self: flex-start;
-  margin: 16px 20px 24px;
-  min-height: var(--hit-min);
-  display: inline-flex;
-  align-items: center;
-  color: var(--c-green);
-  font-size: var(--fs-meta-lg);
-  font-weight: 600;
+
+/* §10's live preview of the Cook Mode text size. It borrows the kitchen
+   screen's own type token, scaled by the choice above it, so what is shown
+   here is the size that will be on the bench. */
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+  border-radius: var(--r-card);
+  background: var(--c-app-bg);
+}
+
+.previewLabel {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.previewText {
+  font-family: var(--font-display);
+  font-size: var(--fs-cook-body);
+  line-height: 1.25;
+  color: var(--c-ink);
 }

@@ -8,18 +8,6 @@
   gap: 6px;
 }
 
-/* A 12px-high link was the way back out of this screen. §15's rule is 44 and
-   the rest of the app keeps it (Cook Mode's "יציאה" is `min-height:
-   var(--hit-min)`); this is the same control doing the same job. The text size
-   is unchanged — what grew is the box you can hit. */
-.back {
-  justify-self: start;
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--hit-min);
-  font-size: var(--fs-meta);
-  color: var(--c-green);
-}
 
 .title {
   font-family: var(--font-display);

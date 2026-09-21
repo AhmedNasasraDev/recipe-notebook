@@ -14,7 +14,7 @@
 // writing the same `prefs`: this is one setting with two doors, not two
 // settings that can disagree.
 
-import { Link } from 'react-router-dom';
+import { BackLink } from '../components/BackLink.js';
 import {
   TOOL_OPTIONS,
   toolLabel,
@@ -22,6 +22,7 @@ import {
   type ToolId,
 } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
+import { ICON_STROKE, TOOL_ICON } from '../shell/Icons.js';
 import styles from './ToolsScreen.module.css';
 
 const TOOLS: readonly ToolId[] = ['cup', 'tbsp', 'tsp'];
@@ -33,6 +34,9 @@ export function ToolsScreen() {
   return (
     <div className={styles.wrap}>
       <header className={styles.head}>
+        {/* §4: the way back is at the TOP of an inner screen, not at the end
+            of it — it used to be the last thing on the page. */}
+        <BackLink to="/more">עוד</BackLink>
         <h1 className={styles.title}>כלי המדידה שלי</h1>
         <p className={styles.lead}>
           כל המרה בין נפח למשקל באפליקציה נעשית לפי הכלים האלה. שינוי כאן מעדכן
@@ -50,10 +54,25 @@ export function ToolsScreen() {
         const currentMl = toolMl(prefs, tool);
         return (
           <section key={tool} className={styles.card} aria-label={toolLabel(tool)}>
-            <h2 className={styles.cardTitle}>
-              {toolLabel(tool)} — כרגע <span className="ltr">{Math.round(currentMl)}</span>{' '}
-              מ&quot;ל
-            </h2>
+            {/*
+              §10: the tool's OWN VOLUME is the fact this card is about, so it
+              is the figure at the top rather than a clause in the heading —
+              "נפח הכלי", in millilitres, which is what a jug holds. What it
+              weighs depends on the ingredient, and the note below the cards
+              says so; nothing here converts anything.
+            */}
+            <div className={styles.toolHead}>
+              <span className={styles.toolIcon} aria-hidden="true">
+                {TOOL_ICON[tool]?.({ width: ICON_STROKE.menu })}
+              </span>
+              <span className={styles.toolNames}>
+                <h2 className={styles.cardTitle}>{toolLabel(tool)}</h2>
+                <span className={styles.toolMlLabel}>נפח הכלי</span>
+                <span className={styles.toolMl}>
+                  <span className="ltr">{Math.round(currentMl)}</span> מ&quot;ל
+                </span>
+              </span>
+            </div>
             <div className={styles.options} role="group" aria-label={`גודל ${toolLabel(tool)}`}>
               {TOOL_OPTIONS[tool].map((o) => {
                 // The same tolerance the onboarding uses: the stored value is a
@@ -136,9 +155,6 @@ export function ToolsScreen() {
         )}
       </section>
 
-      <Link to="/more" className={styles.back}>
-        ← עוד
-      </Link>
     </div>
   );
 }

@@ -61,7 +61,10 @@
 // walked away from that step.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { ClockIcon, ThermometerIcon } from '../shell/Icons.js';
+import { BackLink } from '../components/BackLink.js';
 import { compute } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
@@ -87,7 +90,9 @@ import {
 import {
   clearCookProgress,
   readCookProgress,
+  readCookTextSize,
   writeCookProgress,
+  type CookTextSize,
 } from '../data/offlineMirror.js';
 import styles from './CookScreen.module.css';
 
@@ -122,6 +127,47 @@ export function CookScreen() {
   const [restored, setRestored] = useState(false);
   /** Mise en place: the ticks, and whether the preparation has been started. */
   const [ticks, setTicks] = useState<MiseTicks>({});
+  /*
+    §7's reset. Two taps, not one: the first turns the control into the
+    question, the second clears the ticks. Nothing else is touched — not the
+    step, not the timers, not the chosen quantity — and the effect goes
+    through the same `setTicks` the checkboxes use, so it is saved by the same
+    effect that saves a tick.
+  */
+  const [askReset, setAskReset] = useState(false);
+
+  /*
+    §8: "טיימר מזמן המתכון או טיימר אישי שניתן לערוך; אל תמציא זמנים."
+
+    The recipe's own time starts a timer with one press and has done since
+    §14. What was missing is the other half: a step that carries no time —
+    most steps of most recipes — had no way to time anything at all, and the
+    kitchen answer to "cover and rest until it doubles" is a phone timer you
+    set yourself. So the minutes are ASKED FOR rather than guessed, and the
+    timer that comes out is the same object, on the same clock, saved by the
+    same effect as the recipe's.
+  */
+  /*
+    §10's text size, applied where it was asked for: the screen people read
+    from across a bench. It is a device choice (see `readCookTextSize`), so it
+    is read once on mount and needs no server round trip — and until it
+    answers the screen is at its normal size, which is what it has always
+    been, rather than jumping a size once the answer arrives.
+  */
+  const [textSize, setTextSize] = useState<CookTextSize>('normal');
+  useEffect(() => {
+    let cancelled = false;
+    void readCookTextSize().then((size) => {
+      if (!cancelled) setTextSize(size);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const textScale = textSize === 'xlarge' ? 1.34 : textSize === 'large' ? 1.16 : 1;
+
+  const [askOwnTimer, setAskOwnTimer] = useState(false);
+  const [ownMinutes, setOwnMinutes] = useState('');
   /*
     "Started" is two facts, and keeping them apart is what fixed a real bug.
 
@@ -273,9 +319,7 @@ export function CookScreen() {
       <div className={styles.missing}>
         <h1 className={styles.missingTitle}>מצב הכנה</h1>
         <p>המתכון הזה לא נמצא במחברת.</p>
-        <Link to="/notebook" className={styles.exit}>
-          ← המחברת
-        </Link>
+        <BackLink to="/notebook">המחברת</BackLink>
       </div>
     );
   }
@@ -291,9 +335,7 @@ export function CookScreen() {
         <Link to={`/recipe/${recipe.id}/edit`} className={styles.exit}>
           עריכת המתכון
         </Link>
-        <Link to={`/recipe/${recipe.id}`} className={styles.exit}>
-          ← חזרה למתכון
-        </Link>
+        <BackLink to={`/recipe/${recipe.id}`}>חזרה למתכון</BackLink>
       </div>
     );
   }
@@ -319,9 +361,11 @@ export function CookScreen() {
   */
   const head = (
     <header className={styles.head}>
-      <Link to={`/recipe/${recipe.id}`} className={`${styles.exit} nowrap`}>
-        ← יציאה
-      </Link>
+      {/* §4/§8: the way out of Cook Mode — the right-hand end of the bar, the
+          chevron pointing back, and always reachable, in fullscreen too. */}
+      <BackLink to={`/recipe/${recipe.id}`} className={styles.exitPill}>
+        יציאה
+      </BackLink>
       <button
         type="button"
         className={styles.fsBtn}
@@ -350,6 +394,7 @@ export function CookScreen() {
         className={fs.focus ? `${styles.wrap} ${styles.focus}` : styles.wrap}
         dir="rtl"
         ref={screenRef}
+        style={{ '--cook-text-scale': textScale } as CSSProperties}
       >
         {head}
         {fsNote}
@@ -409,6 +454,44 @@ export function CookScreen() {
                 })}
               </ul>
             </>
+          )}
+
+          {/* §7: clearing the list is a secondary action, under it. */}
+          {mise.ready > 0 && (
+            <div className={styles.resetRow}>
+              {askReset ? (
+                <>
+                  <span className={styles.resetAsk}>
+                    לנקות את כל הסימונים?
+                  </span>
+                  <button
+                    type="button"
+                    className={`${styles.reset} ${styles.resetConfirm}`}
+                    onClick={() => {
+                      setTicks({});
+                      setAskReset(false);
+                    }}
+                  >
+                    כן, לנקות
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.reset}
+                    onClick={() => setAskReset(false)}
+                  >
+                    ביטול
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.reset}
+                  onClick={() => setAskReset(true)}
+                >
+                  איפוס הסימונים
+                </button>
+              )}
+            </div>
           )}
 
           {/*
@@ -502,6 +585,7 @@ export function CookScreen() {
       className={fs.focus ? `${styles.wrap} ${styles.focus}` : styles.wrap}
       dir="rtl"
       ref={screenRef}
+      style={{ '--cook-text-scale': textScale } as CSSProperties}
     >
       {head}
       {fsNote}
@@ -539,23 +623,44 @@ export function CookScreen() {
         </span>
         <p className={styles.stepText}>{step.text || 'שלב בלי תיאור'}</p>
 
-        <p className={styles.stepMeta}>
-          {step.temp ? (
-            <>
-              <span className="ltr">
-                {step.temp}°{step.tempUnit === 'F' ? 'F' : 'C'}
+        {/*
+          §8: the temperature and the time are the two things read from across
+          a bench, so they are chips rather than a line of small print — one
+          for each fact the step actually carries. Nothing is invented: a step
+          with no temperature gets no temperature chip.
+        */}
+        {(step.temp || minutes > 0 || step.kind) && (
+          <p className={styles.stepMeta}>
+            {step.temp ? (
+              <span className={styles.chip}>
+                <ThermometerIcon />
+                <span className="ltr">
+                  {step.temp}°{step.tempUnit === 'F' ? 'F' : 'C'}
+                </span>
               </span>
-              {minutes > 0 && ' · '}
-            </>
-          ) : null}
-          {minutes > 0 && (
-            <>
-              <span className="ltr">{minutes}</span> דק&apos;
-            </>
-          )}
-          {step.kind && <> · {KIND_HE[step.kind] ?? ''}</>}
-        </p>
+            ) : null}
+            {minutes > 0 && (
+              <span className={styles.chip}>
+                <ClockIcon />
+                <span>
+                  <span className="ltr">{minutes}</span> דק&apos;
+                </span>
+              </span>
+            )}
+            {step.kind && <span className={styles.chipQuiet}>{KIND_HE[step.kind] ?? ''}</span>}
+          </p>
+        )}
 
+        {/*
+          §8 asks for ONE primary action on this screen — "סיימתי — לשלב הבא",
+          at the foot, where the thumb is. So what is left here is its
+          opposite: the line that says the step is already marked, and the way
+          to take that back. On an unmarked step this is the same button it
+          always was, kept because a cook may want to tick a step off without
+          moving on from it (checking a slow bake, or working two steps at
+          once) — and because "עיון או חזרה אינם מסמנים שלב כהושלם" means
+          marking has to have a control of its own.
+        */}
         <button
           type="button"
           className={done.has(index) ? styles.markOn : styles.mark}
@@ -565,22 +670,86 @@ export function CookScreen() {
           {done.has(index) ? 'השלב מסומן כהושלם · ביטול' : 'סימון השלב כהושלם'}
         </button>
 
-        {minutes > 0 && !timers.has(index) && (
-          <button
-            type="button"
-            className={styles.timerStart}
-            onClick={() => {
-              const t = Date.now();
-              // `now` is set from the SAME instant the timer starts. Without
-              // this it still holds the mount time until the first tick, which
-              // is earlier — so `endsAt - now` exceeded the full duration and a
-              // fresh 8-minute timer could read 08:01.
-              setNow(t);
-              setTimers((prev) => new Map(prev).set(index, startTimer(minutes, t)));
-            }}
-          >
-            הפעלת טיימר ל<span className="ltr">{minutes}</span> דק&apos;
-          </button>
+        {/*
+          One timer per step — the map is keyed by the step's index and that is
+          also what is saved — so both controls are offered only while this
+          step has none running.
+        */}
+        {!timers.has(index) && (
+          <div className={styles.timerRow}>
+            {minutes > 0 && (
+              <button
+                type="button"
+                className={styles.timerStart}
+                onClick={() => {
+                  const t = Date.now();
+                  // `now` is set from the SAME instant the timer starts.
+                  // Without this it still holds the mount time until the first
+                  // tick, which is earlier — so `endsAt - now` exceeded the
+                  // full duration and a fresh 8-minute timer could read 08:01.
+                  setNow(t);
+                  setTimers((prev) => new Map(prev).set(index, startTimer(minutes, t)));
+                }}
+              >
+                <ClockIcon />
+                הפעלת טיימר ל<span className="ltr">{minutes}</span> דק&apos;
+              </button>
+            )}
+
+            {askOwnTimer ? (
+              <form
+                className={styles.ownTimer}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const m = Number(ownMinutes);
+                  if (!Number.isFinite(m) || m <= 0) return;
+                  const t = Date.now();
+                  setNow(t);
+                  setTimers((prev) => new Map(prev).set(index, startTimer(m, t)));
+                  setOwnMinutes('');
+                  setAskOwnTimer(false);
+                }}
+              >
+                <label className={styles.ownLabel} htmlFor="own-timer">
+                  דקות
+                </label>
+                <input
+                  id="own-timer"
+                  className={styles.ownInput}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={ownMinutes}
+                  onChange={(e) => setOwnMinutes(e.target.value.replace(/[^\d]/g, ''))}
+                />
+                <button
+                  type="submit"
+                  className={styles.timerStart}
+                  disabled={Number(ownMinutes) <= 0}
+                >
+                  הפעלה
+                </button>
+                <button
+                  type="button"
+                  className={styles.timerGhost}
+                  onClick={() => {
+                    setAskOwnTimer(false);
+                    setOwnMinutes('');
+                  }}
+                >
+                  ביטול
+                </button>
+              </form>
+            ) : (
+              <button
+                type="button"
+                className={styles.timerGhost}
+                onClick={() => setAskOwnTimer(true)}
+              >
+                <ClockIcon />
+                טיימר אישי
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -654,6 +823,22 @@ export function CookScreen() {
         </details>
       )}
 
+      {/*
+        ── §8: ONE PRIMARY ACTION ──────────────────────────────────────────
+
+        "פעולה ראשית אחת: סיימתי — לשלב הבא. עיון או חזרה אינם מסמנים שלב
+        כהושלם."
+
+        The filled button now says what it does and does both halves of it:
+        it marks THIS step and moves to the next one. "הבא" used to sit there
+        and only browse, which is the confusion the handoff is pointing at —
+        pressing the loud button at the bottom of a step you have just
+        finished should not leave it unmarked behind you.
+
+        Browsing did not go anywhere: "הקודם" is still there, and the segments
+        at the top still jump to any step. Neither marks anything, which is
+        the other half of the same rule.
+      */}
       <nav className={styles.foot} aria-label="ניווט בין שלבים">
         <button
           type="button"
@@ -668,6 +853,7 @@ export function CookScreen() {
             type="button"
             className={styles.finish}
             onClick={() => {
+              if (!done.has(index)) toggleDone(index);
               // The bake is over: the checklist should not greet the next one
               // half-ticked. Navigation does not wait on the write — losing a
               // delete is harmless, and blocking the way out of Cook Mode on
@@ -676,17 +862,21 @@ export function CookScreen() {
               navigate(`/recipe/${recipe.id}`);
             }}
           >
-            סיום ההכנה
+            סיימתי — סיום ההכנה
           </button>
         ) : (
           <button
             type="button"
-            /* The step you are most likely to want is the filled one: the
-               way forward reads as the action, the way back as an option. */
             className={`${styles.navBtn} ${styles.navNext}`}
-            onClick={() => jump(index + 1)}
+            onClick={() => {
+              /* Marking already advances (see `toggleDone`), so a step that is
+                 not yet marked needs one call and not two — otherwise the
+                 screen would move on twice. */
+              if (done.has(index)) jump(index + 1);
+              else toggleDone(index);
+            }}
           >
-            הבא
+            סיימתי — לשלב הבא
           </button>
         )}
       </nav>

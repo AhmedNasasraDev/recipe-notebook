@@ -147,10 +147,10 @@ describe('§14 one step at a time', () => {
     show();
     await startCooking(user);
     await screen.findByText('לשים 8 דקות');
-    expect(screen.queryByRole('button', { name: 'סיום ההכנה' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /סיום ההכנה/ })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'שלב 3' }));
-    expect(screen.getByRole('button', { name: 'סיום ההכנה' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /סיום ההכנה/ })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'הבא' })).not.toBeInTheDocument();
   });
 
@@ -351,7 +351,7 @@ describe('§14 the progress is remembered on the device', () => {
     await screen.findByText('לשים 8 דקות');
     await user.click(screen.getByRole('button', { name: 'סימון השלב כהושלם' }));
     await user.click(screen.getByRole('button', { name: 'שלב 3' }));
-    await user.click(screen.getByRole('button', { name: 'סיום ההכנה' }));
+    await user.click(screen.getByRole('button', { name: /סיום ההכנה/ }));
     await screen.findByText('דף המתכון');
     first.unmount();
 
@@ -880,13 +880,80 @@ describe('§14 Mise en place — the stage that cannot be skipped', () => {
     const block = css.slice(css.search(q));
     // The instruction gets the room: the 54px numeral shrinks, the text does
     // not, and a long instruction scrolls rather than being cut.
-    expect(block).toMatch(/\.stepNum\s*\{[^}]*font-size:\s*28px/s);
+    expect(block).toMatch(/\.stepNum\s*\{[^}]*font-size:\s*26px/s);
     expect(block).toMatch(/\.stepText\s*\{[^}]*font-size:\s*21px/s);
-    expect(block).toMatch(/\.stepBox\s*\{[^}]*overflow-y:\s*auto/s);
+    // The scroller is the instruction itself now, not the whole step box:
+    // §8 asks for the instruction on one side and the facts and controls on
+    // the other, and a long step must not push those off the screen.
+    expect(block).toMatch(/\.stepText\s*\{[^}]*overflow-y:\s*auto/s);
+    expect(block).toMatch(/\.stepBox\s*\{[^}]*grid-template-areas:/s);
     // The weighing list uses the width instead of one long column.
     expect(block).toMatch(/\.miseList\s*\{[^}]*grid-template-columns:\s*repeat\(2/s);
     // Nothing is rotated and no orientation is locked.
     expect(css).not.toMatch(/transform:\s*rotate/);
     expect(css).not.toMatch(/orientation:\s*(portrait|landscape)\s*!important/);
+  });
+});
+/*
+  ── the design pass on Cook Mode ───────────────────────────────────────────
+
+  Two things the handoff asks for that this screen did not have: one primary
+  action that finishes the step AND moves on ("עיון או חזרה אינם מסמנים שלב
+  כהושלם" is the other half of that rule, and the browse controls still obey
+  it), a personal timer on a step that carries no time of its own, and a way
+  to clear the weighing ticks that cannot be hit by accident.
+*/
+describe('§8 one primary action, and a timer you can set yourself', () => {
+  it('finishes the step and moves on, in one press', async () => {
+    const user = userEvent.setup();
+    show();
+    await startCooking(user);
+    await screen.findByText('לשים 8 דקות');
+
+    await user.click(screen.getByRole('button', { name: 'סיימתי — לשלב הבא' }));
+    expect(await screen.findByText('תפיחה ראשונה')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('1 מתוך 3');
+  });
+
+  it('browsing back and forth marks nothing', async () => {
+    const user = userEvent.setup();
+    show();
+    await startCooking(user);
+    await screen.findByText('לשים 8 דקות');
+
+    await user.click(screen.getByRole('button', { name: 'שלב 2' }));
+    await user.click(screen.getByRole('button', { name: 'הקודם' }));
+    expect(screen.getByRole('status')).toHaveTextContent('0 מתוך 3');
+  });
+
+  it('times a step by asking for the minutes, never by guessing them', async () => {
+    const user = userEvent.setup();
+    show();
+    await startCooking(user);
+    await screen.findByText('לשים 8 דקות');
+    // Every step in the fixture carries a time, so the recipe's own timer is
+    // offered here too — what matters is that the personal one asks for its
+    // minutes and starts a timer with exactly those.
+    await user.click(screen.getByRole('button', { name: 'טיימר אישי' }));
+    await user.type(screen.getByLabelText('דקות'), '12');
+    await user.click(screen.getByRole('button', { name: 'הפעלה' }));
+
+    const timers = await screen.findByRole('region', { name: 'טיימרים' });
+    expect(timers).toHaveTextContent('12:00');
+  });
+
+  it('clears the weighing ticks only after it has asked', async () => {
+    const user = userEvent.setup();
+    show();
+    // On the weighing stage: tick one line, then reset it.
+    const boxes = await screen.findAllByRole('checkbox');
+    await user.click(boxes[0]!);
+    expect(screen.getByRole('status')).toHaveTextContent('1 מתוך');
+
+    await user.click(screen.getByRole('button', { name: 'איפוס הסימונים' }));
+    // The question, not the deed.
+    expect(screen.getByRole('status')).toHaveTextContent('1 מתוך');
+    await user.click(screen.getByRole('button', { name: 'כן, לנקות' }));
+    expect(screen.getByRole('status')).toHaveTextContent('0 מתוך');
   });
 });

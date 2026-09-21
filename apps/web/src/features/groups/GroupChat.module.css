@@ -71,11 +71,39 @@
   margin-top: 4px;
 }
 
+/*
+  SIDES, THE WAY §4 CORRECTS THE MOCKUP.
+
+  The handoff's chat picture puts the reader's own messages on the LEFT and
+  everyone else's on the right, and says in the same breath that it has them
+  backwards: in Hebrew, mine belong on the RIGHT — the side reading starts
+  from — and other people's on the left.
+
+  In an RTL layout `inline-start` IS the right, so a message of mine is pushed
+  to the start with an auto margin at its end, and everybody else's the other
+  way round. Nothing here is a hard-coded `left` or `right`: the same rules
+  would mirror correctly if the application were ever read the other way.
+
+  The tint stays — the side alone is not enough to tell two people apart when
+  one of them writes two messages in a row — and only somebody else's message
+  carries an avatar, because a reader knows what they look like.
+*/
 .row {
-  display: grid;
-  grid-template-columns: 28px 1fr;
+  display: flex;
   gap: 8px;
-  align-items: start;
+  align-items: flex-start;
+  /* Never the full width: a bubble that reaches both edges has no side. */
+  max-inline-size: 86%;
+  margin-inline-start: auto;
+}
+
+.mine {
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}
+
+.mine .avatar {
+  display: none;
 }
 
 .avatar {
@@ -249,16 +277,53 @@
   transparent bar would show the messages through it. The bottom margin is the
   gap the sticky edge would otherwise eat.
 */
+/*
+  ── THE COMPOSER, AS ONE CAPSULE ─────────────────────────────────────────
+
+  §9: a narrow capsule with fully rounded ends, the text on the right and the
+  send control inside the same frame, on one line. No separate send button
+  below the box, and no two-row textarea sitting open on a phone before
+  anybody has typed a word.
+
+  It was a `rows={2}` textarea with a "שליחה" button under it — about 110px of
+  a 402px screen permanently spent on an empty form. The field now opens at
+  one line and grows with the text up to `--chat-input-max`, after which it
+  scrolls inside itself, so a long message is still readable and the
+  conversation above it is not pushed off the screen.
+
+  The paperclip in the handoff's picture is NOT here, and that is deliberate:
+  this application's chat has no attachments — `sendMessage` takes a body and
+  a kind, the table stores text, and there is no bucket behind it. A button
+  that opens a file picker and then cannot send the file is worse than no
+  button. It is written up in the report instead.
+*/
 .composer {
   position: sticky;
   inset-block-end: 0;
   z-index: 1;
   display: grid;
   gap: 8px;
-  padding: 10px;
+  padding-block: 8px;
+  /* The capsule is the surface now, so the composer itself is just the band
+     of page it sits in. */
+  background: var(--c-app-bg);
+}
+
+.capsule {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 4px 6px 4px 4px;
   border: 1px solid var(--c-line);
-  border-radius: var(--r-card);
-  background: var(--c-paper);
+  /* Fully round, at any height it grows to. */
+  border-radius: 999px;
+  background: var(--c-white);
+}
+
+/* Once the field has grown past one line the ends stop being half-circles —
+   a 999px radius on a 90px-tall box is a lozenge, not a capsule. */
+.capsuleTall {
+  border-radius: var(--r-card-lg);
 }
 
 .replying {
@@ -269,15 +334,61 @@
 }
 
 .input {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--c-line);
-  border-radius: var(--r-control);
-  background: var(--c-white);
+  flex: 1;
+  min-width: 0;
+  /* One line to start with; `GroupChat.tsx` measures the text and grows it. */
+  min-height: 36px;
+  max-height: var(--chat-input-max);
+  padding: 7px 10px;
+  border: 0;
+  background: transparent;
   color: var(--c-ink);
   font: inherit;
   font-size: var(--fs-body);
-  resize: vertical;
+  line-height: 1.4;
+  /* The author never drags this: the height follows the text. */
+  resize: none;
+  overflow-y: auto;
+}
+
+.input:focus-visible {
+  outline: none;
+}
+
+/* The focus ring belongs to the capsule, since that is what looks like the
+   field — :focus-within, so it appears wherever the caret actually is. */
+.capsule:focus-within {
+  outline: 2px solid var(--c-green);
+  outline-offset: 1px;
+  border-color: var(--c-green);
+}
+
+/* The one control inside the capsule. A circle, at the 44px floor, with the
+   paper-plane glyph from the application's own icon set. */
+.sendBtn {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  inline-size: var(--hit-min);
+  block-size: var(--hit-min);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--c-green);
+  color: var(--c-white);
+  cursor: pointer;
+}
+
+.sendBtn:disabled {
+  /* Not 0.5: §16 keeps a disabled control legible. It reads as off because it
+     is grey, not because it has faded out. */
+  background: var(--c-neutral-bg);
+  color: var(--c-muted);
+  cursor: default;
+}
+
+.sendBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
 }
 
 .composerRow {

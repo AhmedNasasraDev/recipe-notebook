@@ -28,7 +28,8 @@
 // a person needs in order to bake: quantities, grams, steps.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { BackLink } from '../components/BackLink.js';
 import { compute } from '@recipe-notebook/engine';
 import type { Recipe } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
@@ -155,9 +156,7 @@ export function GroupRecipeScreen() {
           המתכון הזה אינו זמין לחשבון הזה. ייתכן שהמדריך לא שיתף אותו, או שאין
           לכם גישה לקבוצה.
         </p>
-        <Link to="/groups" className={styles.back}>
-          ← לכל הקבוצות
-        </Link>
+        <BackLink to="/groups">לכל הקבוצות</BackLink>
         {problem !== null && (
           <p className={styles.problem} role="alert">
             {problem}
@@ -173,9 +172,7 @@ export function GroupRecipeScreen() {
   return (
     <div className={styles.page}>
       <header className={styles.head}>
-        <Link to={`/group/${groupId}`} className={styles.back}>
-          ← {group.name}
-        </Link>
+        <BackLink to={`/group/${groupId}`}>{group.name}</BackLink>
         <h1 className={styles.title}>{item.name}</h1>
         <p className={styles.meta}>
           {course} · {lesson}

@@ -28,7 +28,8 @@
 // themselves.
 
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { BackLink } from '../components/BackLink.js';
 import { useAppData } from '../app/AppDataProvider.js';
 import type { GroupRole } from '../lib/database.types.js';
 import type { InviteView } from '../features/groups/invites.js';
@@ -114,9 +115,7 @@ export function PermsScreen() {
     return (
       <div className={styles.page}>
         <p className={styles.notice}>הקבוצה אינה קיימת, או שאין לחשבון גישה אליה.</p>
-        <Link to="/groups" className={styles.back}>
-          ← לכל הקבוצות
-        </Link>
+        <BackLink to="/groups">לכל הקבוצות</BackLink>
       </div>
     );
   }
@@ -128,9 +127,7 @@ export function PermsScreen() {
           המסך הזה פתוח למדריכים ולמנהלים בלבד. אלה גם ההרשאות שהשרת אוכף, ולא
           רק מה שמוצג כאן.
         </p>
-        <Link to={`/group/${group.id}`} className={styles.back}>
-          ← {group.name}
-        </Link>
+        <BackLink to={`/group/${group.id}`}>{group.name}</BackLink>
       </div>
     );
   }
@@ -184,9 +181,7 @@ export function PermsScreen() {
   return (
     <div className={styles.page}>
       <header className={styles.head}>
-        <Link to={`/group/${group.id}`} className={styles.back}>
-          ← {group.name}
-        </Link>
+        <BackLink to={`/group/${group.id}`}>{group.name}</BackLink>
         <h1 className={styles.title}>חברים והרשאות</h1>
         <p className={styles.lede}>
           מי בקבוצה, מה התפקיד של כל אחד, ומה מותר לתלמיד לעשות בכל מתכון. כל

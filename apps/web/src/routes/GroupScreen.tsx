@@ -23,6 +23,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { BackLink } from '../components/BackLink.js';
+import { ChatIcon, ChevronIcon, LessonsIcon } from '../shell/Icons.js';
 import { useAppData } from '../app/AppDataProvider.js';
 import { GroupChat } from '../features/groups/GroupChat.js';
 import type { GroupDetail, GroupMember } from '../features/groups/types.js';
@@ -101,9 +103,7 @@ export function GroupScreen() {
         <p className={styles.notice}>
           הקבוצה אינה קיימת, או שאין לחשבון הזה גישה אליה.
         </p>
-        <Link to="/groups" className={styles.back}>
-          ← לכל הקבוצות
-        </Link>
+        <BackLink to="/groups">לכל הקבוצות</BackLink>
         {problem !== null && (
           <p className={styles.problem} role="alert">
             {problem}
@@ -133,9 +133,7 @@ export function GroupScreen() {
     */
     <div className={styles.page}>
       <header className={styles.head}>
-        <Link to="/groups" className={styles.back}>
-          ← לכל הקבוצות
-        </Link>
+        <BackLink to="/groups">לכל הקבוצות</BackLink>
         <h1 className={styles.title}>{group.name}</h1>
         {group.kind !== '' && <p className={styles.kind}>{group.kind}</p>}
         <p className={styles.meta}>
@@ -158,16 +156,7 @@ export function GroupScreen() {
               חברים והרשאות
             </Link>
           )}
-          {group.myRole !== 'owner' && (
-            <button
-              type="button"
-              className={styles.link}
-              onClick={() => void act(() => api.leaveGroup(group.id))}
-              disabled={busy}
-            >
-              יציאה מהקבוצה
-            </button>
-          )}
+
         </div>
       </header>
 
@@ -177,30 +166,34 @@ export function GroupScreen() {
         </p>
       )}
 
-      <div className={styles.tabs} role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'lessons'}
-          className={[styles.tab, tab === 'lessons' ? styles.tabOn : ''].join(' ')}
-          onClick={() => setTab('lessons')}
-        >
-          שיעורים
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'chat'}
-          className={[styles.tab, tab === 'chat' ? styles.tabOn : ''].join(' ')}
-          onClick={() => setTab('chat')}
-        >
-          צ׳אט
-          {group.unread > 0 && (
-            <span className={styles.badge} aria-label={`${group.unread} הודעות שלא נקראו`}>
-              {group.unread}
-            </span>
-          )}
-        </button>
+      <div className={styles.tabs}>
+        <div className={styles.segmented} role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'lessons'}
+            className={[styles.tab, tab === 'lessons' ? styles.tabOn : ''].join(' ')}
+            onClick={() => setTab('lessons')}
+          >
+            <LessonsIcon />
+            שיעורים
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'chat'}
+            className={[styles.tab, tab === 'chat' ? styles.tabOn : ''].join(' ')}
+            onClick={() => setTab('chat')}
+          >
+            <ChatIcon />
+            צ׳אט
+            {group.unread > 0 && (
+              <span className={styles.badge} aria-label={`${group.unread} הודעות שלא נקראו`}>
+                {group.unread}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {tab === 'chat' ? (
@@ -322,7 +315,10 @@ export function GroupScreen() {
                                 to={`/group/${group.id}/item/${item.id}`}
                                 className={styles.itemLink}
                               >
-                                {item.name}
+                                <span className={styles.itemName}>{item.name}</span>
+                                <span className={styles.itemChevron} aria-hidden="true">
+                                  <ChevronIcon />
+                                </span>
                               </Link>
                               {teaches && (
                                 <span className={styles.permsHint}>
@@ -455,6 +451,25 @@ export function GroupScreen() {
                 הוספת קורס
               </button>
             </div>
+          )}
+
+          {/*
+            §9: leaving the group is a SECONDARY action. It used to sit at the
+            top of the screen, one line under the group's name and beside
+            "חברים והרשאות" — the two most prominent controls on a page whose
+            job is lessons and conversation, one of which cannot be undone
+            without a new invitation. It lives at the end of the lessons now,
+            where you arrive after everything the group is for.
+          */}
+          {group.myRole !== 'owner' && (
+            <button
+              type="button"
+              className={styles.leave}
+              onClick={() => void act(() => api.leaveGroup(group.id))}
+              disabled={busy}
+            >
+              יציאה מהקבוצה
+            </button>
           )}
         </div>
       )}

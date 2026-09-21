@@ -437,6 +437,8 @@ describe('stage-11: a plan that cannot be loaded is still a page', () => {
       await screen.findByRole('heading', { level: 1, name: 'תוכנית ייצור' }),
     ).toBeInTheDocument();
     expect(await screen.findByRole('alert')).toHaveTextContent('התוכנית לא נמצאה.');
-    expect(screen.getByRole('link', { name: 'חזרה לתוכניות' })).toBeInTheDocument();
+    // §4's shared back control: the destination's name, with the chevron that
+    // points back in an RTL layout.
+    expect(screen.getByRole('link', { name: 'התוכניות' })).toHaveAttribute('href', '/plans');
   });
 });

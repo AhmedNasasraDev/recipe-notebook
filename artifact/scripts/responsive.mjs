@@ -290,8 +290,17 @@ try {
           through the history, because sticky is exactly the thing that can be
           right in one scroll position and wrong in another.
         */
+        /*
+          The send control lost its text when §9's composer became one capsule
+          — it is the paper-plane button inside it now — so it is found by its
+          accessible name, the way anybody using the screen finds it. Matching
+          on `textContent` quietly found nothing, and the two checks below it
+          disappeared from the run instead of failing: 468 checks became 432
+          and everything still said "passed".
+        */
         const send = [...document.querySelectorAll('button')].find(
-          (b) => (b.textContent || '').trim() === 'שליחה',
+          (b) =>
+            (b.getAttribute('aria-label') || b.textContent || '').trim() === 'שליחה',
         );
         const tabs = document.querySelector('[class*="tabs"]');
         const rows = [...document.querySelectorAll('section[aria-label="צ׳אט הקבוצה"] article')];
@@ -422,8 +431,11 @@ try {
         await page.waitForTimeout(350);
         const up = await page.evaluate(() => {
           const doc = document.documentElement;
+          /* By accessible name — the composer's send control is icon-only
+             since §9's capsule. Same reason as the pass above. */
           const send = [...document.querySelectorAll('button')].find(
-            (b) => (b.textContent || '').trim() === 'שליחה',
+            (b) =>
+              (b.getAttribute('aria-label') || b.textContent || '').trim() === 'שליחה',
           );
           const tabs = document.querySelector('[class*="tabs"]');
           const head = document.querySelector('header[class*="head"]');

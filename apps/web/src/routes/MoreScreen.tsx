@@ -24,6 +24,8 @@ interface Entry {
   to: string;
   title: string;
   body: string;
+  /** Which of §10's two groups the entry belongs to. */
+  group: 'kitchen' | 'tools';
 }
 
 /*
@@ -40,22 +42,36 @@ const ENTRIES: readonly Entry[] = [
     to: '/ingredients',
     title: 'חומרי גלם ומחירים',
     body: 'ניהול חומרי גלם ועדכון מחירים',
+    group: 'kitchen',
   },
   {
     to: '/plans',
     title: 'תכנון ייצור ורכש',
     body: 'תכנון כמויות ורשימת קניות',
+    group: 'kitchen',
   },
   {
     to: '/tools',
     title: 'כלי המדידה שלי',
     body: 'מידות והמרות לפי הכלים שלך',
+    group: 'tools',
   },
   {
     to: '/settings',
     title: 'הגדרות',
     body: 'פרופיל, שפה והעדפות',
+    group: 'tools',
   },
+];
+
+/*
+  §10 groups the four entries in two: what you do to run the kitchen, and what
+  you set up once. Four cards do not need finding, but the headings say what
+  kind of thing each pair is — and the handoff draws them.
+*/
+const GROUPS: readonly { key: Entry['group']; title: string }[] = [
+  { key: 'kitchen', title: 'ניהול המטבח' },
+  { key: 'tools', title: 'כלים והעדפות' },
 ];
 
 export function MoreScreen() {
@@ -77,23 +93,28 @@ export function MoreScreen() {
         that is the way forward.
       */}
       <nav className={styles.menu} aria-label="תפריט עוד">
-        {ENTRIES.map((e) => {
-          const Icon = MENU_ICON[e.to];
-          return (
-            <Link key={e.to} to={e.to} className={styles.entry}>
-              <span className={styles.entryIcon} aria-hidden="true">
-                {Icon?.({ width: ICON_STROKE.menu })}
-              </span>
-              <span className={styles.entryText}>
-                <span className={styles.entryTitle}>{e.title}</span>
-                <span className={styles.entryBody}>{e.body}</span>
-              </span>
-              <span className={styles.entryChevron} aria-hidden="true">
-                <ChevronIcon />
-              </span>
-            </Link>
-          );
-        })}
+        {GROUPS.map((g) => (
+          <section key={g.key} className={styles.group} aria-label={g.title}>
+            <h2 className={styles.groupTitle}>{g.title}</h2>
+            {ENTRIES.filter((e) => e.group === g.key).map((e) => {
+              const Icon = MENU_ICON[e.to];
+              return (
+                <Link key={e.to} to={e.to} className={styles.entry}>
+                  <span className={styles.entryIcon} aria-hidden="true">
+                    {Icon?.({ width: ICON_STROKE.menu })}
+                  </span>
+                  <span className={styles.entryText}>
+                    <span className={styles.entryTitle}>{e.title}</span>
+                    <span className={styles.entryBody}>{e.body}</span>
+                  </span>
+                  <span className={styles.entryChevron} aria-hidden="true">
+                    <ChevronIcon />
+                  </span>
+                </Link>
+              );
+            })}
+          </section>
+        ))}
       </nav>
 
       {/*

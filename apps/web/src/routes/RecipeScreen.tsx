@@ -29,7 +29,8 @@ import { PanCard } from '../features/recipe/PanCard.js';
 import { PrivateNote } from '../features/recipe/PrivateNote.js';
 import { RecipeImages } from '../features/images/RecipeImages.js';
 import { useRecipeImages } from '../features/images/useRecipeImages.js';
-import { BackIcon, MenuDotsIcon } from '../shell/Icons.js';
+import { MenuDotsIcon } from '../shell/Icons.js';
+import { BackLink } from '../components/BackLink.js';
 import {
   forgetRecipeLocally,
   noteRecipeOpened,
@@ -355,10 +356,7 @@ export function RecipeScreen() {
     return (
       <div className={styles.missing}>
         <p>המתכון הזה לא נמצא במחברת.</p>
-        <Link to="/notebook" className={styles.backLink}>
-          <BackIcon />
-          המחברת
-        </Link>
+        <BackLink to="/notebook">המחברת</BackLink>
       </div>
     );
   }
@@ -534,10 +532,9 @@ export function RecipeScreen() {
         <div className={styles.topBar}>
           {/* RTL: back is on the RIGHT — first in the source — and its chevron
               points the way back, which in Hebrew is rightwards. */}
-          <Link to="/notebook" className={`${styles.backLink} nowrap`}>
-            <BackIcon />
+          <BackLink to="/notebook" tone="paper">
             המחברת
-          </Link>
+          </BackLink>
           <button
             type="button"
             className={styles.menuBtn}

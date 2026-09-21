@@ -389,7 +389,7 @@ if (should('C')) {
   check('and remembers the step that was marked', /1 מתוך/.test(await text(page)));
 
   // Leave and come back the same way a person would.
-  await page.getByRole('link', { name: '← יציאה' }).click();
+  await page.getByRole('link', { name: 'יציאה' }).click();
   await page.waitForTimeout(700);
   check('the exit goes to the recipe', /^\/recipe\/brioche/.test(await route(page)), await route(page));
   await page.goBack();
@@ -403,7 +403,7 @@ if (should('C')) {
   const last = page.locator('nav[aria-label="שלבי ההכנה"] button').last();
   await last.click();
   await page.waitForTimeout(300);
-  const finish = page.getByRole('button', { name: 'סיום ההכנה' });
+  const finish = page.getByRole('button', { name: /סיום ההכנה/ });
   check('the last step offers "סיום ההכנה"', (await finish.count()) > 0);
   await finish.click();
   await page.waitForTimeout(800);

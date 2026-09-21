@@ -41,9 +41,17 @@ function show(opts: {
 describe('§21 the measuring tools can be changed after onboarding', () => {
   it('shows the size each tool is currently set to', async () => {
     show({ cup: 250 });
-    expect(await screen.findByRole('heading', { name: /כוס — כרגע 250/ })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /כף — כרגע 15/ })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /כפית — כרגע 5/ })).toBeInTheDocument();
+    /*
+      The design pass moved the volume out of the heading and into the card,
+      under "נפח הכלי" — §10 asks for the tool's own volume to be the fact the
+      card leads with. So the heading is the tool's NAME and the volume is
+      read from the card it belongs to.
+    */
+    const cup = await screen.findByRole('region', { name: 'כוס' });
+    expect(cup).toHaveTextContent('נפח הכלי');
+    expect(cup).toHaveTextContent('250');
+    expect(screen.getByRole('region', { name: 'כף' })).toHaveTextContent('15');
+    expect(screen.getByRole('region', { name: 'כפית' })).toHaveTextContent('5');
   });
 
   it('marks the size in use, so the screen is not just a list of options', async () => {

@@ -85,10 +85,24 @@
 }
 
 .cardLink {
-  display: grid;
-  gap: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: inherit;
   text-decoration: none;
+}
+
+.cardBody {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cardChevron {
+  flex: none;
+  display: inline-flex;
+  color: var(--c-muted);
 }
 
 .cardTop {

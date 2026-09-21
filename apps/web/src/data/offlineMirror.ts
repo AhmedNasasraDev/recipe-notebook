@@ -26,6 +26,7 @@ const KEY = {
   lastOpened: 'rn.lastOpened.v1',
   recents: 'rn.recents.v1',
   favorites: 'rn.favorites.v1',
+  cookTextSize: 'rn.cookTextSize.v1',
 } as const;
 
 async function safeGet<T>(key: string): Promise<T | null> {
@@ -234,6 +235,41 @@ export async function toggleFavorite(recipeId: string): Promise<string[]> {
  * every other accessor here tolerates it, and each key is then removed
  * individually as a fallback.
  */
+// ── the size of the text in Cook Mode ─────────────────────────────────────
+//
+// §10 of the handoff asks for a text-size setting that really takes effect.
+// It lives HERE, on the device, and not in the account — and that is not a
+// shortcut around the profiles table, it is the right place for it: how large
+// the instructions have to be depends on the screen you are reading them
+// from and how far away it is propped up. The same baker wants one size on
+// the phone clipped to a shelf and another on the tablet on the bench.
+//
+// Consequences, stated rather than hidden: it does not follow the account to
+// another device, and a browser that refuses storage keeps the default. Both
+// are the same properties the favourites and the recents have.
+
+export type CookTextSize = 'normal' | 'large' | 'xlarge';
+
+const TEXT_SIZES: readonly CookTextSize[] = ['normal', 'large', 'xlarge'];
+
+const isTextSize = (v: unknown): v is CookTextSize =>
+  typeof v === 'string' && (TEXT_SIZES as readonly string[]).includes(v);
+
+export async function readCookTextSize(): Promise<CookTextSize> {
+  const stored = await safeGet<CookTextSize>(KEY.cookTextSize);
+  return isTextSize(stored) ? stored : 'normal';
+}
+
+/**
+ * Writes the choice and returns what is now stored — which is the DEFAULT
+ * when the write failed, so a settings screen can say "this device is not
+ * keeping it" instead of showing a choice that will be gone on reload.
+ */
+export async function writeCookTextSize(size: CookTextSize): Promise<CookTextSize> {
+  const ok = await safeSet(KEY.cookTextSize, size);
+  return ok ? size : await readCookTextSize();
+}
+
 export async function clearMirror(): Promise<void> {
   try {
     await clear();

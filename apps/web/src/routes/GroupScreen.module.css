@@ -14,18 +14,6 @@
   gap: 6px;
 }
 
-/* A 12px-high link was the way back out of this screen. §15's rule is 44 and
-   the rest of the app keeps it (Cook Mode's "יציאה" is `min-height:
-   var(--hit-min)`); this is the same control doing the same job. The text size
-   is unchanged — what grew is the box you can hit. */
-.back {
-  justify-self: start;
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--hit-min);
-  font-size: var(--fs-meta);
-  color: var(--c-green);
-}
 
 .title {
   font-family: var(--font-display);
@@ -102,9 +90,20 @@
   On the lessons tab this is the same improvement for the same reason — the
   chat is one tap away from the bottom of a long course list.
 */
+/*
+  ── §9: ONE SEGMENTED CONTROL, NOT TWO PILLS ───────────────────────────
+
+  The handoff draws the two halves of this screen — שיעורים and צ׳אט — as a
+  single control across the width, each half a tab with its glyph, the
+  selected one filled in the palette's selection tint. That is also the
+  honest shape: these are two views of one group, not two separate actions.
+
+  `.tabs` is the STICKY BAND and `.segmented` is the control inside it. Two
+  elements rather than one because the band has to be opaque all the way
+  across — it is what the conversation scrolls behind (F27) — while the
+  control has rounded ends and does not reach the gutters.
+*/
 .tabs {
-  display: flex;
-  gap: 8px;
   position: sticky;
   inset-block-start: 0;
   z-index: 2;
@@ -112,25 +111,44 @@
   background: var(--c-app-bg);
 }
 
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-paper);
+}
+
 .tab {
   display: flex;
   gap: 6px;
   align-items: center;
-  min-height: 36px;
-  padding: 6px 14px;
-  border: 1px solid var(--c-line);
+  justify-content: center;
+  min-height: var(--hit-min);
+  padding-inline: 10px;
+  border: 0;
   border-radius: var(--r-pill);
-  background: var(--c-white);
-  color: var(--c-ink);
+  background: transparent;
+  color: var(--c-muted);
   font: inherit;
   font-size: var(--fs-body);
   cursor: pointer;
 }
 
+.tab:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: -2px;
+}
+
+/* Selected: the palette's own selection tint with the sage ink on it, which
+   is how a chosen thing looks everywhere else in the application. Weight and
+   colour both change, so the state is not carried by colour alone. */
 .tabOn {
-  border-color: var(--c-green);
-  background: var(--c-green);
-  color: var(--c-white);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-weight: var(--fw-title);
 }
 
 .badge {
@@ -144,7 +162,7 @@
   text-align: center;
 }
 
-.tab:not(.tabOn) .badge {
+.tab .badge {
   background: var(--c-green);
   color: var(--c-white);
 }
@@ -214,20 +232,74 @@
   color: var(--c-muted);
 }
 
+/*
+  A shared recipe is a ROW you press, the way a recipe in the notebook is —
+  it used to be an underlined word in a grey box, which is a footnote. Same
+  destination, same permissions; it just looks like what it does.
+*/
 .item {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  align-items: baseline;
-  padding: 6px 8px;
+  gap: 8px 12px;
+  align-items: center;
+  padding: 4px 4px 4px 8px;
   border-radius: var(--r-check);
   background: var(--c-app-bg);
 }
 
 .itemLink {
+  flex: 1;
+  min-inline-size: 60%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--hit-min);
+  padding-inline: 8px;
+  border-radius: var(--r-check);
   font-size: var(--fs-body);
   color: var(--c-ink);
-  text-decoration: underline;
+  text-decoration: none;
+}
+
+.itemLink:hover {
+  background: var(--c-white);
+}
+
+.itemLink:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: -2px;
+}
+
+.itemName {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemChevron {
+  flex: none;
+  display: inline-flex;
+  color: var(--c-muted);
+}
+
+/* §9: the way out of a group, at the end and quiet. */
+.leave {
+  align-self: flex-start;
+  justify-self: start;
+  min-height: var(--hit-compact);
+  margin-block-start: 4px;
+  padding-inline: 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--c-muted);
+  font: inherit;
+  font-size: var(--fs-meta-lg);
+  cursor: pointer;
+}
+
+.leave:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
 }
 
 .rowActions {

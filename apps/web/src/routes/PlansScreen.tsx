@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { BackLink } from '../components/BackLink.js';
 import { useAppData } from '../app/AppDataProvider.js';
 import type { PlanSummary } from '../data/repository.js';
 import styles from './PlansScreen.module.css';
@@ -84,6 +85,9 @@ export function PlansScreen() {
   return (
     <div className={styles.page}>
       <header className={styles.head}>
+        {/* §4: an inner screen, so it carries the way back. It is reached from
+            "עוד", which is where it returns to. */}
+        <BackLink to="/more">עוד</BackLink>
         <h1 className={styles.title}>תכנון ייצור</h1>
         <p className={styles.lede}>
           מגדירים מה מייצרים ובאיזו כמות, והמערכת מחשבת מהמתכונים כמה חומר גלם

@@ -32,7 +32,9 @@
 .menu {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  /* Between the two groups, not between the cards — the cards have their own
+     10px inside a group, and the extra air is what separates the pairs. */
+  gap: var(--gap-between-groups);
 }
 
 .entry {
@@ -119,4 +121,22 @@
   font-size: var(--fs-meta-lg);
   color: var(--c-muted);
   line-height: 1.7;
+}
+
+/* §10's two groups. The heading is a label for a pair of cards, so it is the
+   page's smallest heading weight with a hairline under it — the same shape the
+   recipe page uses for a section it does not want to shout about. */
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+}
+
+.groupTitle {
+  padding-block-end: 6px;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 60%, transparent);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: var(--fw-title);
+  color: var(--c-muted);
 }

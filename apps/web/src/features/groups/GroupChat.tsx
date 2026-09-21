@@ -37,6 +37,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAppData } from '../../app/AppDataProvider.js';
+import { SendIcon } from '../../shell/Icons.js';
 import type { GroupRole } from '../../lib/database.types.js';
 import type { ChatMessage, GroupMember } from './types.js';
 import {
@@ -135,6 +136,32 @@ export function GroupChat({ groupId, role, members, avatarUrls }: GroupChatProps
     if (newest === null) return;
     void api.markGroupRead(groupId, newest);
   }, [api, groupId, newest]);
+
+  /*
+    THE COMPOSER GROWS WITH WHAT IS WRITTEN IN IT.
+
+    §9 asks for one line by default and growth only when the text needs it,
+    up to a sensible ceiling with the rest scrolling inside. A textarea cannot
+    do that on its own — `rows` is a fixed number — so the height is set from
+    the content: reset to `auto` to get an honest `scrollHeight`, then clamped
+    to the token. `tall` switches the capsule's ends from half circles to a card
+    radius once it is no longer one line high.
+  */
+  const draftRef = useRef<HTMLTextAreaElement | null>(null);
+  const [tall, setTall] = useState(false);
+  useEffect(() => {
+    const el = draftRef.current;
+    if (el === null) return;
+    el.style.height = 'auto';
+    const max = Number.parseInt(
+      getComputedStyle(el).maxHeight.replace('px', ''),
+      10,
+    );
+    const wanted = el.scrollHeight;
+    const capped = Number.isFinite(max) && max > 0 ? Math.min(wanted, max) : wanted;
+    el.style.height = `${capped}px`;
+    setTall(capped > 48);
+  }, [draft]);
 
   /* Keep the newest message in view as one arrives. */
   const bottom = useRef<HTMLDivElement | null>(null);
@@ -447,36 +474,39 @@ export function GroupChat({ groupId, role, members, avatarUrls }: GroupChatProps
           </p>
         )}
 
+        {can(role, 'announce') && (
+          <label className={styles.check}>
+            <input
+              type="checkbox"
+              checked={announcement}
+              onChange={(e) => setAnnouncement(e.target.checked)}
+            />
+            <span>הכרזה</span>
+          </label>
+        )}
+
         <label className={styles.srOnly} htmlFor="chat-draft">
           הודעה חדשה
         </label>
-        <textarea
-          id="chat-draft"
-          className={styles.input}
-          rows={2}
-          value={draft}
-          placeholder="כתבו הודעה לקבוצה"
-          onChange={(e) => setDraft(e.target.value)}
-        />
-
-        <div className={styles.composerRow}>
-          {can(role, 'announce') && (
-            <label className={styles.check}>
-              <input
-                type="checkbox"
-                checked={announcement}
-                onChange={(e) => setAnnouncement(e.target.checked)}
-              />
-              <span>הכרזה</span>
-            </label>
-          )}
+        <div className={tall ? `${styles.capsule} ${styles.capsuleTall}` : styles.capsule}>
+          <textarea
+            id="chat-draft"
+            ref={draftRef}
+            className={styles.input}
+            rows={1}
+            value={draft}
+            placeholder="כתבו הודעה לקבוצה"
+            onChange={(e) => setDraft(e.target.value)}
+          />
           <button
             type="button"
-            className={styles.send}
+            className={styles.sendBtn}
             onClick={() => void onSend()}
             disabled={busy || draft.trim() === ''}
+            aria-label="שליחה"
+            title="שליחה"
           >
-            שליחה
+            <SendIcon />
           </button>
         </div>
       </div>

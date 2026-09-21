@@ -228,13 +228,3 @@
   line-height: 1.6;
 }
 
-.back {
-  align-self: flex-start;
-  margin: 16px 20px 24px;
-  min-height: var(--hit-min);
-  display: inline-flex;
-  align-items: center;
-  color: var(--c-green);
-  font-size: var(--fs-meta-lg);
-  font-weight: 600;
-}

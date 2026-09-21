@@ -186,9 +186,26 @@ export function IngredientsScreen() {
   const [history, setHistory] = useState<readonly PurchaseRecord[]>([]);
 
   const canWrite = capabilities.canWrite;
+  /*
+    §10 asks for a search on this screen, and it had none: the list is every
+    material the kitchen has ever priced, sorted by name, and on a real
+    catalogue finding "חמאה 82%" meant scrolling past forty rows.
+
+    It filters the LIST and nothing else — no request, no reordering by
+    relevance, no hiding of anything that matches. An empty box is the whole
+    catalogue, which is what the screen was before.
+  */
+  const [query, setQuery] = useState('');
+
   const sorted = useMemo(
-    () => [...catalog].sort((a, b) => a.name.localeCompare(b.name, 'he')),
-    [catalog],
+    () => {
+      const q = query.trim().toLowerCase();
+      const rows = q === ''
+        ? [...catalog]
+        : catalog.filter((c) => c.name.toLowerCase().includes(q));
+      return rows.sort((a, b) => a.name.localeCompare(b.name, 'he'));
+    },
+    [catalog, query],
   );
 
   const current = useMemo(
@@ -692,10 +709,28 @@ export function IngredientsScreen() {
         </section>
       )}
 
+      {catalog.length > 0 && (
+        <div className={styles.searchRow}>
+          <label className={styles.searchLabel} htmlFor="ing-search">
+            חיפוש חומר גלם
+          </label>
+          <input
+            id="ing-search"
+            className={styles.search}
+            type="search"
+            autoComplete="off"
+            value={query}
+            placeholder="שם חומר הגלם"
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+      )}
+
       {sorted.length === 0 ? (
         <p className={styles.empty}>
-          אין עדיין חומרי גלם. אחרי שיוזן חומר גלם עם רכישה ומחיר, כל מתכון
-          שמשתמש בו יקבל את המחיר אוטומטית.
+          {catalog.length === 0
+            ? 'אין עדיין חומרי גלם. אחרי שיוזן חומר גלם עם רכישה ומחיר, כל מתכון שמשתמש בו יקבל את המחיר אוטומטית.'
+            : `אין חומר גלם שהשם שלו מכיל "${query.trim()}". אפשר לנקות את החיפוש ולראות את כל הרשימה.`}
         </p>
       ) : (
         <ul className={styles.list} aria-label="רשימת חומרי הגלם">

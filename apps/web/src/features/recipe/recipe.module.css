@@ -67,34 +67,25 @@
   gap: var(--gap-in-group);
 }
 
-.backLink,
+/*
+  The menu button beside it. The back control itself is components/BackLink —
+  §4 wants one of those in the whole application — and what is left here is
+  the square icon button that opens the recipe's actions, cut to the same
+  shape so the pair reads as one bar.
+*/
 .menuBtn {
   min-height: var(--hit-min);
+  inline-size: var(--hit-min);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  /* Opaque, not a tint: over a photograph a translucent chip is a lottery on
-     what is behind it, and the handoff asks for backgrounds you can read. */
+  padding: 0;
   background: var(--c-white);
   color: var(--c-ink);
   border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
   border-radius: var(--r-pill);
-  text-decoration: none;
-  font-size: var(--fs-secondary);
 }
 
-.backLink {
-  padding-inline: 14px 10px;
-}
-
-.menuBtn {
-  /* A square target, at the 44px floor like everything else. */
-  inline-size: var(--hit-min);
-  padding: 0;
-}
-
-.backLink:focus-visible,
 .menuBtn:focus-visible {
   outline: 2px solid var(--c-green);
   outline-offset: 2px;

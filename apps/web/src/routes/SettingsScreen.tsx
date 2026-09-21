@@ -18,18 +18,52 @@
 // toggle — so it is stated, at the place where the account lives, and there is
 // nothing to switch.
 
-import { useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { BackLink } from '../components/BackLink.js';
 import { PROFILES, UNIT_GROUPS, unit } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { IdentityCard } from '../features/groups/IdentityCard.js';
 import { useAuth } from '../auth/AuthProvider.js';
+import {
+  readCookTextSize,
+  writeCookTextSize,
+  type CookTextSize,
+} from '../data/offlineMirror.js';
 import styles from './SettingsScreen.module.css';
+
+/** §10's three sizes, in the words the handoff uses for them. */
+const TEXT_SIZES: readonly { id: CookTextSize; he: string }[] = [
+  { id: 'normal', he: 'רגיל' },
+  { id: 'large', he: 'גדול' },
+  { id: 'xlarge', he: 'גדול מאוד' },
+];
 
 export function SettingsScreen() {
   const { prefs, setPrefs, capabilities } = useAppData();
   const { status, user, signOut, changePassword } = useAuth();
   const navigate = useNavigate();
+
+  /*
+    §10: "גודל טקסט, עם שמירה והשפעה אמיתיות."
+
+    The size of the instructions in Cook Mode, stored on the DEVICE — see
+    `readCookTextSize` for why it belongs there and not in the account. The
+    control below writes it and then shows what is actually stored, so a
+    browser that refuses storage cannot leave a choice on screen that will be
+    gone after a reload.
+  */
+  const [textSize, setTextSize] = useState<CookTextSize | null>(null);
+  const [textSizeKept, setTextSizeKept] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    void readCookTextSize().then((size) => {
+      if (!cancelled) setTextSize(size);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +131,9 @@ export function SettingsScreen() {
   return (
     <div className={styles.wrap}>
       <header className={styles.head}>
+        {/* §4: the way back is at the TOP of an inner screen, not at the end
+            of it — it used to be the last thing on the page. */}
+        <BackLink to="/more">עוד</BackLink>
         <h1 className={styles.title}>הגדרות</h1>
       </header>
 
@@ -168,6 +205,57 @@ export function SettingsScreen() {
         <Link to="/tools" className={styles.linkBtn}>
           כלי המדידה שלי — גודל כוס, כף וכפית
         </Link>
+      </section>
+
+      {/* ── §10 the size of the text in Cook Mode ──────────────────────── */}
+      <section className={styles.card} aria-label="גודל הטקסט במצב הכנה">
+        <h2 className={styles.cardTitle}>גודל הטקסט במצב הכנה</h2>
+        <p className={styles.note}>
+          ההוראות והמשקלים במצב הכנה נקראים מרחוק, ולכן הגודל שלהם נקבע כאן.
+          ההגדרה נשמרת על המכשיר הזה — טלפון על מדף וטאבלט על השיש יכולים
+          להיות בגדלים שונים.
+        </p>
+        <div className={styles.pills} role="group" aria-label="גודל הטקסט">
+          {TEXT_SIZES.map((o) => {
+            const on = textSize === o.id;
+            return (
+              <button
+                key={o.id}
+                type="button"
+                className={on ? styles.pillOn : styles.pill}
+                aria-pressed={on}
+                onClick={() => {
+                  void writeCookTextSize(o.id).then((stored) => {
+                    setTextSize(stored);
+                    setTextSizeKept(stored === o.id);
+                  });
+                }}
+              >
+                {o.he}
+              </button>
+            );
+          })}
+        </div>
+        {/* A preview at the real size, so the choice is made by looking rather
+            than by imagining. The scale is the one Cook Mode uses. */}
+        <div
+          className={styles.preview}
+          style={
+            {
+              '--cook-text-scale':
+                textSize === 'xlarge' ? 1.34 : textSize === 'large' ? 1.16 : 1,
+            } as CSSProperties
+          }
+        >
+          <span className={styles.previewLabel}>תצוגה מקדימה</span>
+          <p className={styles.previewText}>מוסיפים את החמאה בהדרגה</p>
+        </div>
+        {!textSizeKept && (
+          <p className={styles.warn} role="status">
+            הדפדפן הזה לא שמר את הבחירה — ייתכן שחסימת נתוני אתר מונעת זאת.
+            מצב ההכנה יישאר בגודל הרגיל.
+          </p>
+        )}
       </section>
 
       {/* ── §15 / §17 language ─────────────────────────────────────────── */}
@@ -344,9 +432,6 @@ export function SettingsScreen() {
         )}
       </section>
 
-      <Link to="/more" className={styles.back}>
-        ← עוד
-      </Link>
     </div>
   );
 }

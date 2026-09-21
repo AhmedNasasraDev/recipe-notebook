@@ -26,7 +26,8 @@
 // buttons.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { BackButton, BackLink } from '../components/BackLink.js';
 import {
   GN_SIZES,
   PAN_KINDS,
@@ -77,6 +78,9 @@ const UNIT_GROUPS = [
   { label: 'נפח', ids: ['ml', 'l', 'cup', 'tbsp', 'tsp', 'floz'] },
   { label: 'ספירה', ids: ['unit', 'egg', 'fruit', 'slice'] },
 ] as const;
+
+/** §6's four stages, in the handoff's own words. */
+const STAGES = ['פרטים', 'חומרי גלם', 'אופן ההכנה', 'סיכום'] as const;
 
 export function RecipeEditScreen() {
   const { recipeId } = useParams<{ recipeId: string }>();
@@ -278,6 +282,66 @@ export function RecipeEditScreen() {
     }
   };
 
+  /*
+    ── §6: THE FOUR STAGES ──────────────────────────────────────────────
+
+    The handoff asks for the editor to be four stages — פרטים, חומרי גלם,
+    אופן הכנה, סיכום — with the stage you are on marked, and a primary that
+    carries you to the next one.
+
+    WHAT THIS IS AND WHAT IT IS NOT. The four stages here are the four
+    sections of one form, with a stepper that shows which one you are in and
+    takes you to any of them; they are NOT a wizard that hides the other
+    three. That is deliberate and it is the conservative half of the choice:
+    every field stays mounted, so nothing typed in one stage can be lost by
+    moving to another, the validation that decides whether a recipe may be
+    saved still sees the whole draft at once, and the one save path — the
+    thing this screen exists for — is untouched. A true wizard changes when
+    a draft is written and when it is checked; that is a change to the save
+    behaviour and it needs to be asked for, not slipped in with a redesign.
+
+    The stage you are in is read from what is on screen (IntersectionObserver),
+    so scrolling moves the stepper and the stepper moves the scroll.
+  */
+  const stageRefs = useRef<(HTMLElement | null)[]>([null, null, null, null]);
+  const [stage, setStage] = useState(0);
+  useEffect(() => {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const seen = new Map<number, number>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const i = stageRefs.current.indexOf(e.target as HTMLElement);
+          if (i >= 0) seen.set(i, e.intersectionRatio);
+        }
+        let best = -1;
+        let ratio = 0;
+        for (const [i, r] of seen) {
+          if (r > ratio) {
+            ratio = r;
+            best = i;
+          }
+        }
+        if (best >= 0 && ratio > 0) setStage(best);
+      },
+      { threshold: [0, 0.15, 0.4, 0.75] },
+    );
+    for (const el of stageRefs.current) if (el) io.observe(el);
+    return () => io.disconnect();
+    // The sections are mounted for the life of the screen; the professional
+    // panel's contents change, but its own element does not.
+  }, [loaded]);
+
+  const goToStage = (i: number) => {
+    // Stage 4 is a disclosure: taking somebody there and leaving it shut
+    // would be pointing at a closed door.
+    if (i === 3) setShowProduction(true);
+    const el = stageRefs.current[i];
+    if (!el) return;
+    // Optional call: jsdom has no layout and no `scrollIntoView`.
+    el.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+  };
+
   const onCancel = () => {
     if (dirty && !window.confirm('יש שינויים שלא נשמרו. לצאת בלי לשמור?')) return;
     navigate(recipeId ? `/recipe/${recipeId}` : '/notebook');
@@ -289,9 +353,7 @@ export function RecipeEditScreen() {
         <p className={styles.loading}>
           {ready ? 'המתכון הזה לא נמצא במחברת.' : 'טוען…'}
         </p>
-        <Link to="/notebook" className={styles.backLink}>
-          ← המחברת
-        </Link>
+        <BackLink to="/notebook">המחברת</BackLink>
       </div>
     );
   }
@@ -299,11 +361,32 @@ export function RecipeEditScreen() {
   return (
     <div className={styles.page}>
       <div className={styles.topBar}>
-        <button type="button" className={`${styles.backLink} nowrap`} onClick={onCancel}>
-          ← ביטול
-        </button>
+        <BackButton onClick={onCancel}>ביטול</BackButton>
         <h1 className={styles.screenTitle}>{isNew ? 'מתכון חדש' : 'עריכת מתכון'}</h1>
       </div>
+
+      <nav className={styles.stepper} aria-label="שלבי המתכון">
+        {STAGES.map((label, i) => (
+          <button
+            key={label}
+            type="button"
+            className={[
+              styles.stageBtn,
+              i === stage ? styles.stageOn : '',
+              i < stage ? styles.stagePast : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            aria-current={i === stage ? 'step' : undefined}
+            onClick={() => goToStage(i)}
+          >
+            <span className={styles.stageNum} aria-hidden="true">
+              {i + 1}
+            </span>
+            <span className={styles.stageLabel}>{label}</span>
+          </button>
+        ))}
+      </nav>
 
       {!capabilities.canWrite && (
         <p className={styles.blockedBox} role="status">
@@ -344,7 +427,12 @@ export function RecipeEditScreen() {
       </div>
 
       {/* ── identity ───────────────────────────────────────────────────── */}
-      <section className={styles.card}>
+      <section
+        className={styles.card}
+        ref={(el) => {
+          stageRefs.current[0] = el;
+        }}
+      >
         <h2 className={styles.cardTitle}>
           <span className={styles.stepNum} aria-hidden="true">1</span>
           פרטים בסיסיים
@@ -430,8 +518,22 @@ export function RecipeEditScreen() {
         </label>
       </section>
 
+      {/* §6: the way on to the next stage, where the stage ends. */}
+      <button
+        type="button"
+        className={styles.nextStage}
+        onClick={() => goToStage(1)}
+      >
+        המשך לחומרי גלם
+      </button>
+
       {/* ── ingredients ────────────────────────────────────────────────── */}
-      <section className={styles.card}>
+      <section
+        className={styles.card}
+        ref={(el) => {
+          stageRefs.current[1] = el;
+        }}
+      >
         <div className={styles.cardHeadRow}>
           <h2 className={styles.cardTitle}>
             <span className={styles.stepNum} aria-hidden="true">2</span>
@@ -885,8 +987,21 @@ export function RecipeEditScreen() {
         </dl>
       </section>
 
+      <button
+        type="button"
+        className={styles.nextStage}
+        onClick={() => goToStage(2)}
+      >
+        המשך לאופן ההכנה
+      </button>
+
       {/* ── steps ──────────────────────────────────────────────────────── */}
-      <section className={styles.card}>
+      <section
+        className={styles.card}
+        ref={(el) => {
+          stageRefs.current[2] = el;
+        }}
+      >
         <h2 className={styles.cardTitle}>
           <span className={styles.stepNum} aria-hidden="true">3</span>
           אופן ההכנה
@@ -1010,6 +1125,14 @@ export function RecipeEditScreen() {
         >
           <span aria-hidden="true">+ </span>הוספת שלב
         </button>
+
+        <button
+          type="button"
+          className={styles.nextStage}
+          onClick={() => goToStage(3)}
+        >
+          המשך לסיכום
+        </button>
       </section>
 
       {/*
@@ -1027,8 +1150,14 @@ export function RecipeEditScreen() {
         Nothing was removed and nothing is gated by profile (§3 forbids that).
         It is collapsed because it is optional, and the summary says so.
       */}
-      <details className={styles.proDetails} open={showProduction}
-        onToggle={(e) => setShowProduction(e.currentTarget.open)}>
+      <details
+        className={styles.proDetails}
+        open={showProduction}
+        ref={(el) => {
+          stageRefs.current[3] = el;
+        }}
+        onToggle={(e) => setShowProduction(e.currentTarget.open)}
+      >
         <summary className={styles.proSummary}>
           <span className={styles.stepNum} aria-hidden="true">4</span>
           פרטים מקצועיים

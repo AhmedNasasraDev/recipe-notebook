@@ -1,0 +1,49 @@
+/* §4: one back control for the whole application. Tokens only. */
+
+.sage,
+.paper {
+  /* The pill is as wide as its words, whether the row above it happens to be
+     flex or grid — `align-self` alone left it stretched across a grid header,
+     which is how a back control ends up looking like a page-wide banner. */
+  align-self: flex-start;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--hit-min);
+  padding-inline: 14px 10px;
+  border-radius: var(--r-pill);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.sage {
+  border: 1px solid transparent;
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+}
+
+.sage:hover {
+  background: color-mix(in srgb, var(--c-green-bg) 70%, var(--c-green) 8%);
+}
+
+/* Over a photograph: opaque white with the page's own hairline, because a
+   tint over an unknown picture is a guess about contrast. */
+.paper {
+  border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+  background: var(--c-white);
+  color: var(--c-ink);
+}
+
+.sage:focus-visible,
+.paper:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.label {
+  /* The name of the destination never wraps mid-pill. */
+  white-space: nowrap;
+}

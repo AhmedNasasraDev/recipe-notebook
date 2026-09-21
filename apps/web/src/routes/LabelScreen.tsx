@@ -34,6 +34,7 @@
 
 import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { BackLink } from '../components/BackLink.js';
 import { compute, formatGrams } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
@@ -79,9 +80,7 @@ export function LabelScreen() {
     return (
       <div className={styles.missing}>
         <p>המתכון הזה לא נמצא במחברת.</p>
-        <Link to="/notebook" className={styles.back}>
-          ← המחברת
-        </Link>
+        <BackLink to="/notebook">המחברת</BackLink>
       </div>
     );
   }
@@ -101,9 +100,7 @@ export function LabelScreen() {
   return (
     <div className={styles.wrap}>
       <div className={`${styles.topBar} noprint`}>
-        <Link to={`/recipe/${recipe.id}`} className={styles.back}>
-          ← המתכון
-        </Link>
+        <BackLink to={`/recipe/${recipe.id}`}>המתכון</BackLink>
         <span className={styles.topTitle}>תווית מוצר</span>
       </div>
 

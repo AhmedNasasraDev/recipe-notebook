@@ -17,6 +17,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ChevronIcon } from '../shell/Icons.js';
 import { useAppData } from '../app/AppDataProvider.js';
 import type { GroupSummary, JoinRequestView } from '../features/groups/types.js';
 import { JOIN_METHOD_LABEL, JOIN_METHOD_NOTE, ROLE_LABEL } from '../features/groups/roles.js';
@@ -160,20 +161,27 @@ export function GroupsScreen() {
         <ul className={styles.list}>
           {list.map((g) => (
             <li key={g.id} className={styles.card}>
+              {/* §9: "רשימת קבוצות עם כניסה ברורה". The whole card was already
+                  the link; what it lacked was the chevron that says so. */}
               <Link to={`/group/${g.id}`} className={styles.cardLink}>
-                <span className={styles.cardTop}>
-                  <span className={styles.name}>{g.name}</span>
-                  {g.unread > 0 && (
-                    <span className={styles.badge} aria-label={`${g.unread} הודעות שלא נקראו`}>
-                      {g.unread}
-                    </span>
-                  )}
+                <span className={styles.cardBody}>
+                  <span className={styles.cardTop}>
+                    <span className={styles.name}>{g.name}</span>
+                    {g.unread > 0 && (
+                      <span className={styles.badge} aria-label={`${g.unread} הודעות שלא נקראו`}>
+                        {g.unread}
+                      </span>
+                    )}
+                  </span>
+                  {g.kind !== '' && <span className={styles.kind}>{g.kind}</span>}
+                  <span className={styles.meta}>
+                    <span className={styles.role}>{ROLE_LABEL[g.myRole]}</span>
+                    <span>·</span>
+                    <span>{g.members === 1 ? 'חבר אחד' : `${g.members} חברים`}</span>
+                  </span>
                 </span>
-                {g.kind !== '' && <span className={styles.kind}>{g.kind}</span>}
-                <span className={styles.meta}>
-                  <span className={styles.role}>{ROLE_LABEL[g.myRole]}</span>
-                  <span>·</span>
-                  <span>{g.members === 1 ? 'חבר אחד' : `${g.members} חברים`}</span>
+                <span className={styles.cardChevron} aria-hidden="true">
+                  <ChevronIcon />
                 </span>
               </Link>
             </li>

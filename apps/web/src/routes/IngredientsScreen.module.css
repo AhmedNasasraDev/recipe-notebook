@@ -356,3 +356,33 @@
   font-weight: var(--fw-title);
   color: var(--c-red);
 }
+
+/* §10's search. One field, its own visible label, and the same control shape
+   the notebook's search uses — this is the same act in a different list. */
+.searchRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.searchLabel {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+
+.search {
+  min-height: var(--hit-min);
+  padding-inline: 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-body);
+}
+
+.search:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 1px;
+  border-color: var(--c-green);
+}

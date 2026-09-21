@@ -116,7 +116,9 @@ const switchTo = async (label) => {
 
 const send = async (text) => {
   await page.fill('#chat-draft', text);
-  await page.click(`${CHAT} button:has-text("שליחה")`);
+  // The send control is the one inside the composer capsule and it is
+  // icon-only now (§9), so it is found by its accessible name.
+  await page.getByRole("button", { name: "שליחה" }).click();
   await page.waitForTimeout(400);
 };
 
