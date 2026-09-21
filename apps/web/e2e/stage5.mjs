@@ -94,6 +94,14 @@ const finishOnboarding = async (p) => {
 };
 
 /** Every <option> of a picker, with its label and whether it is selectable. */
+/*
+  The editor is a wizard since §6 — one stage at a time — so every visit to it
+  here goes on to the stage the check is about. The ingredients (and their
+  sub-recipe pickers) are stage 2.
+*/
+const toStage = (p, n) =>
+  p.getByRole('button', { name: new RegExp(`^שלב ${n} `) }).click();
+
 const optionsOf = (locator) =>
   locator.evaluate((el) =>
     [...el.options].map((o) => ({ value: o.value, label: o.textContent, disabled: o.disabled })),
@@ -174,6 +182,8 @@ try {
   // brioche here would close a loop — the client mirror of the 0007 trigger.
   await page.goto('http://127.0.0.1:8124/recipe/ganache/edit', { waitUntil: 'load' });
   await page.waitForTimeout(700);
+  await page.waitForTimeout(500);
+  await toStage(page, 2);
 
   const picker = page.locator('select[aria-label^="מתכון בסיס עבור"]').first();
   check('every ingredient row carries a sub-recipe picker', (await picker.count()) > 0);
@@ -257,6 +267,8 @@ try {
 
   // A row that is ALREADY linked must not hide the fact.
   await page.goto('http://127.0.0.1:8124/recipe/brioche-choc/edit', { waitUntil: 'load' });
+  await page.waitForTimeout(500);
+  await toStage(page, 2);
   await page.waitForTimeout(700);
   const linkedRow = page.locator('details:has(select[aria-label^="מתכון בסיס עבור"])')
     .filter({ hasText: 'מתכון בסיס:' }).first();
@@ -339,6 +351,8 @@ try {
   // ── accessibility of the new controls ───────────────────────────────────
   await page.goto('http://127.0.0.1:8124/recipe/ganache/edit', { waitUntil: 'load' });
   await page.waitForTimeout(700);
+  await page.waitForTimeout(500);
+  await toStage(page, 2);
   const pickerCount = await page.locator('select[aria-label^="מתכון בסיס עבור"]').count();
   const pickerNames = await page.locator('select[aria-label^="מתכון בסיס עבור"]')
     .evaluateAll((els) => els.map((e) => e.getAttribute('aria-label')));
@@ -376,6 +390,8 @@ try {
   await tPage.screenshot({ path: `${OUT}/12-versions-tablet.png`, fullPage: true });
 
   await tPage.goto('http://127.0.0.1:8124/recipe/ganache/edit', { waitUntil: 'load' });
+  await tPage.waitForTimeout(500);
+  await toStage(tPage, 2);
   await tPage.waitForTimeout(700);
   await tPage.screenshot({ path: `${OUT}/13-sub-picker-tablet.png`, fullPage: true });
 
@@ -551,6 +567,9 @@ try {
 
   // The step-kind picker, which is what makes a timeline possible at all.
   await page.goto('http://127.0.0.1:8124/recipe/brioche/edit', { waitUntil: 'load' });
+  await page.waitForTimeout(500);
+  // The steps are stage 3.
+  await toStage(page, 3);
   await page.waitForTimeout(700);
   const kindPicker = page.getByLabel('סוג השלב 1');
   check('a step can be classified from the editor', (await kindPicker.count()) > 0);

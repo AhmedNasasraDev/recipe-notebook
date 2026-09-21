@@ -32,6 +32,15 @@ import {
 } from '../test/fakeSupabase.js';
 import { AppUnderTest, emptyDb, project } from '../test/appHarness.js';
 
+/*
+  The editor is a wizard since §6: one stage on screen at a time (פרטים ·
+  חומרי גלם · אופן ההכנה · סיכום), with the draft held above the stages so
+  nothing typed is lost between them. `toStage` is how a person moves —
+  the stepper at the top of the form, by its accessible name.
+*/
+const toStage = (u: ReturnType<typeof userEvent.setup>, n: 1 | 2 | 3 | 4) =>
+  u.click(screen.getByRole('button', { name: new RegExp(`^שלב ${n} `) }));
+
 beforeEach(() => {
   resetFakeIds();
   resetMemoryIdb();
@@ -171,7 +180,9 @@ describe('requirement 4 — once the dependency is gone, the delete works', () =
     // ── remove the link in the dependent recipe, the way a user would
     view = render(<AppUnderTest client={p.client} route="/recipe/top/edit" />);
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 2);
     await user.selectOptions(screen.getByLabelText('מתכון בסיס עבור גנאש'), '');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'עוגת שוקולד' });
     expect(db['ingredients']!.find((i) => i['name'] === 'גנאש')!['sub_recipe_id']).toBeNull();

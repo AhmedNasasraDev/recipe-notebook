@@ -146,10 +146,18 @@
   line-height: 1.5;
   cursor: pointer;
 }
+/*
+  24px, like every other checkbox in the product (PermsScreen's `.inline`, the
+  chat's own). It was 18 here, and the responsive audit did not catch it for
+  one reason: the editor was not in that audit's screen list until the wizard
+  was built. It is now, and three controls on it — "מתכון בסיס", and the two
+  formula ticks on every ingredient row — were measured at 18px against the
+  project's own 24px floor. Fixed rather than excused.
+*/
 .checkRow input {
-  margin-block-start: 3px;
-  width: 18px;
-  height: 18px;
+  margin-block-start: 1px;
+  width: 24px;
+  height: 24px;
   flex: none;
   accent-color: var(--c-green);
 }
@@ -752,4 +760,33 @@
 .nextStage:focus-visible {
   outline: 2px solid var(--c-green);
   outline-offset: 2px;
+}
+
+/* §6: "שמירת טיוטה" — a real control, and quieter than the stage's primary. */
+.draftBtn {
+  min-height: var(--hit-min);
+  padding-inline: 16px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-secondary);
+  cursor: pointer;
+}
+
+.draftBtn:disabled {
+  color: var(--c-muted);
+  background: var(--c-neutral-bg);
+  cursor: default;
+}
+
+.draftBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.saveOk {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-green-ink);
 }

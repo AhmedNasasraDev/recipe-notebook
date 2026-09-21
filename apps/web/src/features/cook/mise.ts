@@ -98,21 +98,25 @@ export function restoreMise(
 /**
  * Is a preparation that was started earlier still started?
  *
- * Two conditions, and both are needed. The flag, because the one thing that
- * opens the gate is the person pressing the button — a complete list that came
- * back from storage is not a decision, and requirement 16 is exactly that:
- * reading progress back must not be a way past the stage. And the list being
- * complete NOW, because a start made at another scale (whose ticks therefore
- * did not restore) or before the recipe gained an ingredient is not a start for
- * the preparation on screen.
+ * TWO CONDITIONS, AND THE SECOND ONE CHANGED WITH §7.
  *
- * Takes the state rather than the rows on purpose: it is asked during render,
- * when the row list is known, and NOT when the stored record arrives — which
- * can be before the recipes have loaded, and a row list that is merely not
- * there yet would look exactly like an incomplete one. That was a real bug:
- * device storage resolves faster than the network, and the first version
- * dropped the flag and asked the cook to weigh everything again mid-bake.
+ * The flag, because the one thing that starts a preparation is the person
+ * pressing the button — a list that came back from storage is not a decision,
+ * and reading progress back must never be a way past the stage.
+ *
+ * And the saved run being THIS batch, which used to mean "the list is complete
+ * now". That was right while the stage was a lock: a start made at another
+ * scale (whose ticks therefore did not restore) was not a start for the
+ * preparation on screen, and completeness was the only proxy available.
+ *
+ * Since Ahmed's change a cook may start with lines unticked, so completeness
+ * says nothing about whether this bake was started — and asking for it would
+ * send somebody whose bread is already in the oven back to the weighing list
+ * on a reload. The honest condition is the one completeness was standing in
+ * for: the saved run was taken at the SAME SCALE. That is a fact about the
+ * record and the URL, both of which are known before the recipes load, which
+ * is what the old note below was protecting.
  */
-export function startedFrom(savedStarted: boolean, mise: MiseState): boolean {
-  return savedStarted && mise.complete;
+export function startedFrom(savedStarted: boolean, sameScale: boolean): boolean {
+  return savedStarted && sameScale;
 }

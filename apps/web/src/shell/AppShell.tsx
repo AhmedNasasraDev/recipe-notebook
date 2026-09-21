@@ -19,6 +19,11 @@ export function AppShell() {
   // so — describeBackend() in AppDataProvider writes the sentence.
   const showBackendNote =
     capabilities.source === 'local-demo' ||
+    // The trial, which works and saves locally but is not a server (§3 of
+    // Ahmed's stage-3 list). It used to report itself as `supabase`, and this
+    // banner — the application's own disclosure — was therefore suppressed in
+    // the one build where a reader has no other way of knowing.
+    capabilities.source === 'simulated' ||
     capabilities.servingFromCache ||
     !capabilities.online;
 

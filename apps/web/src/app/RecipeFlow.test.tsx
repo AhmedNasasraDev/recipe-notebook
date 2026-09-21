@@ -36,6 +36,15 @@ import {
 } from '../test/fakeSupabase.js';
 import { AppUnderTest, emptyDb, project } from '../test/appHarness.js';
 
+/*
+  The editor is a wizard since §6: one stage on screen at a time (פרטים ·
+  חומרי גלם · אופן ההכנה · סיכום), with the draft held above the stages so
+  nothing typed is lost between them. `toStage` is how a person moves —
+  the stepper at the top of the form, by its accessible name.
+*/
+const toStage = (u: ReturnType<typeof userEvent.setup>, n: 1 | 2 | 3 | 4) =>
+  u.click(screen.getByRole('button', { name: new RegExp(`^שלב ${n} `) }));
+
 beforeEach(() => {
   resetFakeIds();
   resetMemoryIdb();
@@ -85,6 +94,7 @@ describe('the whole route, end to end', () => {
 
     // ── 5. fill it in: two weighed rows and one in cups
     await user.type(screen.getByLabelText('שם המתכון'), 'לחם כוסמין');
+    await toStage(user, 2);
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח מלא');
     await user.type(screen.getByLabelText('כמות של קמח מלא'), '600');
 
@@ -92,10 +102,12 @@ describe('the whole route, end to end', () => {
     await user.type(screen.getByLabelText('שם הרכיב בשורה 2'), 'מים');
     await user.type(screen.getByLabelText('כמות של מים'), '420');
 
+    await toStage(user, 3);
     await user.type(screen.getByLabelText('תיאור שלב 1'), 'ללוש, להתפיח, לאפות.');
     await user.type(screen.getByLabelText('זמן בדקות בשלב 1'), '45');
 
     // ── 6. save
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
 
     // landed on the recipe page, with the engine's figures
@@ -127,6 +139,7 @@ describe('the whole route, end to end', () => {
     // ── 9. edit
     await user.click(screen.getByRole('link', { name: 'עריכת לחם כוסמין' }));
     expect(await screen.findByRole('heading', { name: 'עריכת מתכון' })).toBeInTheDocument();
+    await toStage(user, 2);
     expect(screen.getByLabelText('כמות של קמח מלא')).toHaveValue('600');
 
     await user.clear(screen.getByLabelText('כמות של מים'));
@@ -136,6 +149,7 @@ describe('the whole route, end to end', () => {
     await user.type(screen.getByLabelText('כמות של מלח'), '12');
 
     // ── 10. save the edit — same recipe, not a second one
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'לחם כוסמין' });
 
@@ -247,8 +261,10 @@ describe('a recipe created by one account is invisible to the other', () => {
     const viewA = render(<AppUnderTest client={a.client} route="/recipe/new" />);
     await screen.findByRole('heading', { name: 'מתכון חדש' });
     await user.type(screen.getByLabelText('שם המתכון'), 'הסוד של א');
+    await toStage(user, 2);
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח לבן');
     await user.type(screen.getByLabelText('כמות של קמח לבן'), '500');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
     await screen.findByRole('heading', { name: 'הסוד של א' });
     const aId = db['recipes']![0]!['id'] as string;
@@ -323,6 +339,7 @@ describe('a calibration taken in the app persists and closes the gap', () => {
     const view = render(<AppUnderTest client={p.client} route="/recipe/new" />);
     await screen.findByRole('heading', { name: 'מתכון חדש' });
     await user.type(screen.getByLabelText('שם המתכון'), 'עוגת שוקולד');
+    await toStage(user, 2);
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קקאו');
     await user.type(screen.getByLabelText('כמות של קקאו'), '1');
     await user.selectOptions(screen.getByLabelText('יחידת המדידה של קקאו'), 'cup');
@@ -347,6 +364,7 @@ describe('a calibration taken in the app persists and closes the gap', () => {
       expect(screen.getByLabelText('שלמות החישוב')).toHaveTextContent('חישוב מלא'),
     );
 
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
     await screen.findByRole('heading', { name: 'עוגת שוקולד' });
 

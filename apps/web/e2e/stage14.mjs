@@ -116,8 +116,15 @@ async function run(label, width, height, shot) {
   const count = await boxes.count();
   check(`${label}: one line per ingredient`, count > 0, `${count} lines`);
 
-  const gate = page.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' });
-  check(`${label}: the gate is there and inert`, await gate.isDisabled());
+  /*
+    §7: the weighing is a CHECKLIST, not a lock. The control reads
+    "מעבר להכנה" while lines are unticked and "הכול מוכן — מתחילים בהכנה" once
+    they are all ticked, and it is pressable either way — Ahmed changed the
+    old rule explicitly. `name` matches on a substring, so this finds both.
+  */
+  const gate = page.getByRole('button', { name: 'מעבר להכנה' });
+  const gateDone = page.getByRole('button', { name: 'הכול מוכן' });
+  check(`${label}: the way through is there, and pressable`, await gate.isEnabled());
 
   /* ── the kitchen part: targets, and no sideways scroll ───────────────── */
   const box = await boxes.first().boundingBox();
@@ -153,13 +160,17 @@ async function run(label, width, height, shot) {
     /1 מתוך/.test(partial),
     partial.trim(),
   );
-  check(`${label}: the gate is still inert with one line ticked`, await gate.isDisabled());
   check(
-    `${label}: and the steps are not on the page at all`,
+    `${label}: it says how many lines are left`,
+    (await page.locator('text=/נותרו/').count()) > 0,
+    ((await page.locator('text=/נותרו/').first().textContent()) ?? '').trim().slice(0, 60),
+  );
+  check(
+    `${label}: the steps are not on the page until it is pressed`,
     (await page.getByRole('button', { name: 'סימון השלב כהושלם' }).count()) === 0,
   );
   check(
-    `${label}: there is no way offered round it`,
+    `${label}: and there is one way through, not a "skip"`,
     (await page.locator('text=/דלג|בכל זאת|התחל ללא/').count()) === 0,
   );
   await page.screenshot({ path: `${OUT}/${shot}-02-mise-partial.png` });
@@ -173,10 +184,17 @@ async function run(label, width, height, shot) {
     `${label}: 100% is reported in those words`,
     (await page.locator('text=Mise en place הושלם').count()) > 0,
   );
-  check(`${label}: and the gate opens`, await gate.isEnabled());
+  check(
+    `${label}: and the control now says the list is complete`,
+    (await gateDone.count()) > 0 && (await gateDone.isEnabled()),
+  );
+  check(
+    `${label}: with nothing left to count`,
+    (await page.locator('text=/נותרו/').count()) === 0,
+  );
   await page.screenshot({ path: `${OUT}/${shot}-03-mise-complete.png` });
 
-  await gate.click();
+  await gateDone.click();
   await page.waitForTimeout(500);
   check(
     `${label}: pressing it lands on the first step of the existing Cook Mode`,

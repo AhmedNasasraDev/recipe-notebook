@@ -617,15 +617,16 @@ describe('stage-11: the page follows a price change without being remounted', ()
     await user.click(screen.getByText('פרטים מקצועיים'));
     // `getAllBy`: ₪4 is both the batch cost and the cost per kilo here, one
     // kilo being the whole recipe.
-    expect(screen.getAllByText('₪4').length).toBeGreaterThan(0);
-    expect(screen.queryAllByText('₪9')).toHaveLength(0);
+    // Two decimals since stage 3 — the money figures print agorot now.
+    expect(screen.getAllByText('₪4.00').length).toBeGreaterThan(0);
+    expect(screen.queryAllByText('₪9.00')).toHaveLength(0);
 
     await user.click(screen.getByRole('button', { name: 'ייקור הקמח' }));
 
     // The same kilo at ₪9. Before the fix this stayed ₪4 until the screen was
     // remounted, while the figures taken from the baseline had already moved.
-    await waitFor(() => expect(screen.getAllByText('₪9').length).toBeGreaterThan(0));
-    expect(screen.queryAllByText('₪4')).toHaveLength(0);
+    await waitFor(() => expect(screen.getAllByText('₪9.00').length).toBeGreaterThan(0));
+    expect(screen.queryAllByText('₪4.00')).toHaveLength(0);
   });
 });
 

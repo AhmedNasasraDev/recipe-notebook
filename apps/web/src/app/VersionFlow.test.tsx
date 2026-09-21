@@ -36,6 +36,15 @@ import {
 } from '../test/fakeSupabase.js';
 import { AppUnderTest, emptyDb, project } from '../test/appHarness.js';
 
+/*
+  The editor is a wizard since §6: one stage on screen at a time (פרטים ·
+  חומרי גלם · אופן ההכנה · סיכום), with the draft held above the stages so
+  nothing typed is lost between them. `toStage` is how a person moves —
+  the stepper at the top of the form, by its accessible name.
+*/
+const toStage = (u: ReturnType<typeof userEvent.setup>, n: 1 | 2 | 3 | 4) =>
+  u.click(screen.getByRole('button', { name: new RegExp(`^שלב ${n} `) }));
+
 beforeEach(() => {
   resetFakeIds();
   resetMemoryIdb();
@@ -71,8 +80,10 @@ describe('requirements 1 and 2 — a version is taken before an update', () => {
     render(<AppUnderTest client={p.client} route="/recipe/new" />);
     await screen.findByRole('heading', { name: 'מתכון חדש' });
     await user.type(screen.getByLabelText('שם המתכון'), 'חלה');
+    await toStage(user, 2);
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח לבן');
     await user.type(screen.getByLabelText('כמות של קמח לבן'), '500');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
     await screen.findByRole('heading', { name: 'חלה' });
 
@@ -90,8 +101,10 @@ describe('requirements 1 and 2 — a version is taken before an update', () => {
 
     render(<AppUnderTest client={p.client} route="/recipe/r1/edit" />);
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 2);
     await user.clear(screen.getByLabelText('כמות של מים'));
     await user.type(screen.getByLabelText('כמות של מים'), '450');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'לחם כוסמין' });
 
@@ -118,8 +131,10 @@ describe('requirements 1 and 2 — a version is taken before an update', () => {
 
     render(<AppUnderTest client={p.client} route="/recipe/r1/edit" />);
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 2);
     await user.clear(screen.getByLabelText('כמות של מים'));
     await user.type(screen.getByLabelText('כמות של מים'), '430');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'לחם כוסמין' });
 
@@ -127,8 +142,10 @@ describe('requirements 1 and 2 — a version is taken before an update', () => {
     // V3 would carry both, and the rows would grow without bound.
     await user.click(screen.getByRole('link', { name: 'עריכת לחם כוסמין' }));
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 2);
     await user.clear(screen.getByLabelText('כמות של מים'));
     await user.type(screen.getByLabelText('כמות של מים'), '440');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'לחם כוסמין' });
 
@@ -150,8 +167,10 @@ describe('requirements 1 and 2 — a version is taken before an update', () => {
 
     render(<AppUnderTest client={p.client} route="/recipe/r1/edit" />);
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 2);
     await user.clear(screen.getByLabelText('כמות של מים'));
     await user.type(screen.getByLabelText('כמות של מים'), '450');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'לחם כוסמין' });
 
@@ -186,8 +205,10 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
     const p = project(db, USER_A);
     const view = render(<AppUnderTest client={p.client} route="/recipe/r1/edit" />);
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 2);
     await user.clear(screen.getByLabelText('כמות של מים'));
     await user.type(screen.getByLabelText('כמות של מים'), '450');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'לחם כוסמין' });
     await openPro(user);
@@ -249,8 +270,10 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
     // a second edit: V2 = 450
     await user.click(screen.getByRole('link', { name: 'עריכת לחם כוסמין' }));
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 2);
     await user.clear(screen.getByLabelText('כמות של מים'));
     await user.type(screen.getByLabelText('כמות של מים'), '480');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'לחם כוסמין' });
     expect(db['ingredients']!.find((i) => i['name'] === 'מים')!['qty']).toBe(480);
@@ -360,12 +383,14 @@ describe('requirements 11-17 — linking a sub-recipe from the editor', () => {
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
     // turn the water row into a 150 g line of ganache
+    await toStage(user, 2);
     await user.clear(screen.getByLabelText('שם הרכיב בשורה 2'));
     await user.type(screen.getByLabelText('שם הרכיב בשורה 2'), 'מילוי');
     await user.clear(screen.getByLabelText('כמות של מילוי'));
     await user.type(screen.getByLabelText('כמות של מילוי'), '150');
     await user.selectOptions(screen.getByLabelText('מתכון בסיס עבור מילוי'), 'base');
 
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'לחם כוסמין' });
 
@@ -405,6 +430,7 @@ describe('requirements 11-17 — linking a sub-recipe from the editor', () => {
     render(<AppUnderTest client={p.client} route="/recipe/r1/edit" />);
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    await toStage(user, 2);
     const picker = screen.getByLabelText('מתכון בסיס עבור קמח מלא');
     const options = within(picker).getAllByRole('option');
     const byLabel = new Map(options.map((o) => [o.textContent ?? '', o]));
@@ -428,9 +454,11 @@ describe('requirements 11-17 — linking a sub-recipe from the editor', () => {
     db['recipes']!.push(recipeRow('bsecret', USER_B, { name: 'הבסיס של ב', is_sub: true }));
     const p = project(db, USER_A);
 
+    const user = userEvent.setup();
     render(<AppUnderTest client={p.client} route="/recipe/r1/edit" />);
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    await toStage(user, 2);
     const picker = screen.getByLabelText('מתכון בסיס עבור קמח מלא');
     const labels = within(picker).getAllByRole('option').map((o) => o.textContent ?? '');
     expect(labels.some((l) => l.includes('גנאש'))).toBe(true);

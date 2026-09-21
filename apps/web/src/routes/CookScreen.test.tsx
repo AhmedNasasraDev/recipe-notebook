@@ -405,7 +405,19 @@ describe('§14 the progress is remembered on the device', () => {
 // from, that they follow the scale, that a tick survives being put down, and
 // above all that there is no way from this screen to the steps except through
 // a complete list.
-describe('§14 Mise en place — the stage that cannot be skipped', () => {
+/*
+  ── §7: MISE EN PLACE IS A CHECKLIST, NOT A LOCK ─────────────────────────
+
+  The rule this block used to hold was the opposite one: the steps were not
+  reachable until every line was ticked. Ahmed changed it explicitly (stage 3,
+  item 4) — a cook may go through with lines unticked, as long as the screen
+  says how many are left, and nothing is ever ticked on their behalf.
+
+  What did NOT change, and is still asserted below: the weighing stage is what
+  opens; the ticks survive, per recipe and per scale; a reload does not start
+  the preparation by itself; and no control anywhere ticks a line for you.
+*/
+describe('§7 Mise en place — the checklist, and the way through it', () => {
   /** The list from the request, with quantities the engine will print as-is. */
   const CAKE = {
     id: 'cake',
@@ -486,9 +498,9 @@ describe('§14 Mise en place — the stage that cannot be skipped', () => {
       expect(screen.getByRole('status')).toHaveTextContent('0 מתוך 5'),
     );
     expect(screen.getByText('1 ק"ג')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' }),
-    ).toBeDisabled();
+    // Nothing is ticked at the new scale, and the button says so.
+    expect(screen.getByRole('button', { name: 'מעבר להכנה' })).toBeEnabled();
+    expect(screen.getByText(/נותרו/)).toHaveTextContent('נותרו 5');
   });
 
   it('remembers a tick, and remembers taking it back', async () => {
@@ -527,7 +539,7 @@ describe('§14 Mise en place — the stage that cannot be skipped', () => {
     expect(screen.getAllByRole('checkbox')[0]).not.toBeChecked();
   });
 
-  it('keeps the button disabled while even one line is missing', async () => {
+  it('lets a cook through with a line still unticked, and says how many are left', async () => {
     const user = userEvent.setup();
     show(CAKE);
     await screen.findByRole('heading', { name: 'הכנת חומרי גלם' });
@@ -537,63 +549,78 @@ describe('§14 Mise en place — the stage that cannot be skipped', () => {
     await waitFor(() =>
       expect(screen.getByRole('status')).toHaveTextContent('4 מתוך 5'),
     );
-    expect(
-      screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' }),
-    ).toBeDisabled();
-    expect(screen.queryByText('להקציף חמאה וסוכר')).not.toBeInTheDocument();
+    const gate = screen.getByRole('button', { name: 'מעבר להכנה' });
+    expect(gate).toBeEnabled();
+    expect(screen.getByText(/נותרו/)).toHaveTextContent('רכיב לסימון');
+    // The stage has not finished, and the screen does not pretend it has.
     expect(screen.queryByText(/Mise en place הושלם/)).not.toBeInTheDocument();
+    expect(screen.queryByText('להקציף חמאה וסוכר')).not.toBeInTheDocument();
+
+    await user.click(gate);
+    // The steps are reachable — and the fifth line is STILL unticked when we
+    // come back, because nothing was marked on the cook's behalf.
+    expect(await screen.findByText('להקציף חמאה וסוכר')).toBeInTheDocument();
   });
 
-  it('offers nothing that gets past it — no skip, no "start anyway", no other way in', async () => {
+  it('ticks nothing on the way through', async () => {
+    const user = userEvent.setup();
+    show(CAKE);
+    await screen.findByRole('heading', { name: 'הכנת חומרי גלם' });
+    await user.click(screen.getAllByRole('checkbox')[0]!);
+    await user.click(screen.getByRole('button', { name: 'מעבר להכנה' }));
+    await screen.findByText('להקציף חמאה וסוכר');
+
+    // Back to the weighing list, through the step bar's own way back: the
+    // count is what it was, not 5 of 5.
+    await user.click(screen.getByRole('button', { name: /חזרה לשקילה/ }));
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('1 מתוך 5'),
+    );
+  });
+
+  it('has ONE way through, and it is the button that says so', async () => {
     show(CAKE);
     await screen.findByRole('heading', { name: 'הכנת חומרי גלם' });
 
-    for (const word of [/דלג/, /בכל זאת/, /ללא הכנ/, /התחל ללא/, /לשלבים/]) {
+    /*
+      No second door, and no wording that hides what it does: "דלג" or
+      "התחל ללא הכנה" would read as skipping the weighing rather than going on
+      with it unfinished. The control says "מעבר להכנה" and the line above it
+      says what is left.
+    */
+    for (const word of [/דלג/, /בכל זאת/, /ללא הכנ/, /התחל ללא/]) {
       expect(screen.queryByText(word)).not.toBeInTheDocument();
     }
-    /*
-      The only controls are the five ticks, "מסך מלא", the gate, and the way
-      out of Cook Mode — which goes to the recipe, not to the steps. What this
-      test is really about is that NOTHING here gets past the gate, so the
-      fullscreen button is named and accounted for rather than merely counted.
-    */
     const buttons = screen.getAllByRole('button');
-    expect(buttons.map((b) => b.textContent)).toEqual([
-      'מסך מלא',
-      'הכול מוכן — מתחילים בהכנה',
-    ]);
+    expect(buttons.map((b) => b.textContent)).toEqual(['מסך מלא', 'מעבר להכנה']);
     const links = screen.getAllByRole('link');
     expect(links).toHaveLength(1);
     expect(links[0]).toHaveAttribute('href', '/recipe/cake');
   });
 
-  it('says why the shut gate is shut, and stops saying it when it opens', async () => {
-    // Ahmed: "אם כפתור ההמשך מושבת, הצג סיבה קצרה וברורה."
+  it('counts what is left, out loud, and stops counting when nothing is', async () => {
     const user = userEvent.setup();
     show(CAKE);
     await screen.findByRole('heading', { name: 'הכנת חומרי גלם' });
 
-    const gate = screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' });
-    expect(gate).toBeDisabled();
-    const why = screen.getByText(/כדי להתחיל, סמנו את כל חומרי הגלם/);
-    // The reason is not only next to the button; it is attached to it, so it
-    // reaches a cook who arrives there by keyboard or screen reader.
-    expect(gate.getAttribute('aria-describedby')).toBe(why.getAttribute('id'));
-    expect(why).toHaveTextContent('נשארו 5');
+    const gate = screen.getByRole('button', { name: 'מעבר להכנה' });
+    const note = screen.getByText(/נותרו/);
+    // The line is not merely NEXT to the button; it is attached to it, so a
+    // cook who reaches it by keyboard or screen reader hears what is left
+    // before they press.
+    expect(gate.getAttribute('aria-describedby')).toBe(note.getAttribute('id'));
+    expect(note).toHaveTextContent('נותרו 5');
 
     const boxes = screen.getAllByRole('checkbox');
     await user.click(boxes[0]!);
-    await waitFor(() => expect(why).toHaveTextContent('נשארו 4'));
+    await waitFor(() => expect(screen.getByText(/נותרו/)).toHaveTextContent('נותרו 4'));
 
     for (const box of boxes.slice(1)) await user.click(box);
     await waitFor(() =>
-      expect(
-        screen.queryByText(/כדי להתחיל, סמנו את כל חומרי הגלם/),
-      ).not.toBeInTheDocument(),
+      expect(screen.queryByText(/נותרו/)).not.toBeInTheDocument(),
     );
-    expect(
-      screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' }),
-    ).not.toHaveAttribute('aria-describedby');
+    const done = screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' });
+    expect(done).not.toHaveAttribute('aria-describedby');
   });
 
   it('opens the gate at 100%, and the press lands on step 1', async () => {
@@ -616,7 +643,7 @@ describe('§14 Mise en place — the stage that cannot be skipped', () => {
     expect(screen.queryByRole('heading', { name: 'הכנת חומרי גלם' })).not.toBeInTheDocument();
   });
 
-  it('takes the gate back the moment a tick is undone', async () => {
+  it('goes back to counting the moment a tick is undone', async () => {
     const user = userEvent.setup();
     show(CAKE);
     await screen.findByRole('heading', { name: 'הכנת חומרי גלם' });
@@ -624,15 +651,15 @@ describe('§14 Mise en place — the stage that cannot be skipped', () => {
     for (const box of boxes) await user.click(box);
     expect(
       screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' }),
-    ).toBeEnabled();
+    ).toBeInTheDocument();
 
     await user.click(boxes[2]!);
     await waitFor(() =>
       expect(screen.getByRole('status')).toHaveTextContent('4 מתוך 5'),
     );
-    expect(
-      screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' }),
-    ).toBeDisabled();
+    // The label and the count both come back; the way through stays open.
+    expect(screen.getByRole('button', { name: 'מעבר להכנה' })).toBeEnabled();
+    expect(screen.getByText(/נותרו/)).toHaveTextContent('נותרו 1');
     expect(screen.queryByText(/Mise en place הושלם/)).not.toBeInTheDocument();
   });
 
@@ -704,9 +731,9 @@ describe('§14 Mise en place — the stage that cannot be skipped', () => {
       expect(screen.getByRole('status')).toHaveTextContent('0 מתוך 5'),
     );
     expect(screen.queryByText('להקציף חמאה וסוכר')).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' }),
-    ).toBeDisabled();
+    // The way through is there — it always is now — but a record is not a
+    // press: the screen opened on the weighing list, not on the steps.
+    expect(screen.getByRole('button', { name: 'מעבר להכנה' })).toBeEnabled();
   });
 
   it('is not opened by a stored "started" whose ticks belong to another scale', async () => {
@@ -788,7 +815,7 @@ describe('§14 Mise en place — the stage that cannot be skipped', () => {
     const bar = screen.getByRole('status').closest('div');
     expect(bar?.className).toMatch(/gateBar/);
     expect(
-      bar?.contains(screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' })),
+      bar?.contains(screen.getByRole('button', { name: 'מעבר להכנה' })),
     ).toBe(true);
   });
 

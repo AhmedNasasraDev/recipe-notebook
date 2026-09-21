@@ -139,8 +139,18 @@ try {
     await page.getByRole('heading', { name: 'מתכון חדש' }).isVisible(),
   );
 
-  // ── a fully weighable recipe ───────────────────────────────────────────
+  /*
+    ── A FULLY WEIGHABLE RECIPE, ACROSS TWO STAGES ──────────────────────
+
+    The editor is a wizard since §6: the name is on stage 1 and the
+    ingredients on stage 2, and the stepper is how a person moves between
+    them. `toStage` below is that stepper, by its accessible name.
+  */
+  const toStage = (p, n) =>
+    p.getByRole('button', { name: new RegExp(`^שלב ${n} `) }).click();
+
   await page.getByLabel('שם המתכון').fill('לחם כוסמין');
+  await toStage(page, 2);
   await page.getByLabel('שם הרכיב בשורה 1').fill('קמח לבן');
   await page.getByLabel('כמות של קמח לבן').fill('500');
   await page.waitForTimeout(300);
@@ -190,7 +200,12 @@ try {
 
   // ── the unconfigured build refuses to save, honestly ───────────────────
   check(
-    'the save button is disabled with no server',
+    'the draft save is disabled with no server',
+    await page.getByRole('button', { name: 'שמירת טיוטה' }).isDisabled(),
+  );
+  await toStage(page, 4);
+  check(
+    'and so is the save on the summary stage',
     await page.getByRole('button', { name: 'שמירת המתכון' }).isDisabled(),
   );
   check(
@@ -259,6 +274,7 @@ try {
     `${frameWidth}px`,
   );
 
+  await toStage(tPage, 2);
   const gridCols = await tPage.evaluate(() => {
     const qty = document.querySelector('input[aria-label^="כמות של"]');
     const grid = qty?.closest('div')?.parentElement;
@@ -266,7 +282,9 @@ try {
   });
   check('the ingredient fields use the wider grid', gridCols >= 3, `${gridCols} cols`);
 
+  await toStage(tPage, 1);
   await tPage.getByLabel('שם המתכון').fill('בדיקת טאבלט');
+  await toStage(tPage, 2);
   await tPage.getByLabel('שם הרכיב בשורה 1').fill('קמח לבן');
   await tPage.getByLabel('כמות של קמח לבן').fill('500');
   await tPage.waitForTimeout(400);

@@ -133,28 +133,23 @@ describe('ticks are only true at the scale they were taken at', () => {
 });
 
 describe('a start that was saved earlier', () => {
-  const complete = { total: 2, ready: 2, complete: true };
-  const partial = { total: 2, ready: 1, complete: false };
-  const nothing = { total: 0, ready: 0, complete: false };
-
-  it('counts only when it was saved AND the list is complete now', () => {
-    expect(startedFrom(true, complete)).toBe(true);
+  /*
+    §7 changed the second condition: it used to be "the list is complete now",
+    which was standing in for "the saved run is this batch". Since a cook may
+    start with lines unticked, completeness says nothing about that — so the
+    condition is the scale, which is what the ticks are keyed by anyway.
+  */
+  it('counts when it was saved AND at the same scale', () => {
+    expect(startedFrom(true, true)).toBe(true);
   });
 
-  it('does not count when nothing was saved — a complete list is not a decision', () => {
-    expect(startedFrom(false, complete)).toBe(false);
+  it('does not count when nothing was saved — a record is not a decision', () => {
+    expect(startedFrom(false, true)).toBe(false);
   });
 
-  it('does not count when the list on screen is no longer complete', () => {
-    // A scale change (the ticks did not restore) or a recipe edited since.
-    expect(startedFrom(true, partial)).toBe(false);
-  });
-
-  it('does not count while the rows have not loaded yet', () => {
-    // The case that was a real bug: device storage resolves before the
-    // recipes do, and "no rows yet" must not read as "not started".
-    // `startedFrom` is asked during render instead, so this state is
-    // transient — but it must still answer "not yet" rather than "no".
-    expect(startedFrom(true, nothing)).toBe(false);
+  it('does not count when the saved run was taken at another scale', () => {
+    // The ticks did not restore either (see `restoreMise`), so this is a
+    // different batch: 500 g weighed is not 1 kg weighed.
+    expect(startedFrom(true, false)).toBe(false);
   });
 });

@@ -49,24 +49,21 @@ describe('§12 money, from prices per kilogram', () => {
     expect(c.cost).toBeCloseTo(1.95, 10);
     expect(c.totalG).toBe(560);
     /*
-      AND WHAT THE SCREEN PRINTS FOR IT — which is not ₪1.95.
+      AND WHAT THE SCREEN PRINTS FOR IT.
 
-      `formatNis` rounds to one decimal below ₪100 (it is a verbatim port of
-      the prototype's `nis()`), so an exact ₪1.95 is DISPLAYED as ₪2. The
-      arithmetic above is unaffected: every figure the app derives — the food
-      cost, the percentage, the sale price — is computed from the exact number
-      and only the printed string is rounded.
-
-      It is still a real reporting defect for money, and it is written up in
-      the report with a proposed fix (two decimals under ₪100) rather than
-      changed here: 31 call sites across the app print money through this
-      function, the label and the order sheet among them, and how money is
-      shown is Ahmed's call.
+      Two decimals, always — the change Ahmed approved after this suite caught
+      the old behaviour: `formatNis` rounded to one decimal below ₪100, so an
+      exact ₪1.95 was displayed as ₪2. Nothing about the arithmetic moved;
+      only the string did.
     */
-    expect(formatNis(c.cost)).toBe('₪2');
-    expect(formatNis(2.45)).toBe('₪2.5');
-    // Two decimals survive only where the first one is zero.
-    expect(formatNis(0.195)).toBe('₪0.2');
+    expect(formatNis(c.cost)).toBe('₪1.95');
+    expect(formatNis(2.45)).toBe('₪2.45');
+    expect(formatNis(0.195)).toBe('₪0.20');
+    // Zero is a price, and it prints like one.
+    expect(formatNis(0)).toBe('₪0.00');
+    // Small, and large enough to carry a separator.
+    expect(formatNis(0.05)).toBe('₪0.05');
+    expect(formatNis(1234.491)).toBe('₪1,234.49');
   });
 
   it('gives the cost per kilogram and per unit, and the sale price from the target', () => {

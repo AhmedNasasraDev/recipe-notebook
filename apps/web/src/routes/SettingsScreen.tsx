@@ -421,7 +421,9 @@ export function SettingsScreen() {
           <p className={styles.note}>
             {capabilities.source === 'local-demo'
               ? 'אין חיבור לשרת בהתקנה הזאת, ולכן אין חשבון. ההעדפות כאן נשמרות על המכשיר הזה בלבד.'
-              : 'לא מחוברים לחשבון.'}
+              : capabilities.source === 'simulated'
+                ? 'סימולציה מקומית: אין חשבון ואין שרת. מה שנשמר כאן נשמר בדפדפן הזה בלבד.'
+                : 'לא מחוברים לחשבון.'}
           </p>
         )}
 

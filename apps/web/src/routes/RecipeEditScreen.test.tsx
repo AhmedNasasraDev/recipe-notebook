@@ -51,11 +51,29 @@ function renderEdit(
   });
 }
 
+/*
+  ── THE EDITOR IS A WIZARD (§6) ──────────────────────────────────────────
+
+  One stage on screen at a time: פרטים · חומרי גלם · אופן ההכנה · סיכום. The
+  draft itself is held above the stages, so moving between them changes what
+  is RENDERED and never what is held — which is the thing these tests keep
+  checking by filling a field on one stage and reading it back from another.
+
+  `toStage` is how a person moves: the stepper at the top, by its accessible
+  name ("שלב 2 מתוך 4 — חומרי גלם").
+*/
+const toStage = (u: ReturnType<typeof userEvent.setup>, n: 1 | 2 | 3 | 4) =>
+  u.click(screen.getByRole('button', { name: new RegExp(`^שלב ${n} `) }));
+
 describe('creating a recipe', () => {
-  it('opens an empty form with one ingredient row to start from', async () => {
+  it('opens on the first stage, with the name, and the row is one stage on', async () => {
+    const user = userEvent.setup();
     renderNew();
     expect(await screen.findByRole('heading', { name: 'מתכון חדש' })).toBeInTheDocument();
     expect(screen.getByLabelText('שם המתכון')).toHaveValue('');
+    // Stage 2 is where the ingredients are — one stage at a time is the point.
+    expect(screen.queryByLabelText('שם הרכיב בשורה 1')).not.toBeInTheDocument();
+    await toStage(user, 2);
     expect(screen.getByLabelText('שם הרכיב בשורה 1')).toBeInTheDocument();
   });
 
@@ -65,6 +83,7 @@ describe('creating a recipe', () => {
     renderNew({ onSaveRecipe });
     await screen.findByRole('heading', { name: 'מתכון חדש' });
 
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('למתכון חייב להיות שם.');
@@ -78,6 +97,7 @@ describe('creating a recipe', () => {
     await screen.findByRole('heading', { name: 'מתכון חדש' });
 
     await user.type(screen.getByLabelText('שם המתכון'), 'לחם');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('צריך לפחות רכיב אחד.');
@@ -91,6 +111,7 @@ describe('creating a recipe', () => {
     await screen.findByRole('heading', { name: 'מתכון חדש' });
 
     await user.type(screen.getByLabelText('שם המתכון'), 'לחם כוסמין');
+    await toStage(user, 2);
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח מלא');
     await user.type(screen.getByLabelText('כמות של קמח מלא'), '600');
 
@@ -98,6 +119,8 @@ describe('creating a recipe', () => {
     await user.type(screen.getByLabelText('שם הרכיב בשורה 2'), 'מים');
     await user.type(screen.getByLabelText('כמות של מים'), '420');
 
+    // Everything typed on two different stages arrives in one save.
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
 
     await waitFor(() => expect(saved).toHaveLength(1));
@@ -107,8 +130,12 @@ describe('creating a recipe', () => {
   });
 
   it('cannot save when the repository cannot write, and says so', async () => {
+    const user = userEvent.setup();
     renderNew({ canWrite: false });
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    // The draft save is refused on every stage; the full save is on the last.
+    expect(screen.getByRole('button', { name: 'שמירת טיוטה' })).toBeDisabled();
+    await toStage(user, 4);
     expect(screen.getByRole('button', { name: 'שמירת המתכון' })).toBeDisabled();
     expect(screen.getByText(/אי אפשר לשמור/)).toBeInTheDocument();
   });
@@ -119,6 +146,7 @@ describe('ingredient rows — add, remove, reorder', () => {
     const user = userEvent.setup();
     renderNew();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    await toStage(user, 2);
     await user.click(screen.getByRole('button', { name: 'הוספת רכיב' }));
     expect(screen.getByLabelText('שם הרכיב בשורה 2')).toBeInTheDocument();
   });
@@ -128,6 +156,7 @@ describe('ingredient rows — add, remove, reorder', () => {
     renderEdit();
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    await toStage(user, 2);
     // The accessible name carries the ingredient, so a screen-reader user does
     // not get a list of identical "הסרה" buttons.
     await user.click(screen.getByRole('button', { name: 'הסרת חמאה 82%' }));
@@ -141,6 +170,7 @@ describe('ingredient rows — add, remove, reorder', () => {
     renderEdit();
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    await toStage(user, 2);
     expect(screen.getByLabelText('שם הרכיב בשורה 1')).toHaveValue('קמח לחם');
     await user.click(screen.getByRole('button', { name: 'הורדת קמח לחם למטה' }));
     expect(screen.getByLabelText('שם הרכיב בשורה 1')).toHaveValue('חמאה 82%');
@@ -148,8 +178,10 @@ describe('ingredient rows — add, remove, reorder', () => {
   });
 
   it('disables the move buttons at the ends rather than hiding them', async () => {
+    const user = userEvent.setup();
     renderEdit();
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 2);
     expect(screen.getByRole('button', { name: 'העלאת קמח לחם למעלה' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'הורדת חמאה 82% למטה' })).toBeDisabled();
   });
@@ -160,7 +192,9 @@ describe('ingredient rows — add, remove, reorder', () => {
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    await toStage(user, 2);
     await user.click(screen.getByRole('button', { name: 'הורדת קמח לחם למטה' }));
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
 
     await waitFor(() => expect(saved).toHaveLength(1));
@@ -169,12 +203,17 @@ describe('ingredient rows — add, remove, reorder', () => {
 });
 
 describe('opening a saved recipe for editing', () => {
-  it('fills the form from the stored recipe', async () => {
+  it('fills the form from the stored recipe, stage by stage', async () => {
+    const user = userEvent.setup();
     renderEdit();
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
     expect(screen.getByLabelText('שם המתכון')).toHaveValue('בריוש נאנטר');
     expect(screen.getByLabelText('תגים')).toHaveValue('חג');
+    await toStage(user, 2);
     expect(screen.getByLabelText('כמות של קמח לחם')).toHaveValue('1000');
+    // And back again: the first stage still holds what it held.
+    await toStage(user, 1);
+    expect(screen.getByLabelText('שם המתכון')).toHaveValue('בריוש נאנטר');
   });
 
   it('explains a recipe id that is not in the notebook', async () => {
@@ -194,6 +233,7 @@ describe('opening a saved recipe for editing', () => {
 
     await user.clear(screen.getByLabelText('שם המתכון'));
     await user.type(screen.getByLabelText('שם המתכון'), 'בריוש נאנטר 2');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
 
     await waitFor(() => expect(saved).toHaveLength(1));
@@ -214,6 +254,7 @@ describe('requirement 11 — full / partial / none inside the editor', () => {
     const user = userEvent.setup();
     renderNew();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    await toStage(user, 2);
 
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח לבן');
     await user.type(screen.getByLabelText('כמות של קמח לבן'), '500');
@@ -225,6 +266,7 @@ describe('requirement 11 — full / partial / none inside the editor', () => {
     const user = userEvent.setup();
     renderNew();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    await toStage(user, 2);
 
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח לבן');
     await user.type(screen.getByLabelText('כמות של קמח לבן'), '500');
@@ -243,6 +285,7 @@ describe('requirement 11 — full / partial / none inside the editor', () => {
     const user = userEvent.setup();
     renderNew();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    await toStage(user, 2);
 
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח לבן');
     await user.type(screen.getByLabelText('כמות של קמח לבן'), '500');
@@ -259,6 +302,7 @@ describe('requirement 11 — full / partial / none inside the editor', () => {
     const user = userEvent.setup();
     renderNew();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    await toStage(user, 2);
 
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קקאו');
     await user.type(screen.getByLabelText('כמות של קקאו'), '1');
@@ -273,6 +317,7 @@ describe('requirement 11 — full / partial / none inside the editor', () => {
     const user = userEvent.setup();
     renderNew();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    await toStage(user, 2);
 
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קקאו');
     await user.type(screen.getByLabelText('כמות של קקאו'), '1');
@@ -286,6 +331,7 @@ describe('requirement 11 — full / partial / none inside the editor', () => {
     const user = userEvent.setup();
     renderNew();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    await toStage(user, 2);
 
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קקאו');
     await user.type(screen.getByLabelText('כמות של קקאו'), '100');
@@ -300,6 +346,7 @@ describe('requirement 11 — full / partial / none inside the editor', () => {
     const user = userEvent.setup();
     renderNew();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    await toStage(user, 2);
 
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח לבן');
     await user.type(screen.getByLabelText('כמות של קמח לבן'), '2');
@@ -319,6 +366,7 @@ describe('the null-versus-zero rule is explained where the user meets it', () =>
     const user = userEvent.setup();
     renderNew();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    await toStage(user, 4);
     await user.click(screen.getByText('פרטים מקצועיים'));
     expect(
       screen.getByText(/שדה ריק פירושו .*לפי החישוב.*אפס פירושו שנמדדה תשואה של אפס/s),
@@ -332,8 +380,10 @@ describe('the null-versus-zero rule is explained where the user meets it', () =>
     await screen.findByRole('heading', { name: 'מתכון חדש' });
 
     await user.type(screen.getByLabelText('שם המתכון'), 'לחם');
+    await toStage(user, 2);
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח לבן');
     await user.type(screen.getByLabelText('כמות של קמח לבן'), '500');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
 
     await waitFor(() => expect(saved).toHaveLength(1));
@@ -344,7 +394,9 @@ describe('the null-versus-zero rule is explained where the user meets it', () =>
 describe('accessibility of the per-row controls', () => {
   it('gives every row control a name that identifies its row', async () => {
     renderEdit();
+    const user = userEvent.setup();
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 2);
 
     for (const name of [
       'כמות של קמח לחם',
@@ -360,14 +412,18 @@ describe('accessibility of the per-row controls', () => {
 
   it('falls back to the row number before the ingredient has a name', async () => {
     renderNew();
+    const user = userEvent.setup();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    await toStage(user, 2);
     expect(screen.getByRole('button', { name: 'הסרת רכיב 1' })).toBeInTheDocument();
     expect(screen.getByLabelText('כמות של רכיב 1')).toBeInTheDocument();
   });
 
   it('names the step controls by their position', async () => {
     renderNew();
+    const user = userEvent.setup();
     await screen.findByRole('heading', { name: 'מתכון חדש' });
+    await toStage(user, 3);
     expect(screen.getByLabelText('תיאור שלב 1')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'הסרת שלב 1' })).toBeInTheDocument();
   });
@@ -411,6 +467,7 @@ describe('stage-10 audit, §11: a save the server refuses', () => {
 
     await user.clear(screen.getByLabelText('שם המתכון'));
     await user.type(screen.getByLabelText('שם המתכון'), 'בריוש מעודכן');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
 
     const alert = await screen.findByRole('alert');
@@ -418,6 +475,8 @@ describe('stage-10 audit, §11: a save the server refuses', () => {
     // Still the editor, and still holding what was typed: nothing was lost and
     // nothing pretended to be saved.
     expect(screen.getByRole('heading', { name: 'עריכת מתכון' })).toBeInTheDocument();
+    // The name is on the first stage, and it still holds what was typed.
+    await toStage(user, 1);
     expect(screen.getByLabelText('שם המתכון')).toHaveValue('בריוש מעודכן');
   });
 
@@ -426,6 +485,7 @@ describe('stage-10 audit, §11: a save the server refuses', () => {
     const calls = renderWithFailingSave('עדכון המתכון נכשל: השרת לא זמין.');
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    await toStage(user, 4);
     const save = screen.getByRole('button', { name: 'שמירת השינויים' });
     await user.click(save);
     await screen.findByRole('alert');
@@ -450,6 +510,7 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    await toStage(user, 4);
     await user.click(screen.getByText('פרטים מקצועיים'));
     await user.type(screen.getByLabelText('משקל לפני אפייה, גרם'), '1000');
     await user.type(screen.getByLabelText('משקל אחרי אפייה, גרם'), '880');
@@ -465,6 +526,7 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     const saved: Recipe[] = [];
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 4);
     await user.click(screen.getByText('פרטים מקצועיים'));
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
 
@@ -478,6 +540,7 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     const saved: Recipe[] = [];
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 4);
     await user.click(screen.getByText('פרטים מקצועיים'));
 
     // Hidden until the recipe is declared a dough, because the water
@@ -505,6 +568,7 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    await toStage(user, 4);
     // The pan lives in step 4, "פרטים מקצועיים", which is collapsed.
     await user.click(screen.getByText('פרטים מקצועיים'));
     await user.selectOptions(screen.getByLabelText('סוג התבנית של המתכון'), 'round');
@@ -523,6 +587,7 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    await toStage(user, 4);
     // The pan lives in step 4, "פרטים מקצועיים", which is collapsed.
     await user.click(screen.getByText('פרטים מקצועיים'));
     await user.selectOptions(screen.getByLabelText('סוג התבנית של המתכון'), 'round');
@@ -541,6 +606,7 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
 
+    await toStage(user, 4);
     await user.click(screen.getByText('פרטים מקצועיים'));
     await user.type(screen.getByLabelText('הקפאה'), 'עד חודש, בקירור ספירלי');
     await user.type(screen.getByLabelText('הפשרה'), 'לילה בקירור');
@@ -571,6 +637,7 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     const user = userEvent.setup();
     renderEdit(full);
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 4);
     await user.click(screen.getByText('פרטים מקצועיים'));
 
     expect(screen.getByLabelText('הקפאה')).toHaveValue('עד חודש');
@@ -578,5 +645,139 @@ describe('stage-11: the professional inputs reach the saved recipe', () => {
     expect(screen.getByLabelText('סוג התבנית של המתכון')).toHaveValue('rect');
     expect(screen.getByLabelText('רוחב, ס"מ')).toHaveValue('20');
     expect(screen.getByLabelText('גובה, ס"מ')).toHaveValue('5');
+  });
+});
+
+/*
+  ── §6, STAGE 3: THE WIZARD'S OWN GUARANTEES ─────────────────────────────
+
+  The four things Ahmed asked for when he approved it: one stage at a time,
+  nothing lost moving between them, a partial draft that can be saved, and
+  validation that appears where the field is — which in a wizard means being
+  taken to it.
+*/
+describe('the four stages', () => {
+  it('shows one stage at a time, and marks which one', async () => {
+    const user = userEvent.setup();
+    renderNew();
+    await screen.findByRole('heading', { name: 'מתכון חדש' });
+
+    expect(screen.getByRole('button', { name: /^שלב 1 / })).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
+    expect(screen.getByLabelText('שם המתכון')).toBeInTheDocument();
+    expect(screen.queryByLabelText('שם הרכיב בשורה 1')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('תיאור שלב 1')).not.toBeInTheDocument();
+
+    await toStage(user, 3);
+    expect(screen.getByLabelText('תיאור שלב 1')).toBeInTheDocument();
+    expect(screen.queryByLabelText('שם המתכון')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^שלב 3 / })).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
+  });
+
+  it('keeps everything typed when moving forward and back', async () => {
+    const user = userEvent.setup();
+    renderNew();
+    await screen.findByRole('heading', { name: 'מתכון חדש' });
+
+    await user.type(screen.getByLabelText('שם המתכון'), 'חלה');
+    await toStage(user, 2);
+    await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח');
+    await user.type(screen.getByLabelText('כמות של קמח'), '700');
+    await toStage(user, 3);
+    await user.type(screen.getByLabelText('תיאור שלב 1'), 'ללוש');
+
+    // All the way back, and all the way forward again.
+    await toStage(user, 1);
+    expect(screen.getByLabelText('שם המתכון')).toHaveValue('חלה');
+    await toStage(user, 2);
+    expect(screen.getByLabelText('שם הרכיב בשורה 1')).toHaveValue('קמח');
+    expect(screen.getByLabelText('כמות של קמח')).toHaveValue('700');
+    await toStage(user, 3);
+    expect(screen.getByLabelText('תיאור שלב 1')).toHaveValue('ללוש');
+  });
+
+  it('moves with the foot controls too, not only with the stepper', async () => {
+    const user = userEvent.setup();
+    renderNew();
+    await screen.findByRole('heading', { name: 'מתכון חדש' });
+
+    await user.click(screen.getByRole('button', { name: 'המשך לחומרי גלם' }));
+    expect(screen.getByLabelText('שם הרכיב בשורה 1')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'הקודם' }));
+    expect(screen.getByLabelText('שם המתכון')).toBeInTheDocument();
+  });
+
+  it('saves a partial draft of an EXISTING recipe and stays where it is', async () => {
+    const user = userEvent.setup();
+    const saved: Recipe[] = [];
+    renderEdit(BRIOCHE, { onSaveRecipe: (r) => saved.push(r) });
+    await screen.findByRole('heading', { name: 'עריכת מתכון' });
+
+    await user.clear(screen.getByLabelText('שם המתכון'));
+    await user.type(screen.getByLabelText('שם המתכון'), 'בריוש — טיוטה');
+    await user.click(screen.getByRole('button', { name: 'שמירת טיוטה' }));
+
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]!.name).toBe('בריוש — טיוטה');
+    // Still in the editor, and it says the DRAFT was saved.
+    expect(await screen.findByText(/הטיוטה נשמרה/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'עריכת מתכון' })).toBeInTheDocument();
+    expect(screen.getByLabelText('שם המתכון')).toHaveValue('בריוש — טיוטה');
+  });
+
+  it('saves a partial draft of a NEW recipe — a name is enough', async () => {
+    const user = userEvent.setup();
+    const saved: Recipe[] = [];
+    renderNew({ onSaveRecipe: (r) => saved.push(r) });
+    await screen.findByRole('heading', { name: 'מתכון חדש' });
+
+    await user.type(screen.getByLabelText('שם המתכון'), 'רעיון לעוגה');
+    await user.click(screen.getByRole('button', { name: 'שמירת טיוטה' }));
+
+    /*
+      One row, with the name and nothing else — no ingredients, which a
+      finished recipe still requires. The editor then moves to the saved row's
+      own address, so the NEXT save updates it instead of creating a second
+      recipe; that navigation is covered by the flow tests, which render the
+      whole router.
+    */
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]!.name).toBe('רעיון לעוגה');
+    expect(saved[0]!.ingredients ?? []).toHaveLength(0);
+  });
+
+  it('still refuses a nameless draft, because a name is the recipe\'s identity', async () => {
+    const user = userEvent.setup();
+    const saved: Recipe[] = [];
+    renderNew({ onSaveRecipe: (r) => saved.push(r) });
+    await screen.findByRole('heading', { name: 'מתכון חדש' });
+
+    await user.click(screen.getByRole('button', { name: 'שמירת טיוטה' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('למתכון חייב להיות שם.');
+    expect(saved).toHaveLength(0);
+  });
+
+  it('takes a refused save to the stage that holds the missing field', async () => {
+    const user = userEvent.setup();
+    renderNew();
+    await screen.findByRole('heading', { name: 'מתכון חדש' });
+
+    // A name, no ingredients — and the refusal is about stage 2.
+    await user.type(screen.getByLabelText('שם המתכון'), 'בלי רכיבים');
+    await toStage(user, 4);
+    await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('צריך לפחות רכיב אחד.');
+    // We are on the ingredients stage now, where the problem is.
+    expect(screen.getByLabelText('שם הרכיב בשורה 1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^שלב 2 / })).toHaveAttribute(
+      'aria-current',
+      'step',
+    );
   });
 });

@@ -25,7 +25,9 @@ import styles from './GroupsScreen.module.css';
 
 export function GroupsScreen() {
   const { groups: api, capabilities } = useAppData();
-  const noBackend = capabilities.source !== 'supabase';
+  /* The trial simulates groups locally and they work there; only the
+     read-only demo has no groups at all. */
+  const noBackend = capabilities.source === 'local-demo';
 
   const [list, setList] = useState<readonly GroupSummary[] | null>(null);
   const [requests, setRequests] = useState<readonly JoinRequestView[]>([]);

@@ -167,6 +167,17 @@ export interface AppData {
    * update guard, neither of which trusts anything from here.
    */
   userId: string | null;
+  /**
+   * Raises a failure on the shell's own banner.
+   *
+   * For a write whose own screen is GONE by the time it fails — the personal
+   * note's unmount flush is the case that forced it: a cook types a line and
+   * presses back inside the debounce, the save is attempted from a component
+   * that no longer exists, and nothing was left to say so (§11's silent save
+   * failure). The banner lives in `AppShell`, above every screen, so it is
+   * still there to carry the message.
+   */
+  raiseError(message: string): void;
   clearError(): void;
 }
 
@@ -180,6 +191,18 @@ function describeBackend(caps: RepositoryCapabilities): string {
     return caps.online
       ? 'מחובר לחשבון שלכם.'
       : 'אין כרגע חיבור לאינטרנט. אפשר לקרוא, אבל לא לשמור.';
+  }
+
+  /*
+    THE TRIAL SAYS WHAT IT IS — PRECISELY, NOT VAGUELY.
+
+    What is saved, what is not, and where: the three things somebody trying
+    the file actually needs. The photographs are the one thing that does not
+    survive a reload (they are object URLs in the page, not files in a
+    bucket), so they are named rather than covered by "some things".
+  */
+  if (caps.source === 'simulated') {
+    return 'סימולציה מקומית. אין חשבון ואין שרת: המתכונים כאן הם נתוני דוגמה, מה שתשנו נשמר בדפדפן הזה בלבד (תמונות — עד רענון), ואין סנכרון בין מכשירים.';
   }
 
   const s = supabaseStatus();
@@ -485,6 +508,7 @@ export function AppDataProvider({
       // §10, straight off the repository — see the note on AppData.groups.
       groups: repo,
       userId,
+      raiseError: (message: string) => setError(message),
       clearError: () => setError(null),
     }),
     [

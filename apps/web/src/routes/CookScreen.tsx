@@ -181,6 +181,7 @@ export function CookScreen() {
     in the oven.
   */
   const [startedSaved, setStartedSaved] = useState(false);
+  const [savedAtThisScale, setSavedAtThisScale] = useState(false);
   const [startedHere, setStartedHere] = useState(false);
 
   /*
@@ -252,12 +253,19 @@ export function CookScreen() {
           setDone(new Set(marked));
           setAt(Number.isFinite(saved.step) ? saved.step : 0);
           setTicks(restoreMise(saved, signature));
+          /*
+            The saved start counts only when the record was taken at THIS
+            scale — see `startedFrom`. Recorded here, where the record is,
+            rather than inferred later from how many lines are ticked.
+          */
           setStartedSaved(saved.started === true);
+          setSavedAtThisScale(saved.miseScale === signature);
         } else {
           setDone(new Set());
           setAt(0);
           setTicks({});
           setStartedSaved(false);
+          setSavedAtThisScale(false);
         }
         setStartedHere(false);
         setRestored(true);
@@ -323,7 +331,7 @@ export function CookScreen() {
   /* Which stage the screen is on — computed here, above the early returns,
      because the effect below needs it and hooks cannot follow a `return`. */
   const mise = miseState(rows, ticks);
-  const started = startedHere || startedFrom(startedSaved, mise);
+  const started = startedHere || startedFrom(startedSaved, savedAtThisScale);
   useEffect(() => {
     if (!started) return;
     const root = document.scrollingElement ?? document.documentElement;
@@ -360,9 +368,25 @@ export function CookScreen() {
 
   /* ── Mise en place: the first stage, and the only way to the steps ────── */
 
-  /* The gate's own condition, named once: the list is real and not finished. */
-  const gateShut = !mise.complete && mise.total > 0;
-  const gateWhyId = 'mise-gate-why';
+  /*
+    ── §7: THE WEIGHING IS A CHECKLIST, NOT A LOCK ──────────────────────────
+
+    It used to be a lock: the steps were not on the page until every line was
+    ticked, and the button that put them there was disabled until then. That
+    was this project's own §14 rule and four browser checks enforced it.
+
+    Ahmed changed it explicitly (stage 3, item 4): a cook may go through to
+    the preparation with lines still unticked, as long as the screen says how
+    many are left — a baker who has the butter in front of them does not
+    always tick it, and a kitchen that cannot get past a checklist stops using
+    the checklist. Nothing is ticked on their behalf: `startedHere` moves the
+    stage on and touches no tick, so coming back shows exactly what was
+    marked.
+
+    `pending` is what the screen has to say out loud.
+  */
+  const pending = Math.max(0, mise.total - mise.ready);
+  const gateNoteId = 'mise-gate-note';
   const scaleLine =
     scale.factor === 1
       ? SCALE_MODE_TEXT.recipe
@@ -392,6 +416,27 @@ export function CookScreen() {
       >
         {fs.focus ? 'יציאה ממסך מלא' : 'מסך מלא'}
       </button>
+      {/*
+        THE WAY BACK TO THE SCALES.
+
+        §7 lets a cook through with lines unticked — which only works if they
+        can come back and tick them. There was no way back at all while the
+        stage was a lock, because there was nothing to come back for. It
+        leaves the step, the ticks and the timers exactly as they are; it is
+        not "start again".
+      */}
+      {started && (
+        <button
+          type="button"
+          className={styles.fsBtn}
+          onClick={() => {
+            setStartedHere(false);
+            setStartedSaved(false);
+          }}
+        >
+          חזרה לשקילה
+        </button>
+      )}
       <span className={styles.recipeName}>{recipe.name}</span>
     </header>
   );
@@ -538,32 +583,31 @@ export function CookScreen() {
               </p>
             )}
             {/*
-              WHY THE BUTTON IS SHUT.
-              Ahmed: "אם כפתור ההמשך מושבת, הצג סיבה קצרה וברורה." The count
-              above states the fact; this states the rule, and `aria-describedby`
-              carries it to anyone who reaches the disabled button by keyboard
-              or screen reader instead of seeing the line under it.
+              WHAT IS STILL UNTICKED, AND THAT IT DOES NOT BLOCK ANYONE.
+              The button is not shut any more — Ahmed approved the change
+              explicitly: "אפשר לעבור להכנה גם בלי לסמן את כל הרכיבים, עם
+              חיווי ברור כמה נותרו. אין לסמן אותם אוטומטית." The count above
+              states the fact, this line states how many are left and that
+              nothing is ticked for you, and `aria-describedby` carries it to
+              anyone who reaches the button by keyboard or screen reader
+              instead of seeing the line under it.
             */}
-            {gateShut && (
-              <p className={styles.gateWhy} id={gateWhyId}>
-                כדי להתחיל, סמנו את כל חומרי הגלם. נשארו{' '}
-                <span className="ltr">{mise.total - mise.ready}</span>.
+            {pending > 0 && (
+              <p className={styles.gateNote} id={gateNoteId}>
+                נותרו <span className="ltr">{pending}</span>{' '}
+                {pending === 1 ? 'רכיב לסימון' : 'רכיבים לסימון'}. אפשר לעבור
+                להכנה גם עכשיו — הם לא יסומנו אוטומטית, והסימון ממתין כאן.
               </p>
             )}
             <button
               type="button"
               className={styles.start}
-              aria-describedby={gateShut ? gateWhyId : undefined}
-              /*
-                The gate. Not a link to somewhere else, not a confirmation that
-                can be dismissed: while this is disabled the steps are not on
-                the page at all, and this is the only thing that puts them
-                there.
-              */
-              disabled={gateShut}
+              /* The note above is the description, so a keyboard or screen
+                 reader user hears what is still unticked before they press. */
+              aria-describedby={pending > 0 ? gateNoteId : undefined}
               onClick={() => setStartedHere(true)}
             >
-              הכול מוכן — מתחילים בהכנה
+              {pending === 0 ? 'הכול מוכן — מתחילים בהכנה' : 'מעבר להכנה'}
             </button>
           </div>
         </section>

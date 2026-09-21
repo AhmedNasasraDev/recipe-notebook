@@ -1469,3 +1469,58 @@
   font-size: var(--fs-secondary);
   font-weight: 600;
 }
+
+/*
+  ── THE PERSONAL NOTE'S FAILURE STATES (stage 3, item 2) ─────────────────
+
+  A note that did not save is not a detail: what was typed is the only copy,
+  and the screen has to offer the way to try again rather than a sentence.
+  These three are the retry row, the two-versions block when the account's
+  text moved under an unsaved draft, and the version text itself — quoted, so
+  it reads as "this is what you wrote" and not as an editable field.
+*/
+.noteRetry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-tight);
+  align-items: center;
+}
+
+.noteRetryBtn {
+  min-height: var(--hit-min);
+  padding-inline: 14px;
+  border: 1px solid var(--c-green);
+  border-radius: var(--r-pill);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font: inherit;
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.noteRetryBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.noteConflict {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  padding: 12px 14px;
+  border: 1px solid var(--c-amber);
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+}
+
+.noteVersion {
+  padding: 8px 10px;
+  border-radius: var(--r-check);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-size: var(--fs-secondary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

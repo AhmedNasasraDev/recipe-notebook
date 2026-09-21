@@ -28,6 +28,15 @@ import { NotebookScreen } from '../routes/NotebookScreen.js';
 import { RecipeScreen } from '../routes/RecipeScreen.js';
 import { RecipeEditScreen } from '../routes/RecipeEditScreen.js';
 
+/*
+  The editor is a wizard since §6: one stage on screen at a time (פרטים ·
+  חומרי גלם · אופן ההכנה · סיכום), with the draft held above the stages so
+  nothing typed is lost between them. `toStage` is how a person moves —
+  the stepper at the top of the form, by its accessible name.
+*/
+const toStage = (u: ReturnType<typeof userEvent.setup>, n: 1 | 2 | 3 | 4) =>
+  u.click(screen.getByRole('button', { name: new RegExp(`^שלב ${n} `) }));
+
 const BREAD: Recipe = {
   id: 'bread',
   name: 'לחם כפרי',
@@ -201,15 +210,22 @@ describe('the editor says what is wrong, where it is wrong', () => {
     await screen.findByRole('heading', { name: 'מתכון חדש' });
 
     // A recipe with an ingredient and no name.
+    await toStage(user, 2);
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח');
     await user.type(screen.getByLabelText('כמות של קמח'), '500');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
 
+    /*
+      The refusal took us to the stage the missing field is ON — §6 asks for
+      the message beside the field, and in a wizard that means going there.
+    */
     const name = screen.getByLabelText('שם המתכון');
     expect(name).toHaveAttribute('aria-invalid', 'true');
     expect(name).toHaveAttribute('aria-describedby', 'r-name-error');
     expect(screen.getByText('למתכון חייב להיות שם.')).toBeInTheDocument();
     // Nothing the user typed was thrown away by the refusal.
+    await toStage(user, 2);
     expect(screen.getByLabelText('שם הרכיב בשורה 1')).toHaveValue('קמח');
     expect(screen.getByLabelText('כמות של קמח')).toHaveValue('500');
 
@@ -227,8 +243,10 @@ describe('the editor says what is wrong, where it is wrong', () => {
     await screen.findByRole('heading', { name: 'מתכון חדש' });
 
     await user.type(screen.getByLabelText('שם המתכון'), 'חלה');
+    await toStage(user, 2);
     await user.type(screen.getByLabelText('שם הרכיב בשורה 1'), 'קמח');
     await user.type(screen.getByLabelText('כמות של קמח'), '500');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
 
     expect(await screen.findByText('המתכון נשמר במחברת.')).toBeInTheDocument();

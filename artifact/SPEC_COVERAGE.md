@@ -3,7 +3,7 @@
 
 # Spec Coverage — המפרט כ-checklist
 
-52 דרישות. **COMPLETED**: 38 · **PARTIAL**: 8 · **NOT BUILT**: 4 · **BLOCKED**: 2
+54 דרישות. **COMPLETED**: 40 · **PARTIAL**: 8 · **NOT BUILT**: 4 · **BLOCKED**: 2
 
 COMPLETED פירושו שהיכולת קיימת בפועל וניתן להוכיח אותה מהקוד ומהבדיקות — לא «מצאתי קומפוננטה».
 
@@ -15,7 +15,7 @@ COMPLETED פירושו שהיכולת קיימת בפועל וניתן להוכ�
 | §2 מסך 2 — בית | HomeScreen | `/home` | `routes/HomeScreen.tsx` | כן | recipes + mirror | כן | כן | **COMPLETED** |  |
 | §2 מסך 3 — מחברת | NotebookScreen | `/notebook` | `routes/NotebookScreen.tsx` | כן | recipes | כן | כן | **COMPLETED** |  |
 | §2 מסך 4 — מתכון | RecipeScreen | `/recipe/:id` | `routes/RecipeScreen.tsx` | כן | recipes + versions + notes + images | כן | כן | **COMPLETED** |  |
-| §2 מסך 5 — עריכה | RecipeEditScreen | `/recipe/:id/edit` | `routes/RecipeEditScreen.tsx` | כן | save_recipe | כן | כן | **COMPLETED** |  |
+| §2 מסך 5 — עריכה | RecipeEditScreen — אשף בארבעה שלבים | `/recipe/:id/edit` | `routes/RecipeEditScreen.tsx` | כן | save_recipe | RecipeEditScreen.test.tsx · RecipeFlow/UxFlow/VersionFlow/PricingFlow | stage4 · stage5 · keyboard.mjs · demo-check.mjs · responsive.mjs (editor-details/editor-ingredients) | **COMPLETED** | **עודכן באישור אחמד (שלב 3, סעיף 5):** שלב אחד בכל פעם — פרטים · חומרי גלם · אופן ההכנה · סיכום — עם stepper נגיש («שלב N מתוך 4 — …»). הנתונים והתמונות נשמרים במעבר קדימה ואחורה (state בלבד, בלי שמירה לשרת). «שמירת טיוטה» בכל שלב, עם `validateDraft(draft, mode)` שמפריד דרישות טיוטה מדרישות מתכון סופי; סירוב שמירה מקפיץ לשלב שבו השדה החסר יושב. מנגנון השמירה עצמו (saveRecipe) לא שונה, ואין שינוי סכימה. תיקון שנמצא רק כשהמסך נכנס ל-responsive.mjs: שלושה checkbox היו 18px מול רצפת 24px של הפרויקט — הועלו ל-24 |
 | §2 מסך 6 — הדבקה | PasteScreen | `/paste` | `routes/PasteScreen.tsx` | כן | save_recipe | כן | לא | **PARTIAL** | פענוח מקומי בלבד. «פענוח חכם» (proxy ל-Claude, HANDOFF §6) אינו קיים בקוד |
 | §2 מסך 7 — Cook Mode | CookScreen | `/recipe/:id/cook` | `routes/CookScreen.tsx` | כן | קריאה + IndexedDB | כן | כן | **COMPLETED** |  |
 | §2 מסך 8 — תווית | LabelScreen | `/recipe/:id/label` | `routes/LabelScreen.tsx` | כן | קריאה | כן | לא | **COMPLETED** | שורת ה-HACCP תלויה באצווה קיימת — ואין UI ליצור אצווה (ראו F3) |
@@ -39,7 +39,7 @@ COMPLETED פירושו שהיכולת קיימת בפועל וניתן להוכ�
 | §5.4 המרת מתכון שלם | שלושה מצבי תצוגה | `/recipe/:id` | `routes/RecipeScreen.tsx (VIEW_TABS)` | חלקי | — | RecipeScreen.test.tsx | לא | **PARTIAL** | שלושת המצבים קיימים והכיתוב «המתכון לא השתנה» קיים. «שמירה כגרסה» מתצוגה מומרת — אינו קיים |
 | §6 שינוי מנות ותפוקה | ארבעה מצבי סקיילינג | `/recipe/:id` | `routes/RecipeScreen.tsx` | כן | — | RecipeScreen.test.tsx | לא | **PARTIAL** | המפרט עצמו מסמן «נפח סופי» כחסר — הוא עדיין חסר |
 | §7 תבניות וציוד | PanCard + שדה ציוד | `/recipe/:id · /recipe/:id/edit` | `features/recipe/PanCard.tsx` | כן | recipes.pan/equipment | PanCard.test.tsx | לא | **COMPLETED** |  |
-| §8 הערות אישיות | PrivateNote + הערת פריט | `/recipe/:id · /group/:id/item/:itemId` | `features/recipe/PrivateNote.tsx` | כן | private_notes (RLS own) | PrivateNote.test.tsx + private-notes.sql | לא | **COMPLETED** |  |
+| §8 הערות אישיות | PrivateNote + הערת פריט | `/recipe/:id · /group/:id/item/:itemId` | `features/recipe/PrivateNote.tsx` | כן | private_notes (RLS own) | PrivateNote.test.tsx (24) + private-notes.sql | לא | **COMPLETED** | **עודכן באישור אחמד (שלב 3, סעיף 2):** «נשמר» מוצג רק על טקסט שהשרת אישר (`confirmed` ref, `savedNow`). כשל שמירה אינו שקט: הטקסט נשמר כטיוטה מקומית ב-IndexedDB לפי משתמש ולפי מתכון (`rn.noteDraft.v1.<userId>.<recipeId>`), מוצגת שגיאה עם «ניסיון חוזר», והשגיאה שורדת מעבר מסך (`raiseError` ב-AppDataProvider). הטיוטה זוכרת את טקסט השרת שנכתבה מולו (`base`), ולכן גרסה חדשה יותר אינה נדרסת בשקט — מוצגות שתי הגרסאות והמשתמש בוחר. דפדפן שמסרב לאחסן אומר זאת במקום להבטיח |
 | §9 גרסאות מתכון | VersionHistory + restore | `/recipe/:id` | `features/recipe/VersionHistory.tsx` | כן | recipe_versions + restore RPC | VersionFlow + version-roundtrip | לא | **COMPLETED** |  |
 | §10 קבוצות, קורסים ותפקידים | 4 מסכים + צ׳אט | `/groups …` | `routes/Group*.tsx` | כן | מיגרציות 0023-0037 | 5 חבילות SQL + 5 קובצי מסך | חלקי | **COMPLETED** | הצ׳אט לא הורץ מול שרת מהסביבה הזאת (F14) |
 | §10.2 ארבע דרכי הצטרפות | invite/link/code/request | `/groups · /join/:token` | `migrations 0027/0030/0031` | כן | group_invites + join_requests | group-joining.sql + roles-and-invitations.sql | חלקי | **COMPLETED** |  |
@@ -48,7 +48,7 @@ COMPLETED פירושו שהיכולת קיימת בפועל וניתן להוכ�
 | §12 מודל פרטיות | RLS + roster ללא מייל | `—` | `migrations 0023-0037` | כן | RLS | rls-isolation.sql + group-teaching.sql | לא | **COMPLETED** |  |
 | §13 יכולות מקצועיות | תמחור, food cost, DDT, HACCP חלקי | `/recipe/:id` | `features/pricing/*` | חלקי | ingredient_catalog | foodCost.test.ts ועוד | לא | **PARTIAL** | אצוות וניסיונות אינם מוצגים/נכתבים מה-UI |
 | §13a HACCP ומעקב אצוות | haccpOf + שורת תווית | `/recipe/:id/label` | `features/batch/haccp.ts` | חלקי | batches (קריאה בלבד) | haccp.test.ts (13) | לא | **PARTIAL** | אין מסך אצוות, אין תיעוד מצולם, אין נתיב כתיבה (F3) |
-| §14 Cook Mode | CookScreen + Mise en place | `/recipe/:id/cook` | `routes/CookScreen.tsx` | כן | mirror (ticks + started + step) | CookScreen.test.tsx (35) · mise.test.ts (20) | stage14 (40) | **COMPLETED** | שלב Mise en place חוסם את השלבים עד 100% |
+| §14 Cook Mode | CookScreen + Mise en place | `/recipe/:id/cook` | `routes/CookScreen.tsx` | כן | mirror (ticks + started + step) | CookScreen.test.tsx (49) · mise.test.ts (19) | stage14 (42) | **COMPLETED** | **עודכן באישור אחמד (שלב 3, סעיף 4):** שלב Mise en place אינו חוסם יותר. אפשר לעבור להכנה גם עם רכיבים שטרם סומנו, עם חיווי «נותרו N רכיבים לסימון»; אין סימון אוטומטי; נוסף «חזרה לשקילה» ממסך השלבים |
 | §15 RTL ומספרים | dir=rtl + פורמט מספרים | `כל המסכים` | `styles/global.css` | כן | — | probe-nav (RTL) + בדיקות מסך | כן | **COMPLETED** |  |
 | §15 ערבית | — | `—` | `routes/SettingsScreen.tsx (הצהרה)` | לא | — | SettingsScreen.test.tsx | לא | **NOT BUILT** | ההגדרות אומרות במפורש «בהכנה» ואין מתג שאינו עושה דבר |
 | §16 Design System | tokens.css + בדיקת ניגודיות | `כל המסכים` | `styles/tokens.css` | כן | — | tokens.test.ts (80) | כן | **COMPLETED** |  |
@@ -61,8 +61,10 @@ COMPLETED פירושו שהיכולת קיימת בפועל וניתן להוכ�
 | HANDOFF §6 Security — proxy ל-Claude | — | `—` | `—` | לא | — | — | — | **NOT BUILT** | «פענוח חכם» דורש proxy עם מפתח בצד שרת. לא נבנה |
 | HANDOFF §4 מייל הזמנות | Edge Function send-group-invite | `(נקראת מ-PermsScreen)` | `supabase/functions/send-group-invite` | כן | Resend | — | לא | **BLOCKED** | נפרסה ופעילה; ממתינה לאימות דומיין ול-3 secrets. מעולם לא נקראה |
 | §10 צ׳אט בזמן אמת | Realtime Broadcast | `/group/:id` | `migrations 0032 + GroupChat.tsx` | כן | realtime.messages RLS | group-chat.sql (45) + GroupChat.test.tsx (34) | לא | **BLOCKED** | הסביבה הזאת חוסמת *.supabase.co — הערוץ לא נפתח אף פעם מדפדפן |
-| §14 Mise en place — שקילה לפני ביצוע | CookScreen (שלב ראשון) + features/cook/mise.ts | `/recipe/:id/cook` | `routes/CookScreen.tsx · features/cook/mise.ts` | כן | IndexedDB בלבד — אין שינוי DB | mise.test.ts (20) · CookScreen.test.tsx (15 חדשות) | stage14 (40) · journeys.mjs C | **COMPLETED** | הכמויות מ-compute() לפי ה-scale שב-URL; סימון נשמר עם חתימת ה-scale |
+| §14 / §7 Mise en place — שקילה לפני ביצוע | CookScreen (שלב ראשון) + features/cook/mise.ts | `/recipe/:id/cook` | `routes/CookScreen.tsx · features/cook/mise.ts` | כן | IndexedDB בלבד — אין שינוי DB | mise.test.ts (19) · CookScreen.test.tsx | stage14 (42) · journeys.mjs C · responsive.mjs (18 בדיקות שער) | **COMPLETED** | הכמויות מ-compute() לפי ה-scale שב-URL; סימון נשמר עם חתימת ה-scale. הכלל החדש: רשימה, לא מנעול — `startedFrom` נשען על התאמת ה-scale ולא על שלמות הרשימה, אחרת רענון באמצע אפייה היה מחזיר לשקילה |
 | §6 scale — מעבר בין מסכים | scaleLink.ts | `/recipe/:id → /order · /cook` | `features/recipe/scaleLink.ts` | כן | — | scaleLink.test.ts (14) | journeys.mjs B/F | **COMPLETED** | מנתח אחד; קודם היה עותק בכל מסך |
+| §12 תצוגת כסף — שתי ספרות עשרוניות | formatNis (packages/engine) | `/recipe/:id · /order · /ingredients · /plan/:id` | `packages/engine/src/format.ts` | כן | — | handoff-verification.test.ts (14) · format.test.ts | responsive.mjs · journeys.mjs | **COMPLETED** | **עודכן באישור אחמד (שלב 3, סעיף 1):** `toLocaleString('he-IL')` עם minimumFractionDigits ו-maximumFractionDigits = 2, בכל מקום שבו מוצג סכום — כולל תוויות ודף הזמנה. המרה של התצוגה בלבד: הדיוק הפנימי ותוצאות החישוב לא שונו. הפורמט הקודם עיגל מתחת ל-₪100 לספרה אחת (₪1.95 הוצג ₪2). נבדק על מחיר אפס, מחיר חסר, סכומים קטנים (₪0.05) וגדולים (₪1,234.49) |
+| גרסת ניסוי — חיווי «סימולציה מקומית» | capabilities().source = 'simulated' + describeBackend + DemoNotice | `כל המסכים` | `apps/web/src/data/repository.ts · app/AppDataProvider.tsx · artifact/viewer/DemoNotice.tsx` | כן | — | AppShell.test.tsx · SettingsScreen.test.tsx · MoreScreen.test.tsx | demo-check.mjs (42) · responsive.mjs (66 בדיקות כיסוי פקדים) | **COMPLETED** | **עודכן באישור אחמד (שלב 3, סעיף 3):** מקור הנתונים הוא ערך שלישי מפורש — 'local-demo' \| 'simulated' \| 'supabase' — והתצוגה אינה מתיימרת יותר להיות חיבור לשרת. הפס העליון בקובץ הניסוי אומר «גרסת ניסוי · סימולציה מקומית» ו-describeBackend מסביר במדויק מה נשמר (בדפדפן הזה בלבד), מה לא (תמונות — עד רענון) ומה אין (סנכרון בין מכשירים). הפס נמדד ב-11 מסכים × 6 גדלים ואינו מכסה שום פקד — הבדיקה חותכת את ה-rect לפי כל גלילן מעליו, כי גיאומטריה לבדה שיקרה |
 
 ## ממצאים (37)
 
@@ -111,7 +113,7 @@ COMPLETED פירושו שהיכולת קיימת בפועל וניתן להוכ�
 - ה-Artifact הוא האפליקציה עצמה: המסכים, הקומפוננטות, הטקסטים, הניווט וה-CSS מיובאים מ-apps/web/src ללא שינוי.
 - שני דברים נאלצו להשתנות מחוץ למוצר: MemoryRouter במקום BrowserRouter (לעמוד Artifact אין שליטה בשורת הכתובת), ו-AuthProvider מקבל client={null} — התפר הקיים שלו לבדיקות.
 - dir="rtl" ו-lang="he" נקבעים בטעינה, כי בפרודקשן הם יושבים על <html> ב-apps/web/index.html והפלטפורמה היא שמחזיקה את <html> כאן.
-- capabilities() מדווח source: 'supabase', canWrite: true. זה שקר לגבי ה-Artifact, והדרך היחידה לראות את המסכים כמו שמשתמש מחובר רואה אותם. תג «סימולציה מקומית» בפינה אומר זאת, ואינו יכול לחסום לחיצה (pointer-events: none).
+- capabilities() מדווח source: 'simulated', canWrite: true — ולא 'supabase' כפי שהיה. זו התצוגה האמיתית של מה שקורה: אין חשבון ואין שרת, והמסכים עדיין נראים כמו שמשתמש מחובר רואה אותם. describeBackend מחזיר בשביל המצב הזה משפט מפורש — «סימולציה מקומית. אין חשבון ואין שרת: המתכונים כאן הם נתוני דוגמה, מה שתשנו נשמר בדפדפן הזה בלבד (תמונות — עד רענון), ואין סנכרון בין מכשירים» — ותג «סימולציה מקומית» בראש הדף חוזר עליו בכל מסך ואינו מכסה פקד.
 - הנתונים: חמשת מתכוני הדמו הם נתוני המוצר (data/demoRecipes.ts). קבוצות, צ׳אט, הזמנות, בקשות, תוכנית ייצור, שישה חומרי גלם וגרסאות — ARTIFACT FIXTURE.
 - פעולות שעובדות מקומית בתוך ה-Artifact: יצירת/עריכת/מחיקת מתכון (כולל סירוב מחיקה של מתכון בסיס בשימוש), שחזור גרסה, העלאת תמונה, יצירת קבוצה, בקשת הצטרפות בקוד, פדיון הזמנה, שליחה/עריכה/מחיקה בצ׳אט, שינוי תפקיד והרשאות, שמירת הערה אישית, שמירת עותק §11, שם ותמונת פרופיל, כיול כלים, חומרי גלם ותוכנית ייצור.
 - אין Supabase, אין auth, אין Realtime, אין Storage ואין מייל. הודעות צ׳אט חדשות נמסרות בזיכרון הדף ולא בערוץ Realtime.

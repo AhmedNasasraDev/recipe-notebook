@@ -101,6 +101,8 @@ export function RecipeScreen() {
     getPrivateNote,
     savePrivateNote,
     listRecipeImages,
+    userId,
+    raiseError,
     addRecipeImage,
     removeRecipeImage,
     signedImageUrl,
@@ -824,6 +826,11 @@ export function RecipeScreen() {
         initial={note}
         canWrite={capabilities.canWrite}
         onSave={(body) => savePrivateNote(recipe.id, body)}
+        /* The draft is private text, so it is kept per account as well as per
+           recipe; `raiseError` is how a failure from the unmount flush is
+           still seen after this screen is gone. */
+        userId={userId}
+        onFlushError={raiseError}
       />
 
       {/*

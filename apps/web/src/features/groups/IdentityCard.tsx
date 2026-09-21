@@ -26,7 +26,13 @@ import styles from './IdentityCard.module.css';
 
 export function IdentityCard() {
   const { groups: api, capabilities } = useAppData();
-  const canWrite = capabilities.canWrite && capabilities.source === 'supabase';
+  /*
+    `!== 'local-demo'` rather than `=== 'supabase'`: the trial (`simulated`)
+    keeps a display name in the browser and can edit it, and only the
+    read-only demo has nowhere to put one. Written this way so a new source
+    kind does not silently disable a control that works.
+  */
+  const canWrite = capabilities.canWrite && capabilities.source !== 'local-demo';
 
   const [name, setName] = useState('');
   const [stored, setStored] = useState('');

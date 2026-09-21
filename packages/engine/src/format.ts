@@ -45,11 +45,34 @@ export function formatGrams(g: number): string {
   return (g >= 10 ? Math.round(g) : Math.round(g * 10) / 10) + " גר'";
 }
 
-/** Shekels, ported verbatim from engine.js:133 (nis). */
+/**
+ * Shekels — ALWAYS TWO DECIMALS.
+ *
+ * This was a verbatim port of the prototype's `nis()`, which rounded to one
+ * decimal below ₪100 and to whole shekels above it. The arithmetic was never
+ * affected — every figure the app derives is computed from the exact number
+ * and only the printed string was rounded — but an exact ₪1.95 was DISPLAYED
+ * as ₪2, a cost per unit of ₪0.195 as ₪0.2, and a ₪1,234.49 total as ₪1,234.
+ * In a costing tool that is a reporting defect: agorot are the unit prices are
+ * quoted in, and a label or an order sheet that says ₪2 for something that
+ * costs ₪1.95 is wrong on paper.
+ *
+ * Ahmed approved the change (stage 3, item 1): two decimals everywhere, the
+ * labels and the order sheets included, with the internal precision
+ * untouched. `toLocaleString` keeps the Hebrew thousands separator, so a big
+ * number still reads as ₪1,234.49.
+ *
+ * Zero is ₪0.00 — a real price of nothing, which the app distinguishes from
+ * "no price" by not calling this function at all for the latter (see
+ * `money()` on the recipe page and `priced` on a computed row).
+ */
 export function formatNis(n: number): string {
   return (
     '₪' +
-    (n >= 100 ? Math.round(n) : Math.round(n * 10) / 10).toLocaleString('he-IL')
+    n.toLocaleString('he-IL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
   );
 }
 

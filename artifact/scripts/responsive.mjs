@@ -136,6 +136,25 @@ const SCREENS = [
   { route: '/plan/fixture-plan-1', name: 'plan', landmark: 'h1' },
   { route: '/settings', name: 'settings', landmark: 'h1' },
   { route: '/ingredients', name: 'ingredients', landmark: 'h1' },
+  /*
+    THE EDITOR, ON TWO OF ITS FOUR STAGES.
+
+    It was not in this list at all until the wizard was built, and the wizard
+    is exactly the shape that needs it: a sticky action bar with a second row
+    under it, a stepper that has to stay readable at 360px, and one long form
+    per stage. Stage 1 is the shortest stage and stage 2 the one that grows a
+    row at a time, so both are measured.
+  */
+  { route: '/recipe/new', name: 'editor-details', landmark: 'h1' },
+  {
+    route: '/recipe/new',
+    name: 'editor-ingredients',
+    landmark: 'h1',
+    async setup(page) {
+      await page.getByRole('button', { name: /^שלב 2 / }).click();
+      await page.waitForTimeout(400);
+    },
+  },
 ];
 
 const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
@@ -318,10 +337,18 @@ try {
           the gate used to sit at the end of the ingredient list — below the
           fold on a short screen. It is pinned now, so it is measured the same
           way the chat's two edges are.
+
+          The gate has TWO labels since the §14 rule change: "מעבר להכנה"
+          while lines are still unticked, and "הכול מוכן — מתחילים בהכנה" once
+          none are. Matching only the second one is how 18 of this file's
+          checks — three gate checks across six sizes — stopped running while
+          the run still printed "passed": 468 became 450. So it is matched on
+          either, inside the weighing section itself, and the screen that must
+          have a gate is asked whether it found one.
         */
-        const gate = [...document.querySelectorAll('button')].find((b) =>
-          (b.textContent || '').includes('מתחילים בהכנה'),
-        );
+        const gate = [
+          ...document.querySelectorAll('section[aria-label="הכנת חומרי גלם"] button'),
+        ].find((b) => /(מעבר להכנה|מתחילים בהכנה)/.test(b.textContent || ''));
         return {
           gate: gate
             ? {
@@ -360,6 +387,14 @@ try {
         m.badgeCovers.length === 0,
         m.badgeCovers.join(' · '),
       );
+      /*
+        And the presence of the gate is itself a check on the weighing screen,
+        so a renamed control fails loudly instead of quietly taking its own
+        checks out of the run.
+      */
+      if (screen.name === 'cook-mise') {
+        check(`${tag}: the weighing screen offers a way through`, m.gate !== null);
+      }
       if (m.gate) {
         check(
           `${tag}: the Mise en place gate is on screen`,
@@ -381,9 +416,9 @@ try {
           await new Promise((r) => requestAnimationFrame(() => r(null)));
           const rows = [...document.querySelectorAll('section[aria-label="הכנת חומרי גלם"] li')];
           const last = rows.at(-1);
-          const g = [...document.querySelectorAll('button')].find((b) =>
-            (b.textContent || '').includes('מתחילים בהכנה'),
-          );
+          const g = [
+            ...document.querySelectorAll('section[aria-label="הכנת חומרי גלם"] button'),
+          ].find((b) => /(מעבר להכנה|מתחילים בהכנה)/.test(b.textContent || ''));
           const on = (el) => {
             if (!el) return null;
             const r = el.getBoundingClientRect();

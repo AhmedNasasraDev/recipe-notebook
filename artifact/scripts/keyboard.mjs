@@ -144,7 +144,13 @@ try {
     'the required field says so to a screen reader, not only in colour',
     (await nameBox.getAttribute('aria-required')) === 'true',
   );
-  await page.getByRole('button', { name: 'שמירת המתכון' }).click();
+  /*
+    The editor is a wizard (§6): "שמירת טיוטה" is on every stage, and it is
+    the one that refuses a nameless recipe from right here. The refusal also
+    takes the person to the stage the missing field is on — which is this one,
+    so the field is still on screen with its message beside it.
+  */
+  await page.getByRole('button', { name: 'שמירת טיוטה' }).click();
   await page.waitForTimeout(400);
   check(
     'a refused save marks the field and points at its message',

@@ -62,7 +62,23 @@ export interface StoredVersion {
   snapshot: Recipe;
 }
 
-export type DataSourceKind = 'local-demo' | 'supabase';
+/**
+ * Which backend is serving this session.
+ *
+ *   · `supabase`    — the real service, with an account behind it.
+ *   · `local-demo`  — no backend at all: the five demo recipes, read-only.
+ *   · `simulated`   — the TRIAL: a full working application whose backend is
+ *                     a fixture in the browser. Writes succeed and persist in
+ *                     this browser, and nothing leaves the page.
+ *
+ * `simulated` exists because the trial used to report itself as `supabase` so
+ * that the screens would render their connected state — which meant the
+ * application's own disclosure banner was suppressed exactly where it was
+ * most needed. Ahmed asked for the trial to say what it is (stage 3, item 3):
+ * it can keep working locally, and it must not present itself as a connection
+ * to a real server.
+ */
+export type DataSourceKind = 'local-demo' | 'simulated' | 'supabase';
 
 export interface RepositoryCapabilities {
   /** which backend is actually serving this session */

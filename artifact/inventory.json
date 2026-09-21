@@ -779,15 +779,15 @@
     },
     {
       "req": "§2 מסך 5 — עריכה",
-      "impl": "RecipeEditScreen",
+      "impl": "RecipeEditScreen — אשף בארבעה שלבים",
       "route": "/recipe/:id/edit",
       "file": "routes/RecipeEditScreen.tsx",
       "ui": "כן",
       "backend": "save_recipe",
-      "test": "כן",
-      "e2e": "כן",
+      "test": "RecipeEditScreen.test.tsx · RecipeFlow/UxFlow/VersionFlow/PricingFlow",
+      "e2e": "stage4 · stage5 · keyboard.mjs · demo-check.mjs · responsive.mjs (editor-details/editor-ingredients)",
       "status": "COMPLETED",
-      "note": ""
+      "note": "**עודכן באישור אחמד (שלב 3, סעיף 5):** שלב אחד בכל פעם — פרטים · חומרי גלם · אופן ההכנה · סיכום — עם stepper נגיש («שלב N מתוך 4 — …»). הנתונים והתמונות נשמרים במעבר קדימה ואחורה (state בלבד, בלי שמירה לשרת). «שמירת טיוטה» בכל שלב, עם `validateDraft(draft, mode)` שמפריד דרישות טיוטה מדרישות מתכון סופי; סירוב שמירה מקפיץ לשלב שבו השדה החסר יושב. מנגנון השמירה עצמו (saveRecipe) לא שונה, ואין שינוי סכימה. תיקון שנמצא רק כשהמסך נכנס ל-responsive.mjs: שלושה checkbox היו 18px מול רצפת 24px של הפרויקט — הועלו ל-24"
     },
     {
       "req": "§2 מסך 6 — הדבקה",
@@ -1072,10 +1072,10 @@
       "file": "features/recipe/PrivateNote.tsx",
       "ui": "כן",
       "backend": "private_notes (RLS own)",
-      "test": "PrivateNote.test.tsx + private-notes.sql",
+      "test": "PrivateNote.test.tsx (24) + private-notes.sql",
       "e2e": "לא",
       "status": "COMPLETED",
-      "note": ""
+      "note": "**עודכן באישור אחמד (שלב 3, סעיף 2):** «נשמר» מוצג רק על טקסט שהשרת אישר (`confirmed` ref, `savedNow`). כשל שמירה אינו שקט: הטקסט נשמר כטיוטה מקומית ב-IndexedDB לפי משתמש ולפי מתכון (`rn.noteDraft.v1.<userId>.<recipeId>`), מוצגת שגיאה עם «ניסיון חוזר», והשגיאה שורדת מעבר מסך (`raiseError` ב-AppDataProvider). הטיוטה זוכרת את טקסט השרת שנכתבה מולו (`base`), ולכן גרסה חדשה יותר אינה נדרסת בשקט — מוצגות שתי הגרסאות והמשתמש בוחר. דפדפן שמסרב לאחסן אומר זאת במקום להבטיח"
     },
     {
       "req": "§9 גרסאות מתכון",
@@ -1180,10 +1180,10 @@
       "file": "routes/CookScreen.tsx",
       "ui": "כן",
       "backend": "mirror (ticks + started + step)",
-      "test": "CookScreen.test.tsx (35) · mise.test.ts (20)",
-      "e2e": "stage14 (40)",
+      "test": "CookScreen.test.tsx (49) · mise.test.ts (19)",
+      "e2e": "stage14 (42)",
       "status": "COMPLETED",
-      "note": "שלב Mise en place חוסם את השלבים עד 100%"
+      "note": "**עודכן באישור אחמד (שלב 3, סעיף 4):** שלב Mise en place אינו חוסם יותר. אפשר לעבור להכנה גם עם רכיבים שטרם סומנו, עם חיווי «נותרו N רכיבים לסימון»; אין סימון אוטומטי; נוסף «חזרה לשקילה» ממסך השלבים"
     },
     {
       "req": "§15 RTL ומספרים",
@@ -1330,16 +1330,16 @@
       "note": "הסביבה הזאת חוסמת *.supabase.co — הערוץ לא נפתח אף פעם מדפדפן"
     },
     {
-      "req": "§14 Mise en place — שקילה לפני ביצוע",
+      "req": "§14 / §7 Mise en place — שקילה לפני ביצוע",
       "impl": "CookScreen (שלב ראשון) + features/cook/mise.ts",
       "route": "/recipe/:id/cook",
       "file": "routes/CookScreen.tsx · features/cook/mise.ts",
       "ui": "כן",
       "backend": "IndexedDB בלבד — אין שינוי DB",
-      "test": "mise.test.ts (20) · CookScreen.test.tsx (15 חדשות)",
+      "test": "mise.test.ts (19) · CookScreen.test.tsx",
       "status": "COMPLETED",
-      "e2e": "stage14 (40) · journeys.mjs C",
-      "note": "הכמויות מ-compute() לפי ה-scale שב-URL; סימון נשמר עם חתימת ה-scale"
+      "e2e": "stage14 (42) · journeys.mjs C · responsive.mjs (18 בדיקות שער)",
+      "note": "הכמויות מ-compute() לפי ה-scale שב-URL; סימון נשמר עם חתימת ה-scale. הכלל החדש: רשימה, לא מנעול — `startedFrom` נשען על התאמת ה-scale ולא על שלמות הרשימה, אחרת רענון באמצע אפייה היה מחזיר לשקילה"
     },
     {
       "req": "§6 scale — מעבר בין מסכים",
@@ -1352,6 +1352,30 @@
       "status": "COMPLETED",
       "e2e": "journeys.mjs B/F",
       "note": "מנתח אחד; קודם היה עותק בכל מסך"
+    },
+    {
+      "req": "§12 תצוגת כסף — שתי ספרות עשרוניות",
+      "impl": "formatNis (packages/engine)",
+      "route": "/recipe/:id · /order · /ingredients · /plan/:id",
+      "file": "packages/engine/src/format.ts",
+      "ui": "כן",
+      "backend": "—",
+      "test": "handoff-verification.test.ts (14) · format.test.ts",
+      "e2e": "responsive.mjs · journeys.mjs",
+      "status": "COMPLETED",
+      "note": "**עודכן באישור אחמד (שלב 3, סעיף 1):** `toLocaleString('he-IL')` עם minimumFractionDigits ו-maximumFractionDigits = 2, בכל מקום שבו מוצג סכום — כולל תוויות ודף הזמנה. המרה של התצוגה בלבד: הדיוק הפנימי ותוצאות החישוב לא שונו. הפורמט הקודם עיגל מתחת ל-₪100 לספרה אחת (₪1.95 הוצג ₪2). נבדק על מחיר אפס, מחיר חסר, סכומים קטנים (₪0.05) וגדולים (₪1,234.49)"
+    },
+    {
+      "req": "גרסת ניסוי — חיווי «סימולציה מקומית»",
+      "impl": "capabilities().source = 'simulated' + describeBackend + DemoNotice",
+      "route": "כל המסכים",
+      "file": "apps/web/src/data/repository.ts · app/AppDataProvider.tsx · artifact/viewer/DemoNotice.tsx",
+      "ui": "כן",
+      "backend": "—",
+      "test": "AppShell.test.tsx · SettingsScreen.test.tsx · MoreScreen.test.tsx",
+      "e2e": "demo-check.mjs (42) · responsive.mjs (66 בדיקות כיסוי פקדים)",
+      "status": "COMPLETED",
+      "note": "**עודכן באישור אחמד (שלב 3, סעיף 3):** מקור הנתונים הוא ערך שלישי מפורש — 'local-demo' | 'simulated' | 'supabase' — והתצוגה אינה מתיימרת יותר להיות חיבור לשרת. הפס העליון בקובץ הניסוי אומר «גרסת ניסוי · סימולציה מקומית» ו-describeBackend מסביר במדויק מה נשמר (בדפדפן הזה בלבד), מה לא (תמונות — עד רענון) ומה אין (סנכרון בין מכשירים). הפס נמדד ב-11 מסכים × 6 גדלים ואינו מכסה שום פקד — הבדיקה חותכת את ה-rect לפי כל גלילן מעליו, כי גיאומטריה לבדה שיקרה"
     }
   ],
   "findings": [
@@ -1619,7 +1643,7 @@
     "ה-Artifact הוא האפליקציה עצמה: המסכים, הקומפוננטות, הטקסטים, הניווט וה-CSS מיובאים מ-apps/web/src ללא שינוי.",
     "שני דברים נאלצו להשתנות מחוץ למוצר: MemoryRouter במקום BrowserRouter (לעמוד Artifact אין שליטה בשורת הכתובת), ו-AuthProvider מקבל client={null} — התפר הקיים שלו לבדיקות.",
     "dir=\"rtl\" ו-lang=\"he\" נקבעים בטעינה, כי בפרודקשן הם יושבים על <html> ב-apps/web/index.html והפלטפורמה היא שמחזיקה את <html> כאן.",
-    "capabilities() מדווח source: 'supabase', canWrite: true. זה שקר לגבי ה-Artifact, והדרך היחידה לראות את המסכים כמו שמשתמש מחובר רואה אותם. תג «סימולציה מקומית» בפינה אומר זאת, ואינו יכול לחסום לחיצה (pointer-events: none).",
+    "capabilities() מדווח source: 'simulated', canWrite: true — ולא 'supabase' כפי שהיה. זו התצוגה האמיתית של מה שקורה: אין חשבון ואין שרת, והמסכים עדיין נראים כמו שמשתמש מחובר רואה אותם. describeBackend מחזיר בשביל המצב הזה משפט מפורש — «סימולציה מקומית. אין חשבון ואין שרת: המתכונים כאן הם נתוני דוגמה, מה שתשנו נשמר בדפדפן הזה בלבד (תמונות — עד רענון), ואין סנכרון בין מכשירים» — ותג «סימולציה מקומית» בראש הדף חוזר עליו בכל מסך ואינו מכסה פקד.",
     "הנתונים: חמשת מתכוני הדמו הם נתוני המוצר (data/demoRecipes.ts). קבוצות, צ׳אט, הזמנות, בקשות, תוכנית ייצור, שישה חומרי גלם וגרסאות — ARTIFACT FIXTURE.",
     "פעולות שעובדות מקומית בתוך ה-Artifact: יצירת/עריכת/מחיקת מתכון (כולל סירוב מחיקה של מתכון בסיס בשימוש), שחזור גרסה, העלאת תמונה, יצירת קבוצה, בקשת הצטרפות בקוד, פדיון הזמנה, שליחה/עריכה/מחיקה בצ׳אט, שינוי תפקיד והרשאות, שמירת הערה אישית, שמירת עותק §11, שם ותמונת פרופיל, כיול כלים, חומרי גלם ותוכנית ייצור.",
     "אין Supabase, אין auth, אין Realtime, אין Storage ואין מייל. הודעות צ׳אט חדשות נמסרות בזיכרון הדף ולא בערוץ Realtime.",

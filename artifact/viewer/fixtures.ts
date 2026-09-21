@@ -716,9 +716,23 @@ export function createViewerRepository(activeUserId: string = VIEWER_USER_ID): R
     ];
   };
   const capabilities = (): RepositoryCapabilities => ({
-    // See the header: this is what makes the screens render their connected
-    // state. The inspector outside the app says no request leaves the page.
-    source: 'supabase',
+    /*
+      `simulated`, NOT `supabase` — the correction Ahmed asked for (stage 3,
+      item 3).
+
+      This used to claim the real backend so that every screen would render
+      its working state: writes succeed here, the groups and the chat work,
+      and nothing is read-only. The cost was that the application's own
+      disclosure banner — which appears for every state that is not
+      "connected and online" — was suppressed in the one build where the
+      reader has no other way of knowing what they are looking at.
+
+      `simulated` keeps all of that working AND discloses it: `canWrite` is
+      still true, so nothing is disabled, and `AppShell` shows the sentence
+      `describeBackend` writes for this source — what is saved, where, and
+      what is not.
+    */
+    source: 'simulated',
     online: true,
     canWrite: true,
     servingFromCache: false,

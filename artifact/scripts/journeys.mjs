@@ -321,14 +321,14 @@ if (should('C')) {
   const n = await boxes.count();
   check('one line per ingredient', n > 0, `${n}`);
 
-  const gate = page.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' });
-  check('the gate starts inert', await gate.isDisabled());
+  const gate = page.getByRole('button', { name: 'מעבר להכנה' });
+  check('the way through is open from the start (§7)', await gate.isEnabled());
 
   // Partial.
   await boxes.first().click();
   await page.waitForTimeout(250);
   check('the count follows a tick', /1 מתוך/.test(await text(page)));
-  check('the gate is still inert', await gate.isDisabled());
+  check('and the screen says how many are left', /נותרו/.test(await text(page)));
   check(
     'and the steps are not on the page',
     (await page.getByRole('button', { name: 'סימון השלב כהושלם' }).count()) === 0,

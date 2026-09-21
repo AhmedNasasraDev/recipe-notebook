@@ -27,6 +27,14 @@ const KEY = {
   recents: 'rn.recents.v1',
   favorites: 'rn.favorites.v1',
   cookTextSize: 'rn.cookTextSize.v1',
+  /*
+    A personal note that was typed and NOT saved yet, per account and per
+    recipe. Both parts of the key matter: two accounts on one device must not
+    see each other's unsaved text (the note is private by design — see
+    PrivateNote.tsx), and two recipes must not share one draft.
+  */
+  noteDraft: (userId: string, recipeId: string) =>
+    `rn.noteDraft.v1.${userId}.${recipeId}`,
 } as const;
 
 async function safeGet<T>(key: string): Promise<T | null> {
@@ -268,6 +276,54 @@ export async function readCookTextSize(): Promise<CookTextSize> {
 export async function writeCookTextSize(size: CookTextSize): Promise<CookTextSize> {
   const ok = await safeSet(KEY.cookTextSize, size);
   return ok ? size : await readCookTextSize();
+}
+
+// ── a personal note that has not been saved yet ───────────────────────────
+//
+// §11's silent save failure, and Ahmed's stage-3 item 2: the text must be
+// recoverable after the screen is gone, the failure has to be visible with a
+// way to try again, and a newer version on the server must not be overwritten
+// without being noticed.
+//
+// `base` is the server's text AT THE MOMENT THE DRAFT WAS MADE. It is what
+// makes the last part possible: on the way back, if the server now holds
+// something else, the draft was written against an older version and the
+// screen says so instead of quietly overwriting it.
+
+export interface NoteDraft {
+  /** what the person typed and we could not save */
+  body: string;
+  /** what the server held when they started typing */
+  base: string;
+  /** when the draft was stored, ms since the epoch */
+  at: number;
+}
+
+const isDraft = (v: unknown): v is NoteDraft =>
+  typeof v === 'object' &&
+  v !== null &&
+  typeof (v as NoteDraft).body === 'string' &&
+  typeof (v as NoteDraft).base === 'string';
+
+export async function readNoteDraft(
+  userId: string,
+  recipeId: string,
+): Promise<NoteDraft | null> {
+  const stored = await safeGet<NoteDraft>(KEY.noteDraft(userId, recipeId));
+  return isDraft(stored) ? stored : null;
+}
+
+/** Returns false when this browser refuses to store it — the caller says so. */
+export async function writeNoteDraft(
+  userId: string,
+  recipeId: string,
+  draft: NoteDraft,
+): Promise<boolean> {
+  return safeSet(KEY.noteDraft(userId, recipeId), draft);
+}
+
+export async function clearNoteDraft(userId: string, recipeId: string): Promise<void> {
+  await safeDel(KEY.noteDraft(userId, recipeId));
 }
 
 export async function clearMirror(): Promise<void> {

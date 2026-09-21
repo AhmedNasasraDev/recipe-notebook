@@ -472,7 +472,30 @@ export interface DraftProblem {
  * validator here would mostly be inventing requirements the product does not
  * have. A recipe in progress is a legitimate thing to save.
  */
-export function validateDraft(draft: RecipeDraft): DraftProblem[] {
+/**
+ * What a draft may be saved as, and what a finished recipe must be.
+ *
+ * §6 asks for both: "אפשר שמירת טיוטה חלקית והפרד בין דרישות לטיוטה לבין
+ * דרישות למתכון סופי." The difference is deliberately small, because the rest
+ * of the application already handles an incomplete recipe honestly — every
+ * screen says "נתונים חלקיים" rather than inventing a figure.
+ *
+ *   · `draft` — a name, and numbers that are numbers. Nothing else. A row
+ *     with a quantity and no name yet is a half-typed line, not an error.
+ *   · `final` — everything above, plus at least one real ingredient and a
+ *     name on every row that carries a quantity.
+ *
+ * A name is required in both because it is the recipe's identity: the row is
+ * `recipes.name NOT NULL` in the schema, it is how the notebook lists it, and
+ * "מתכון ללא שם" would be a row nobody can find again. No schema change was
+ * needed for either mode.
+ */
+export type ValidationMode = 'draft' | 'final';
+
+export function validateDraft(
+  draft: RecipeDraft,
+  mode: ValidationMode = 'final',
+): DraftProblem[] {
   const problems: DraftProblem[] = [];
 
   if (!draft.name.trim()) {
@@ -480,12 +503,12 @@ export function validateDraft(draft: RecipeDraft): DraftProblem[] {
   }
 
   const rows = draft.ingredients.filter((i) => !isBlankIngredient(i));
-  if (rows.length === 0) {
+  if (rows.length === 0 && mode === 'final') {
     problems.push({ field: 'ingredients', message: 'צריך לפחות רכיב אחד.' });
   }
 
   rows.forEach((row, i) => {
-    if (!row.name.trim()) {
+    if (!row.name.trim() && mode === 'final') {
       problems.push({
         field: `ingredient-${i}`,
         message: `לרכיב ${i + 1} יש כמות אבל אין שם.`,

@@ -173,11 +173,16 @@
   line-height: 1.6;
 }
 
-/* The one line that says why the gate is shut. Secondary voice — it is a rule,
-   not a warning, and it disappears the moment the list is complete. */
-.gateWhy {
+/*
+  The line that says what is still unticked (§7). Secondary voice — it is a
+  statement, not a warning: since Ahmed's change the preparation is reachable
+  either way, and this says what is left behind. It disappears the moment the
+  list is complete.
+*/
+.gateNote {
   font-size: var(--fs-secondary);
   color: var(--c-cook-muted);
+  line-height: 1.6;
 }
 
 .miseDone {

@@ -84,7 +84,7 @@ try {
   check('closing it lands on the notebook', (await page.getByRole('heading', { name: 'מחברת מתכונים' }).count()) === 1);
   check(
     'the notice stays one press away',
-    (await page.getByRole('button', { name: 'גרסת ניסוי — מה זה?' }).count()) === 1,
+    (await page.getByRole('button', { name: 'גרסת ניסוי — סימולציה מקומית. מה זה?' }).count()) === 1,
   );
   const cards = await page.locator('a[href^="/recipe/"]').count();
   check('the sample notebook is there', cards >= 5, `${cards} recipe links`);
@@ -136,7 +136,7 @@ try {
   }
   await page.setViewportSize({ width: 402, height: 874 });
   check(
-    'the "גרסת ניסוי" pill covers no control, on any screen at any size',
+    'the "סימולציה מקומית" strip covers no control, on any screen at any size',
     overlaps.length === 0,
     overlaps.slice(0, 3).join(' | ') || '11 screens × 4 sizes',
   );
@@ -172,13 +172,28 @@ try {
   }
 
   // ── 4. creating a recipe, and finding it again ──────────────────────────
+  /*
+    THE EDITOR IS A WIZARD (§6), SO THE DEMO WALKS IT LIKE A PERSON.
+
+    One stage at a time — פרטים, חומרי גלם, אופן ההכנה, סיכום — so the name is
+    on stage 1, the ingredient rows on stage 2, and the final save only on the
+    summary. `toStage` is the stepper, found by the accessible name it carries.
+    Filling a field that is not on the current stage is how this file stopped
+    at 14 of its 42 checks.
+  */
+  const toStage = async (n) => {
+    await page.getByRole('button', { name: new RegExp(`^שלב ${n} `) }).click();
+    await page.waitForTimeout(400);
+  };
+
   await open('#/recipe/new');
   const NAME = `עוגת ניסוי ${Date.now() % 10_000}`;
   await page.getByLabel('שם המתכון', { exact: false }).first().fill(NAME);
+  await toStage(2);
   await page.getByLabel('שם הרכיב בשורה 1').fill('קמח לחם');
   await page.getByLabel('כמות').first().fill('500');
   await page.waitForTimeout(200);
-  await page.waitForTimeout(300);
+  await toStage(4);
   const save = page.getByRole('button', { name: /שמירת ה(מתכון|שינויים)/ });
   check('the editor offers a save', (await save.count()) >= 1);
   await save.first().click();
@@ -215,6 +230,9 @@ try {
   await page.waitForTimeout(1000);
   await page.getByLabel('שם המתכון').fill(`${NAME} — נערך`);
   await page.waitForTimeout(200);
+  /* The name is stage 1's field and the save is on the summary, so the edit
+     is finished the way the wizard finishes one. */
+  await toStage(4);
   await page.getByRole('button', { name: /שמירת ה(מתכון|שינויים)/ }).first().click();
   await page.waitForTimeout(1200);
   await open('#/notebook');
@@ -239,17 +257,25 @@ try {
   const boxes = page.locator('section[aria-label="הכנת חומרי גלם"] input[type="checkbox"]');
   const n = await boxes.count();
   check('the weighing list is the recipe\'s own', n >= 5, `${n} rows`);
-  const gate = page.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' });
-  check('the gate is shut until everything is ticked', await gate.isDisabled());
+  /* §7: a checklist, not a lock — the way through is open from the start and
+     the screen says how many lines are still unticked. */
+  const gate = page.getByRole('button', { name: 'מעבר להכנה' });
+  check('the way through is open from the start', await gate.isEnabled());
   check(
-    'and it says why',
-    (await page.getByText(/כדי להתחיל, סמנו את כל חומרי הגלם/).count()) === 1,
+    'and it says how many lines are left',
+    (await page.getByText(/נותרו/).count()) >= 1,
   );
   for (let i = 0; i < n; i += 1) await boxes.nth(i).check();
   await page.waitForTimeout(300);
-  check('ticking everything opens it', await gate.isEnabled());
+  check(
+    'ticking everything changes what it says',
+    (await page.getByRole('button', { name: 'הכול מוכן' }).count()) === 1 &&
+      (await page.getByText(/נותרו/).count()) === 0,
+  );
   await page.screenshot({ path: path.join(SHOTS, 'demo-mise.png') });
-  await gate.click();
+  /* `gate` matched the label while lines were unticked; with the list
+     complete the same control reads "הכול מוכן — מתחילים בהכנה". */
+  await page.getByRole('button', { name: 'הכול מוכן' }).click();
   await page.waitForTimeout(700);
   check('the steps open', (await page.locator('[class*="stepText"]').count()) === 1);
 

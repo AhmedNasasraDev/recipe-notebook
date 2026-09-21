@@ -28,6 +28,15 @@ import {
 } from '../test/fakeSupabase.js';
 import { AppUnderTest, emptyDb, project } from '../test/appHarness.js';
 
+/*
+  The editor is a wizard since §6: one stage on screen at a time (פרטים ·
+  חומרי גלם · אופן ההכנה · סיכום), with the draft held above the stages so
+  nothing typed is lost between them. `toStage` is how a person moves —
+  the stepper at the top of the form, by its accessible name.
+*/
+const toStage = (u: ReturnType<typeof userEvent.setup>, n: 1 | 2 | 3 | 4) =>
+  u.click(screen.getByRole('button', { name: new RegExp(`^שלב ${n} `) }));
+
 beforeEach(() => {
   resetFakeIds();
   resetMemoryIdb();
@@ -230,7 +239,9 @@ describe('requirement 4 — food cost on the recipe page', () => {
 
     const view = render(<AppUnderTest client={p.client} route="/recipe/cookies/edit" />);
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
-    // The sale price lives behind the editor's "תשואה ותמחור" disclosure.
+    // The sale price lives on the summary stage, behind the editor's
+    // "תשואה ותמחור" disclosure.
+    await toStage(user, 4);
     await user.click(screen.getByText('פרטים מקצועיים'));
     await user.type(screen.getByLabelText('מחיר מכירה'), '20');
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
@@ -356,8 +367,10 @@ describe('a version keeps its historical meaning after a price change', () => {
     //    price that was in force when it was taken.
     let view = render(<AppUnderTest client={p.client} route="/recipe/brioche/edit" />);
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
+    await toStage(user, 2);
     await user.clear(screen.getByLabelText('כמות של חמאה 82%'));
     await user.type(screen.getByLabelText('כמות של חמאה 82%'), '260');
+    await toStage(user, 4);
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
     await screen.findByRole('heading', { name: 'בריוש' });
 
