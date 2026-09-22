@@ -37,6 +37,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { BackControl } from '../components/BackLink.js';
+import { PrintIcon } from '../shell/Icons.js';
 import { compute, formatGrams, formatNis } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
@@ -117,6 +118,15 @@ export function OrderScreen() {
     <div className={styles.wrap}>
       <div className={`${styles.topBar} noprint`}>
         <BackControl>המתכון</BackControl>
+        <button
+          type="button"
+          className={styles.printTop}
+          onClick={() => window.print()}
+          aria-label="הדפסה או שמירה כ-PDF של דף ההזמנה"
+        >
+          <PrintIcon />
+          <span>הדפסה / שמירה כ-PDF</span>
+        </button>
         <span className={styles.topTitle}>דף הזמנה</span>
       </div>
 

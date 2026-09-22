@@ -191,3 +191,71 @@
   outline: 2px solid var(--c-green);
   outline-offset: 2px;
 }
+
+/* ── the outcome of the last action: a sentence, and a way to do it again ── */
+.notice {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--r-control);
+  background: var(--c-green-bg, #eaf4ee);
+  color: var(--c-green-ink, #1e6b4c);
+  font-size: var(--fs-secondary);
+  line-height: 1.5;
+}
+
+.error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-in-group);
+}
+
+.errorText {
+  flex: 1 1 200px;
+  margin: 0;
+}
+
+.retryBtn {
+  flex: none;
+  min-height: var(--hit-min);
+  padding: 0 16px;
+  border: 1px solid currentColor;
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: inherit;
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.retryBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.replaceBtn,
+.replaceBtnOff {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--hit-min);
+  padding: 0 14px;
+  margin-block-start: 6px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-size: var(--fs-secondary);
+  cursor: pointer;
+}
+
+.replaceBtnOff {
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+.replaceBtn:focus-within {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}

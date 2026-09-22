@@ -61,10 +61,14 @@ export function PasteScreen() {
     // A first guess at the name: the first line, if it did not become a
     // quantity or a step. The user can change it, and must if it is wrong.
     if (!name.trim()) {
+      /* The parser now reads a leading title line as the name (`meta.name`),
+         so it is neither an ingredient nor a step. The older guess is kept as
+         a fallback for a paste whose first line is something else. */
       const first = text.split('\n').map((l) => l.trim()).find(Boolean) ?? '';
       const looksLikeIngredient = result.ingredients.some((i) => i.name === first);
       const looksLikeStep = result.steps.some((s) => s.text === first);
-      if (first && !looksLikeIngredient && !looksLikeStep && first.length <= 60) {
+      if (result.meta.name) setName(result.meta.name);
+      else if (first && !looksLikeIngredient && !looksLikeStep && first.length <= 60) {
         setName(first);
       }
     }
@@ -106,6 +110,13 @@ export function PasteScreen() {
           ...(s.temp ? { temp: s.temp } : {}),
           ...(s.minutes === '' ? {} : { minutes: s.minutes }),
         })),
+        /* The batch facts the text stated — weights before and after the
+           oven, the count — go into the recipe's own fields, never into the
+           ingredient list (see `parseLocal`). */
+        ...(result.meta.weightBefore ? { weightBefore: result.meta.weightBefore } : {}),
+        ...(result.meta.weightAfter ? { weightAfter: result.meta.weightAfter } : {}),
+        ...(result.meta.unitWeight ? { unitWeight: result.meta.unitWeight } : {}),
+        ...(result.meta.yieldUnits ? { yieldUnits: result.meta.yieldUnits } : {}),
       } as unknown as Recipe;
       const saved = await saveRecipe(recipe, { versionNote: 'יובא מהדבקת טקסט' });
       navigate(`/recipe/${saved.id}`, { replace: true });

@@ -6,7 +6,7 @@
 // not see. The tests that matter are the ones about those states.
 
 import { describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, renderHook, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RecipeImages } from './RecipeImages.js';
 import { useRecipeImages } from './useRecipeImages.js';
@@ -39,6 +39,8 @@ function show(
     removeRejects?: string;
     onAdd?(file: File | Blob): void;
     onRemove?(image: RecipeImage): void;
+    /** hand a replace api to the hook, so "החלפת התמונה" is offered */
+    withReplace?: boolean;
   } = {},
 ) {
   const list = vi.fn(async () => {
@@ -69,8 +71,20 @@ function show(
     same list twice, once for the hero and once for this gallery — so the
     tests drive the pair together, which is exactly how the screen uses them.
   */
+  const replace = vi.fn(async (img: RecipeImage, file: File | Blob) => {
+    opts.onAdd?.(file);
+    return image({ id: 'swapped', storagePath: 'r1/swapped.webp', ord: img.ord });
+  });
   function Harness() {
-    const state = useRecipeImages({ recipeId: 'r1', list, add, remove, sign, focus });
+    const state = useRecipeImages({
+      recipeId: 'r1',
+      list,
+      add,
+      remove,
+      sign,
+      focus,
+      ...(opts.withReplace ? { replace } : {}),
+    });
     return (
       <RecipeImages
         state={state}
@@ -80,7 +94,7 @@ function show(
     );
   }
   render(<Harness />);
-  return { list, add, remove, sign };
+  return { list, add, remove, sign, replace };
 }
 
 const pick = () => new File([new Uint8Array(10)], 'photo.jpg', { type: 'image/jpeg' });
@@ -279,5 +293,132 @@ describe('an expired signed URL', () => {
 
     img.dispatchEvent(new Event('error'));
     await waitFor(() => expect(sign).toHaveBeenCalledTimes(2));
+  });
+});
+
+/*
+  ── QA 22.09.2026: the save chain must not lose what the person gave it ────
+
+  Ahmed's list for the photograph: a clear sentence when it lands, the input
+  kept on screen when it fails, a "נסה שוב" that does not send anyone back to
+  the file chooser, no second upload from a double tap, and no upload at all
+  to a recipe that has no id yet.
+*/
+describe('the outcome of an upload is said, and a failure can be retried', () => {
+  it('says the photo was saved once it lands', async () => {
+    const user = userEvent.setup();
+    show({ images: [] });
+    await screen.findByText('הוספת תמונה');
+    await user.upload(screen.getByLabelText<HTMLInputElement>(/הוספת תמונה/), pick());
+    expect(await screen.findByRole('status')).toHaveTextContent('התמונה נשמרה למתכון.');
+  });
+
+  it('offers "נסה שוב" after a failure and retries with the SAME file', async () => {
+    const user = userEvent.setup();
+    const seen: (File | Blob)[] = [];
+    const { add } = show({ images: [], onAdd: (f) => seen.push(f) });
+    add.mockRejectedValueOnce(new Error('אין חיבור לשרת.'));
+    await screen.findByText('הוספת תמונה');
+
+    const file = pick();
+    await user.upload(screen.getByLabelText<HTMLInputElement>(/הוספת תמונה/), file);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/אין חיבור לשרת/);
+
+    await user.click(screen.getByRole('button', { name: 'נסה שוב' }));
+    await waitFor(() => expect(add).toHaveBeenCalledTimes(2));
+    // The second call carries the file that was picked the first time.
+    expect(add.mock.calls[1]?.[1]).toBe(file);
+    expect(await screen.findByRole('status')).toHaveTextContent('התמונה נשמרה למתכון.');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('starts ONE upload for two taps that land before the first returns', async () => {
+    let release: (() => void) | null = null;
+    const add = vi.fn(
+      (_id: string, _file: File | Blob) =>
+        new Promise<RecipeImage>((resolve) => {
+          release = () => resolve(image({ id: 'new' }));
+        }),
+    );
+    const api = {
+      recipeId: 'r1',
+      list: async () => [],
+      add,
+      remove: async () => {},
+      sign: async (p: string) => `blob:signed/${p}`,
+      focus: async (i: RecipeImage) => i,
+    };
+    const { result } = renderHook(() => useRecipeImages(api));
+    await waitFor(() => expect(result.current.load).toBe('ready'));
+    act(() => {
+      result.current.pick(pick());
+      result.current.pick(pick());
+    });
+    expect(add).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      release?.();
+    });
+    await waitFor(() => expect(result.current.images).toHaveLength(1));
+  });
+
+  it('refuses to upload to a recipe that has no id yet, and says so', async () => {
+    const add = vi.fn(async () => image());
+    const api = {
+      recipeId: 'new-copy-abc',
+      list: async () => [],
+      add,
+      remove: async () => {},
+      sign: async (p: string) => `blob:signed/${p}`,
+      focus: async (i: RecipeImage) => i,
+    };
+    const { result } = renderHook(() => useRecipeImages(api));
+    await waitFor(() => expect(result.current.load).toBe('ready'));
+    act(() => result.current.pick(pick()));
+    expect(add).not.toHaveBeenCalled();
+    expect(result.current.error).toMatch(/המתכון עדיין לא נשמר/);
+  });
+
+  it('retries a failed focal-point save with the same point', async () => {
+    const focus = vi
+      .fn(async (img: RecipeImage, at: { x: number; y: number }) => ({ ...img, focalX: at.x, focalY: at.y }))
+      .mockRejectedValueOnce(new Error('שמירת מיקום התמונה נכשלה'));
+    const api = {
+      recipeId: 'r1',
+      list: async () => [image()],
+      add: async () => image(),
+      remove: async () => {},
+      sign: async (p: string) => `blob:signed/${p}`,
+      focus,
+    };
+    const { result } = renderHook(() => useRecipeImages(api));
+    await waitFor(() => expect(result.current.load).toBe('ready'));
+    let ok = true;
+    await act(async () => {
+      ok = await result.current.refocus(image(), { x: 20, y: 80 });
+    });
+    expect(ok).toBe(false);
+    expect(result.current.canRetry).toBe(true);
+    await act(async () => result.current.retry());
+    await waitFor(() => expect(result.current.images[0]?.focalX).toBe(20));
+    expect(focus).toHaveBeenCalledTimes(2);
+    expect(result.current.notice).toBe('מיקום התמונה נשמר.');
+  });
+});
+
+describe('replacing a photo', () => {
+  it('swaps the file behind the photo and keeps its place', async () => {
+    const user = userEvent.setup();
+    const { replace } = show({ images: [image()], withReplace: true });
+    await screen.findByRole('img');
+    await user.upload(screen.getByLabelText<HTMLInputElement>('החלפת התמונה בקובץ אחר'), pick());
+    await waitFor(() => expect(replace).toHaveBeenCalledOnce());
+    expect(await screen.findByRole('img')).toHaveAttribute('src', 'blob:signed/r1/swapped.webp');
+    expect(screen.getByRole('status')).toHaveTextContent('התמונה הוחלפה.');
+  });
+
+  it('is not offered when the repository cannot do it', async () => {
+    show({ images: [image()] });
+    await screen.findByRole('img');
+    expect(screen.queryByLabelText('החלפת התמונה בקובץ אחר')).not.toBeInTheDocument();
   });
 });

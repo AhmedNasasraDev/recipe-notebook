@@ -46,7 +46,7 @@ interface Props {
 }
 
 export function RecipeImages({ state, canWrite, canEdit }: Props) {
-  const { images, load, urls, busy, error } = state;
+  const { images, load, urls, busy, error, notice } = state;
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
   if (load === 'loading') {
@@ -124,6 +124,28 @@ export function RecipeImages({ state, canWrite, canEdit }: Props) {
                 </div>
                 {image.caption && <p className={styles.caption}>{image.caption}</p>}
 
+                {showAdd && state.canReplace && confirmId !== image.id && (
+                  /*
+                    "החלפה": the same picture slot, a different file. The new
+                    object goes up before the old one comes down, so a failed
+                    swap leaves the picture that was there (see the repository).
+                  */
+                  <label className={busy ? styles.replaceBtnOff : styles.replaceBtn}>
+                    {busy ? 'רגע…' : 'החלפת התמונה'}
+                    <input
+                      className="visuallyHidden"
+                      type="file"
+                      accept="image/*"
+                      disabled={busy}
+                      aria-label="החלפת התמונה בקובץ אחר"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        e.target.value = '';
+                        if (file) state.replace(image, file);
+                      }}
+                    />
+                  </label>
+                )}
                 {showAdd &&
                   (confirmId === image.id ? (
                     <div className={styles.confirm} role="group" aria-label="אישור מחיקה">
@@ -162,10 +184,32 @@ export function RecipeImages({ state, canWrite, canEdit }: Props) {
         </ul>
       )}
 
-      {error && (
-        <p className={styles.error} role="alert">
-          {error}
+      {notice && !error && (
+        <p className={styles.notice} role="status">
+          {notice}
         </p>
+      )}
+
+      {error && (
+        <div className={styles.error} role="alert">
+          <p className={styles.errorText}>{error}</p>
+          {/*
+            THE INPUT IS NOT THROWN AWAY. The file that was picked, or the
+            picture that was to go, is still in the hook's state, so this
+            button does the same thing again — a person on a flaky kitchen
+            connection should not have to find the photo a second time.
+          */}
+          {state.canRetry && (
+            <button
+              type="button"
+              className={styles.retryBtn}
+              onClick={() => state.retry()}
+              disabled={busy}
+            >
+              {busy ? 'מנסה שוב…' : 'נסה שוב'}
+            </button>
+          )}
+        </div>
       )}
 
       {showAdd && (

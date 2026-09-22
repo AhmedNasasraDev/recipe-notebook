@@ -209,6 +209,23 @@ ol {
  * allergen and HACCP chips carry meaning in their colour, and a driver that
  * prints them grey still prints their text.
  * ───────────────────────────────────────────────────────────────────────────── */
+/*
+  ── PRINTING ────────────────────────────────────────────────────────────────
+
+  Two kinds of screen print. The label and the order sheet ARE paper: they
+  live outside the app frame, and `.noprint` hides their controls.
+
+  The recipe (and Cook Mode, which shows the same recipe) print through a
+  SHEET: `features/print/RecipePrintSheet` renders the recipe as a document
+  into `#print-root`, a sibling of the app's root, and marks the body while
+  it is mounted. On paper the application — which scrolls inside a
+  fixed-height frame and would otherwise print one clipped page — is hidden
+  and the sheet is the whole page. On screen the sheet is never shown.
+*/
+#print-root {
+  display: none;
+}
+
 @media print {
   .noprint {
     display: none !important;
@@ -217,6 +234,16 @@ ol {
   html,
   body {
     background: #fff;
+    height: auto;
+    overflow: visible;
+  }
+
+  body.has-print-sheet #root {
+    display: none !important;
+  }
+
+  body.has-print-sheet #print-root {
+    display: block;
   }
 
   @page {

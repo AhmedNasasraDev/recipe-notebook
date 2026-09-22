@@ -63,21 +63,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ClockIcon, ThermometerIcon } from '../shell/Icons.js';
+import { CancelIcon, ClockIcon, PauseIcon, PlayIcon, PrintIcon, ThermometerIcon } from '../shell/Icons.js';
+import { RecipePrintSheet } from '../features/print/RecipePrintSheet.js';
 import { BackControl } from '../components/BackLink.js';
 import { compute } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
 import { readScale, SCALE_MODE_TEXT } from '../features/recipe/scaleLink.js';
 import { rowLabel } from '../features/recipe/rowLabel.js';
+import { formatGrams } from '@recipe-notebook/engine';
 import { useFullscreen } from '../features/cook/useFullscreen.js';
 import {
-  miseKeyOf,
   miseSignature,
-  miseState,
+  miseStateOfKeys,
   restoreMise,
   startedFrom,
   toggleMise,
+  weighingRows,
   type MiseTicks,
 } from '../features/cook/mise.js';
 import {
@@ -169,6 +171,13 @@ export function CookScreen() {
 
   const [askOwnTimer, setAskOwnTimer] = useState(false);
   const [ownMinutes, setOwnMinutes] = useState('');
+  /** "הטיימר של שלב 2 בוטל" — said for a few seconds, then gone. */
+  const [cancelledNote, setCancelledNote] = useState<string | null>(null);
+  useEffect(() => {
+    if (cancelledNote === null) return;
+    const id = setTimeout(() => setCancelledNote(null), 5000);
+    return () => clearTimeout(id);
+  }, [cancelledNote]);
   /*
     "Started" is two facts, and keeping them apart is what fixed a real bug.
 
@@ -217,6 +226,13 @@ export function CookScreen() {
     [pricedRecipe, pricedNotebook, scale.factor, prefs],
   );
   const rows = useMemo(() => computed?.rows ?? [], [computed]);
+  /*
+    THE WEIGHING LIST: one line per ingredient, and only ingredients. A
+    repeated ingredient is one line with its weights added; a row that is a
+    fact about the batch ("משקל בצק לפני אפייה") is left off and named under
+    the list. See `weighingRows`.
+  */
+  const weigh = useMemo(() => weighingRows(rows), [rows]);
   /** The ticks are only meaningful at the factor they were taken at. */
   const signature = miseSignature(scale.factor);
 
@@ -361,7 +377,10 @@ export function CookScreen() {
   */
   /* Which stage the screen is on — computed here, above the early returns,
      because the effect below needs it and hooks cannot follow a `return`. */
-  const mise = miseState(rows, ticks);
+  const mise = miseStateOfKeys(
+    weigh.rows.map((w) => w.key),
+    ticks,
+  );
   const started = startedHere || startedFrom(startedSaved, savedAtThisScale);
   useEffect(() => {
     if (!started) return;
@@ -432,6 +451,17 @@ export function CookScreen() {
     the way out of fullscreen), the recipe's name, and "מסך מלא". Written once
     so the two cannot drift.
   */
+  const printSheet = computed ? (
+    <RecipePrintSheet
+      recipe={recipe}
+      computed={computed}
+      factor={scale.factor}
+      scaleText={scaleLine}
+      prefs={prefs}
+      imageUrl={null}
+    />
+  ) : null;
+
   const head = (
     <header className={styles.head}>
       {/* §4/§8: the way out of Cook Mode — the right-hand end of the bar, the
@@ -446,6 +476,17 @@ export function CookScreen() {
         aria-pressed={fs.focus}
       >
         {fs.focus ? 'יציאה ממסך מלא' : 'מסך מלא'}
+      </button>
+      {/* The recipe on paper, from the bench too: the same sheet the recipe
+          page prints, at the scale this preparation is at. */}
+      <button
+        type="button"
+        className={styles.printBtn}
+        onClick={() => window.print()}
+        aria-label="הדפסה או שמירה כ-PDF של המתכון"
+      >
+        <PrintIcon />
+        <span>הדפסה / PDF</span>
       </button>
       {/*
         THE WAY BACK TO THE SCALES.
@@ -491,6 +532,7 @@ export function CookScreen() {
         style={{ '--cook-text-scale': textScale } as CSSProperties}
       >
         {head}
+        {printSheet}
         {fsNote}
 
         <section className={styles.mise} aria-label="הכנת חומרי גלם">
@@ -516,16 +558,19 @@ export function CookScreen() {
           ) : (
             <>
               <ul className={styles.miseList}>
-                {rows.map((row, i) => {
-                  const key = miseKeyOf(row, i);
+                {weigh.rows.map((w) => {
+                  const key = w.key;
                   const on = ticks[key] === true;
                   /*
                     The SAME `rowLabel` the recipe page prints, in grams —
                     which is what a mise en place is. A sub-recipe row comes
                     back as one weight of the base recipe, because that is how
-                    `compute()` returned it.
+                    `compute()` returned it. A merged line prints the sum.
                   */
-                  const label = rowLabel(row, 'g', scale.factor, prefs);
+                  const label =
+                    w.count > 1 && w.g !== null
+                      ? { text: formatGrams(w.g), hint: `מופיע ב-${w.count} שורות במתכון` }
+                      : rowLabel(w.row, 'g', scale.factor, prefs);
                   return (
                     <li key={key}>
                       <label className={on ? styles.miseRowOn : styles.miseRow}>
@@ -536,7 +581,7 @@ export function CookScreen() {
                           onChange={() => setTicks((prev) => toggleMise(prev, key))}
                         />
                         <span className={styles.miseName}>
-                          {row.ing.name || 'רכיב בלי שם'}
+                          {w.name || 'רכיב בלי שם'}
                         </span>
                         <span className={`${styles.miseQty} ltr`}>{label.text}</span>
                         {label.hint !== '' && (
@@ -547,6 +592,12 @@ export function CookScreen() {
                   );
                 })}
               </ul>
+              {weigh.skipped.length > 0 && (
+                <p className={styles.miseSkipped}>
+                  לא נשקלים כאן, כי אינם חומרי גלם: {weigh.skipped.join(' · ')}. הנתונים
+                  האלה שייכים לפרטי המתכון ולדף ההזמנה.
+                </p>
+              )}
             </>
           )}
 
@@ -681,6 +732,7 @@ export function CookScreen() {
       style={{ '--cook-text-scale': textScale } as CSSProperties}
     >
       {head}
+      {printSheet}
       {fsNote}
 
       {/* §14 the progress bar: a segment per step, clickable, green when done */}
@@ -770,6 +822,7 @@ export function CookScreen() {
         */}
         {!timers.has(index) && (
           <div className={styles.timerRow}>
+            <span className={styles.timerIdle}>טיימר לשלב הזה: לא הופעל</span>
             {minutes > 0 && (
               <button
                 type="button"
@@ -848,49 +901,93 @@ export function CookScreen() {
         )}
       </div>
 
-      {/* §14 the parallel timers, visible from every step */}
+      {/*
+        ── THE TIMERS — BIG, LABELLED, AND IN ONE OF FIVE STATES ────────────
+
+        QA 22.09.2026, §5: the clock was body-size text in a strip, which a
+        cook across a bench, or anyone with weaker sight, could not read. The
+        clock is the largest thing on the screen now (and larger still in
+        fullscreen), every control is a word beside its glyph, and the state
+        is written out — פועל, מושהה, הסתיים — as well as coloured, so it is
+        never carried by colour alone. Visible from EVERY step, because the
+        whole point of a parallel timer is that you have walked away from
+        the step that started it.
+      */}
+      {cancelledNote && (
+        <p className={styles.cancelledNote} role="status">
+          {cancelledNote}
+        </p>
+      )}
       {running.length > 0 && (
         <section className={styles.timers} aria-label="טיימרים">
           {running.map(([i, t]) => {
             const v = viewTimer(t, now);
+            const state = v.done ? 'done' : v.running ? 'running' : 'paused';
+            const box =
+              state === 'done'
+                ? styles.timerDone
+                : state === 'paused'
+                  ? styles.timerPaused
+                  : styles.timer;
             return (
-              <div
-                key={i}
-                className={v.done ? styles.timerDone : styles.timer}
-                role={v.done ? 'alert' : 'status'}
-              >
-                <span className={styles.timerStep}>
-                  שלב <span className="ltr">{i + 1}</span>
-                </span>
+              <div key={i} className={box} role={v.done ? 'alert' : 'status'}>
+                <div className={styles.timerHead}>
+                  <span className={styles.timerStep}>
+                    טיימר · שלב <span className="ltr">{i + 1}</span>
+                  </span>
+                  <span className={styles.timerState}>{TIMER_STATE_HE[state]}</span>
+                </div>
                 <span className={`${styles.timerClock} ltr`}>{formatClock(v.leftSec)}</span>
-                <span className={styles.timerActions}>
+                <div className={styles.timerBar} aria-hidden="true">
+                  <span
+                    className={styles.timerBarFill}
+                    style={{ inlineSize: `${Math.round(v.progress * 100)}%` }}
+                  />
+                </div>
+                {v.done ? (
+                  <p className={styles.timerDoneText}>
+                    הזמן נגמר — <span className="ltr">{formatClock(v.totalSec)}</span> חלפו.
+                  </p>
+                ) : (
+                  <p className={styles.timerMeta}>
+                    מתוך <span className="ltr">{formatClock(v.totalSec)}</span>
+                  </p>
+                )}
+                <div className={styles.timerActions}>
                   {!v.done && (
                     <button
                       type="button"
-                      className={styles.timerBtn}
+                      className={styles.timerBtnPrimary}
                       onClick={() =>
                         setTimers((prev) => new Map(prev).set(i, toggleTimer(t, Date.now())))
                       }
                       aria-label={`${v.running ? 'עצירת' : 'המשך'} הטיימר של שלב ${i + 1}`}
                     >
+                      {v.running ? <PauseIcon /> : <PlayIcon />}
                       {v.running ? 'עצירה' : 'המשך'}
                     </button>
                   )}
                   <button
                     type="button"
                     className={styles.timerBtn}
-                    onClick={() =>
+                    onClick={() => {
                       setTimers((prev) => {
                         const next = new Map(prev);
                         next.delete(i);
                         return next;
-                      })
-                    }
+                      });
+                      setCancelledNote(
+                        v.done
+                          ? `הטיימר של שלב ${i + 1} נסגר.`
+                          : `הטיימר של שלב ${i + 1} בוטל.`,
+                      );
+                    }}
                     aria-label={`מחיקת הטיימר של שלב ${i + 1}`}
                   >
-                    מחיקה
+                    <CancelIcon />
+                    {v.done ? 'סגירה' : 'ביטול'}
                   </button>
-                </span>
+                </div>
               </div>
             );
           })}
@@ -908,10 +1005,14 @@ export function CookScreen() {
         <details className={styles.ings}>
           <summary className={styles.ingsSummary}>הרכיבים</summary>
           <ul className={styles.ingsList}>
-            {rows.map((row, i) => (
-              <li key={miseKeyOf(row, i)} className={styles.ingRow}>
-                <span>{row.ing.name || 'רכיב בלי שם'}</span>
-                <span className="ltr">{rowLabel(row, 'g', scale.factor, prefs).text}</span>
+            {weigh.rows.map((w) => (
+              <li key={w.key} className={styles.ingRow}>
+                <span>{w.name || 'רכיב בלי שם'}</span>
+                <span className="ltr">
+                  {w.count > 1 && w.g !== null
+                    ? formatGrams(w.g)
+                    : rowLabel(w.row, 'g', scale.factor, prefs).text}
+                </span>
               </li>
             ))}
           </ul>
@@ -978,6 +1079,12 @@ export function CookScreen() {
     </div>
   );
 }
+
+const TIMER_STATE_HE = {
+  running: 'פועל',
+  paused: 'מושהה',
+  done: 'הסתיים',
+} as const;
 
 const KIND_HE: Record<string, string> = {
   active: 'עבודה',

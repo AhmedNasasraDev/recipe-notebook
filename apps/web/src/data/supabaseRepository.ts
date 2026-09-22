@@ -823,15 +823,131 @@ export function createSupabaseRepository({
         reload.
       */
       if (error) {
-        const missing = (error as { code?: string }).code === '42703';
+        /*
+          Two spellings of the same fact. Postgres says 42703 when a column
+          is named in SQL; PostgREST says PGRST204 when the column is named in
+          the request body and is not in its schema cache — which is what an
+          UPDATE from supabase-js produces. QA on the real project (22.09.2026)
+          got PGRST204 and the generic sentence, because only 42703 was
+          checked; the person then had no way to know the fix was a migration.
+        */
+        const code = (error as { code?: string }).code;
+        const missing = code === '42703' || code === 'PGRST204';
         throw new SupabaseRepositoryError(
           missing
             ? 'שמירת מיקום התמונה דורשת עדכון של מסד הנתונים (מיגרציה 0038) שעדיין לא הוחל.'
             : 'שמירת מיקום התמונה נכשלה',
-          error,
+          missing ? null : error,
         );
       }
       return imageFromRow(data);
+    },
+
+    async replaceRecipeImage(image: RecipeImage, file: File | Blob): Promise<RecipeImage> {
+      requireOnline('החלפת תמונה');
+      /*
+        Upload the new picture first, under a fresh path, and only then take
+        the old one down: a failure at any point before the last step leaves
+        the recipe with the picture it had. The new row inherits the place,
+        the caption and the focal point, so the hero does not jump.
+      */
+      const converted = await convertToWebp(file);
+      if (!converted.ok) {
+        throw new SupabaseRepositoryError(convertErrorText(converted), null);
+      }
+      const path = imagePath(image.recipeId);
+      const upload = await client.storage
+        .from(RECIPE_IMAGE_BUCKET)
+        .upload(path, converted.blob, { contentType: 'image/webp', upsert: false });
+      if (upload.error) {
+        throw new SupabaseRepositoryError('העלאת התמונה נכשלה', upload.error);
+      }
+      const { data, error } = await client
+        .from('recipe_images')
+        .insert({
+          recipe_id: image.recipeId,
+          storage_path: path,
+          width: converted.width,
+          height: converted.height,
+          bytes: converted.bytes,
+          caption: image.caption,
+          ord: image.ord,
+          focal_x: image.focalX,
+          focal_y: image.focalY,
+          created_by: userId,
+        })
+        .select('*')
+        .single();
+      if (error) {
+        await client.storage.from(RECIPE_IMAGE_BUCKET).remove([path]);
+        throw new SupabaseRepositoryError('שמירת התמונה נכשלה', error);
+      }
+      // The old picture: object, then row. A failure here is reported, but
+      // the new picture is already in place and is what the recipe shows.
+      const removed = await client.storage.from(RECIPE_IMAGE_BUCKET).remove([image.storagePath]);
+      if (removed.error) {
+        throw new SupabaseRepositoryError(
+          'התמונה החדשה נשמרה, אבל מחיקת הישנה נכשלה',
+          removed.error,
+        );
+      }
+      const gone = await client.from('recipe_images').delete().eq('id', image.id);
+      if (gone.error) {
+        throw new SupabaseRepositoryError(
+          'התמונה החדשה נשמרה, אבל מחיקת הישנה נכשלה',
+          gone.error,
+        );
+      }
+      return imageFromRow(data);
+    },
+
+    async copyRecipeImages(
+      fromRecipeId: string,
+      toRecipeId: string,
+    ): Promise<{ copied: number; failed: number }> {
+      requireOnline('העתקת תמונות');
+      const { data, error } = await client
+        .from('recipe_images')
+        .select('*')
+        .eq('recipe_id', fromRecipeId)
+        .order('ord', { ascending: true })
+        .order('created_at', { ascending: true });
+      if (error) throw new SupabaseRepositoryError('טעינת התמונות נכשלה', error);
+      let copied = 0;
+      let failed = 0;
+      for (const row of (data ?? []) as RecipeImageRow[]) {
+        /*
+          A server-side copy: the bytes never come down to the phone. The
+          storage policies decide it — reading the source needs the original
+          to be ours, writing the target needs the copy to be ours — which is
+          exactly the ownership "שכפול" has by construction.
+        */
+        const path = imagePath(toRecipeId);
+        const copy = await client.storage.from(RECIPE_IMAGE_BUCKET).copy(row.storage_path, path);
+        if (copy.error) {
+          failed += 1;
+          continue;
+        }
+        const inserted = await client.from('recipe_images').insert({
+          recipe_id: toRecipeId,
+          storage_path: path,
+          width: row.width,
+          height: row.height,
+          bytes: row.bytes,
+          caption: row.caption,
+          ord: row.ord,
+          focal_x: row.focal_x ?? 50,
+          focal_y: row.focal_y ?? 50,
+          created_by: userId,
+        });
+        if (inserted.error) {
+          await client.storage.from(RECIPE_IMAGE_BUCKET).remove([path]);
+          failed += 1;
+          continue;
+        }
+        copied += 1;
+      }
+      return { copied, failed };
     },
 
     /*

@@ -598,7 +598,14 @@ describe('§7 Mise en place — the checklist, and the way through it', () => {
       that starts the preparation is still the one that says so.
     */
     const buttons = screen.getAllByRole('button');
-    expect(buttons.map((b) => b.textContent)).toEqual(['יציאה', 'מסך מלא', 'מעבר להכנה']);
+    // The print action joined the head (QA 22.09.2026, §2); it leads to
+    // paper, not to the steps, so the one way THROUGH is still the gate.
+    expect(buttons.map((b) => b.textContent)).toEqual([
+      'יציאה',
+      'מסך מלא',
+      'הדפסה / PDF',
+      'מעבר להכנה',
+    ]);
     expect(screen.queryAllByRole('link')).toHaveLength(0);
   });
 

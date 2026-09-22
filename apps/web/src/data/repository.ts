@@ -325,6 +325,22 @@ export interface RecipeImageRepository {
    */
   setRecipeImageFocus(image: RecipeImage, focal: { x: number; y: number }): Promise<RecipeImage>;
   /**
+   * Swaps the picture behind an existing photo for a new file, keeping its
+   * place, its caption and its focal point. The new object goes up first, so
+   * a failure leaves the old picture exactly where it was.
+   */
+  replaceRecipeImage(image: RecipeImage, file: File | Blob): Promise<RecipeImage>;
+  /**
+   * Gives a recipe its own copies of another recipe's photographs — new
+   * objects, new rows — so the two can be edited and deleted independently.
+   * Used by "שכפול": a duplicate that shared the original's files would lose
+   * its pictures the moment the original deleted them.
+   *
+   * Best effort per picture: the result says how many landed and how many
+   * did not, and the caller decides what to tell the person.
+   */
+  copyRecipeImages(fromRecipeId: string, toRecipeId: string): Promise<{ copied: number; failed: number }>;
+  /**
    * A time-limited URL for a private object, or null when one cannot be had.
    * Null is a real answer: the photo exists and this caller may not see it.
    */

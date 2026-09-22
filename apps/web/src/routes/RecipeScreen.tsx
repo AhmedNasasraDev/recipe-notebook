@@ -29,7 +29,9 @@ import { PanCard } from '../features/recipe/PanCard.js';
 import { PrivateNote } from '../features/recipe/PrivateNote.js';
 import { RecipeImages } from '../features/images/RecipeImages.js';
 import { useRecipeImages } from '../features/images/useRecipeImages.js';
-import { DeleteIcon, EditIcon, MenuDotsIcon } from '../shell/Icons.js';
+import { DeleteIcon, EditIcon, MenuDotsIcon, PrintIcon } from '../shell/Icons.js';
+import { RecipePrintSheet } from '../features/print/RecipePrintSheet.js';
+import { SCALE_MODE_TEXT } from '../features/recipe/scaleLink.js';
 import { BackControl } from '../components/BackLink.js';
 import {
   forgetRecipeLocally,
@@ -105,6 +107,8 @@ export function RecipeScreen() {
     raiseError,
     addRecipeImage,
     removeRecipeImage,
+    replaceRecipeImage,
+    copyRecipeImages,
     setRecipeImageFocus,
     signedImageUrl,
   } = useAppData();
@@ -163,6 +167,7 @@ export function RecipeScreen() {
     list: listRecipeImages,
     add: addRecipeImage,
     remove: removeRecipeImage,
+    replace: replaceRecipeImage,
     sign: signedImageUrl,
     focus: setRecipeImageFocus,
   });
@@ -425,7 +430,31 @@ export function RecipeScreen() {
         existingNames: recipes.map((r) => String(r.name ?? '')),
       });
       const saved = await saveRecipe(copy);
-      navigate(`/recipe/${saved.id}`);
+      /*
+        THE COPY GETS ITS OWN PICTURES. New objects and new rows, so deleting
+        or replacing a photo on either recipe leaves the other exactly as it
+        was — a duplicate that pointed at the original's files would lose its
+        pictures the day the original was cleaned up (QA 22.09.2026, §4).
+        Best effort: the recipe is already saved, and a photo that did not
+        copy is said, not hidden.
+      */
+      try {
+        const { failed } = await copyRecipeImages(recipe.id, saved.id);
+        if (failed > 0) {
+          raiseError(
+            failed === 1
+              ? 'המתכון שוכפל, אבל תמונה אחת לא הועתקה. אפשר להעלות אותה מחדש בעותק.'
+              : `המתכון שוכפל, אבל ${failed} תמונות לא הועתקו. אפשר להעלות אותן מחדש בעותק.`,
+          );
+        }
+      } catch (e) {
+        raiseError(
+          e instanceof Error
+            ? `המתכון שוכפל, אבל התמונות לא הועתקו: ${e.message}`
+            : 'המתכון שוכפל, אבל התמונות לא הועתקו.',
+        );
+      }
+      navigate(`/recipe/${saved.id}`, { state: { saved: 'created' } });
     } catch (e) {
       setActionError(e instanceof Error ? e.message : 'השכפול נכשל.');
     } finally {
@@ -543,14 +572,87 @@ export function RecipeScreen() {
         photograph, which is most of them. The cost is one reflow on the
         recipes that do have one — see `useRecipeImages`.
       */}
-      <div className={heroUrl ? styles.hero : styles.heroBare}>
-        {heroUrl && (
-          /*
+      {/*
+        ── THE TOP BAR: STICKY, ABOVE THE PICTURE ──────────────────────────
+
+        It used to float on the photograph. It sits above it now and stays
+        at the top while the page scrolls, because it carries the one action
+        Ahmed asked to be reachable from anywhere on the recipe — "הדפסה /
+        שמירה כ-PDF" — beside the way back and the menu (QA 22.09.2026, §2).
+        The button is a word and a glyph, never the glyph alone.
+      */}
+      <div className={styles.topBar}>
+        {/* RTL: back is on the RIGHT — first in the source — and its chevron
+            points the way back, which in Hebrew is rightwards. */}
+        <BackControl>המחברת</BackControl>
+        <button
+          type="button"
+          className={styles.printTop}
+          onClick={() => window.print()}
+          aria-label="הדפסה או שמירה כ-PDF של המתכון"
+        >
+          <PrintIcon />
+          <span className={styles.printTopText}>הדפסה / שמירה כ-PDF</span>
+        </button>
+        <button
+          type="button"
+          className={styles.menuBtn}
+          aria-expanded={showMore}
+          aria-controls="recipe-more"
+          aria-label="עוד פעולות על המתכון"
+          onClick={() => {
+            const next = !showMore;
+            setShowMore(next);
+            if (next) {
+              // After the panel has opened, so the scroll lands on the
+              // panel and not on where it used to end.
+              requestAnimationFrame(() =>
+                // Optional call: `scrollIntoView` does not exist in jsdom,
+                // and a button that opens a panel must not throw in a test.
+                moreRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' }),
+              );
+            }
+          }}
+        >
+          <MenuDotsIcon />
+        </button>
+      </div>
+
+      {/* What the printer gets: the recipe as a document, outside the app
+          frame. Nothing of it shows on screen. */}
+      <RecipePrintSheet
+        recipe={recipe}
+        computed={computed}
+        factor={factor}
+        scaleText={
+          factor === 1
+            ? SCALE_MODE_TEXT.recipe
+            : `${SCALE_MODE_TEXT[scaleMode]} · ×${factor.toFixed(2)}`
+        }
+        prefs={prefs}
+        imageUrl={heroUrl}
+      />
+
+      {/*
+        ── the hero ───────────────────────────────────────────────────────
+
+        The handoff asks for a wide photograph at the top, about a quarter to
+        a third of the screen, scrolling with the page — and, when the recipe
+        has no photograph, NO enormous empty rectangle.
+
+        While the list is still loading nothing is reserved either: a skeleton
+        the height of a hero would flash on every recipe that has no
+        photograph, which is most of them. The cost is one reflow on the
+        recipes that do have one — see `useRecipeImages`.
+      */}
+      {heroUrl && (
+        <div className={styles.hero}>
+          {/*
             DECORATIVE, DELIBERATELY. This is the SAME photograph the gallery
             below the steps lists, with its caption and its alt text. Naming it
             twice makes a screen reader read one picture twice on every recipe;
             the hero is the visual presentation of something already announced.
-          */
+          */}
           <img
             className={styles.heroPhoto}
             src={heroUrl}
@@ -565,75 +667,46 @@ export function RecipeScreen() {
             style={{ objectPosition: `${focus.x}% ${focus.y}%` }}
             onError={() => heroImage && imageState.broken(heroImage)}
           />
-        )}
-        {/*
-          ── THE POSITION CONTROL, ON THE PICTURE ITSELF ──────────────────
+          {/*
+            ── THE POSITION CONTROL, ON THE PICTURE ITSELF ──────────────────
 
-          Only for somebody who may edit this recipe — Ahmed: "אפשר שינוי
-          תמונה רק למי שמורשה לערוך את המתכון" — and only when there IS a
-          picture, because there is nothing to position otherwise.
+            Only for somebody who may edit this recipe — Ahmed: "אפשר שינוי
+            תמונה רק למי שמורשה לערוך את המתכון" — and only when there IS a
+            picture, because there is nothing to position otherwise.
 
-          Pressing anywhere on the band sets the focal point to that spot, and
-          the picture moves under the finger immediately: the preview is the
-          hero, at the size it really is, rather than a thumbnail that lies
-          about the crop. Then "שמירה" writes it and "ביטול" throws the draft
-          away and the stored point comes back.
+            Pressing anywhere on the band sets the focal point to that spot, and
+            the picture moves under the finger immediately: the preview is the
+            hero, at the size it really is, rather than a thumbnail that lies
+            about the crop. Then "שמירה" writes it and "ביטול" throws the draft
+            away and the stored point comes back.
 
-          A press and not a drag: a drag over the band would fight the page's
-          own vertical scroll on a phone, and on a photograph 170-300px tall a
-          tap is precise enough — the whole adjustment is which THIRD of the
-          picture you want.
-        */}
-        {heroUrl && canEditPhoto && draftFocus !== null && (
-          <button
-            type="button"
-            className={styles.focusTarget}
-            aria-label="בחירת מיקום התמונה — לחיצה על הנקודה שתישאר במרכז"
-            onClick={(e) => {
-              const box = e.currentTarget.getBoundingClientRect();
-              setDraftFocus({
-                x: ((e.clientX - box.left) / box.width) * 100,
-                y: ((e.clientY - box.top) / box.height) * 100,
-              });
-            }}
-          >
-            <span
-              className={styles.focusDot}
-              style={{ insetInlineStart: `${focus.x}%`, insetBlockStart: `${focus.y}%` }}
-              aria-hidden="true"
-            />
-          </button>
-        )}
-        <div className={styles.topBar}>
-          {/* RTL: back is on the RIGHT — first in the source — and its chevron
-              points the way back, which in Hebrew is rightwards. */}
-          <BackControl tone="paper">
-            המחברת
-          </BackControl>
-          <button
-            type="button"
-            className={styles.menuBtn}
-            aria-expanded={showMore}
-            aria-controls="recipe-more"
-            aria-label="עוד פעולות על המתכון"
-            onClick={() => {
-              const next = !showMore;
-              setShowMore(next);
-              if (next) {
-                // After the panel has opened, so the scroll lands on the
-                // panel and not on where it used to end.
-                requestAnimationFrame(() =>
-                  // Optional call: `scrollIntoView` does not exist in jsdom,
-                  // and a button that opens a panel must not throw in a test.
-                  moreRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' }),
-                );
-              }
-            }}
-          >
-            <MenuDotsIcon />
-          </button>
+            A press and not a drag: a drag over the band would fight the page's
+            own vertical scroll on a phone, and on a photograph 170-300px tall a
+            tap is precise enough — the whole adjustment is which THIRD of the
+            picture you want.
+          */}
+          {canEditPhoto && draftFocus !== null && (
+            <button
+              type="button"
+              className={styles.focusTarget}
+              aria-label="בחירת מיקום התמונה — לחיצה על הנקודה שתישאר במרכז"
+              onClick={(e) => {
+                const box = e.currentTarget.getBoundingClientRect();
+                setDraftFocus({
+                  x: ((e.clientX - box.left) / box.width) * 100,
+                  y: ((e.clientY - box.top) / box.height) * 100,
+                });
+              }}
+            >
+              <span
+                className={styles.focusDot}
+                style={{ insetInlineStart: `${focus.x}%`, insetBlockStart: `${focus.y}%` }}
+                aria-hidden="true"
+              />
+            </button>
+          )}
         </div>
-      </div>
+      )}
 
       {/*
         ── THE ROW THAT OPENS, SAVES AND CANCELS ──────────────────────────
@@ -698,6 +771,17 @@ export function RecipeScreen() {
                 ביטול
               </button>
             </>
+          )}
+          {/*
+            A failed save is said HERE, beside the button that was pressed,
+            and the panel stays open with the chosen point still in it: the
+            person picked a spot, and an error is no reason to throw that
+            away. "נסה שוב" writes the same point again.
+          */}
+          {imageState.error && draftFocus !== null && (
+            <span className={styles.focusError} role="alert">
+              {imageState.error}
+            </span>
           )}
         </div>
       )}
@@ -1047,6 +1131,9 @@ export function RecipeScreen() {
           the sheet itself.
         */}
         <div className={styles.printRow} role="group" aria-label="פלטים להדפסה">
+          <button type="button" className={styles.printLink} onClick={() => window.print()}>
+            הדפסת המתכון
+          </button>
           <Link to={`/recipe/${recipe.id}/label`} className={styles.printLink}>
             תווית מוצר
           </Link>

@@ -248,6 +248,16 @@ export function createLocalDemoRepository(): Repository {
       );
     },
 
+    async replaceRecipeImage(): Promise<never> {
+      throw new WriteNotAllowedError(
+        'תמונות מתכון נשמרות בשרת, ובהתקנה הזאת אין חיבור לשרת.',
+      );
+    },
+
+    async copyRecipeImages() {
+      return { copied: 0, failed: 0 };
+    },
+
     async signedImageUrl() {
       return null;
     },

@@ -548,58 +548,188 @@
 }
 
 /* ── the parallel timers ──────────────────────────────────────────────── */
+/*
+  QA 22.09.2026, §5. The clock is the biggest thing on the screen: 48px in
+  the ordinary view, 72px and up in fullscreen, tabular digits so the numbers
+  do not jitter. Each timer is a card in one of three colours AND one of
+  three written states — running, paused, finished — so the state is never
+  colour alone. The controls are 52px tall, a glyph beside a word.
+*/
 .timers {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap-tight);
+  display: grid;
+  gap: var(--gap-in-group);
 }
 
 .timer,
+.timerPaused,
 .timerDone {
   display: flex;
-  align-items: center;
-  gap: var(--gap-in-group);
-  padding: 8px 12px;
-  border: 1px solid var(--c-cook-line);
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 2px solid var(--c-cook-line);
   border-radius: var(--r-card);
   background: var(--c-cook-raised);
 }
 
-/* §14: "מסומנים באדום בסיום" */
+.timerPaused {
+  border-color: var(--c-amber);
+  background: var(--c-amber-bg);
+}
+
+/* §14: "מסומנים באדום בסיום" — and said in words in `.timerState`. */
 .timerDone {
   border-color: var(--c-red);
   background: var(--c-red-bg);
 }
 
+.timerHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--gap-in-group);
+}
+
 .timerStep {
-  font-size: var(--fs-meta-lg);
-  color: var(--c-cook-muted);
-  flex: none;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-cook-text);
+}
+
+.timerState {
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--c-cook-text);
+}
+
+.timerDone .timerState {
+  color: var(--c-red);
+}
+
+.timerPaused .timerState {
+  color: var(--c-amber);
 }
 
 .timerClock {
-  font-size: var(--fs-body-lg);
+  display: block;
+  font-family: var(--font-display);
+  font-size: calc(48px * var(--cook-text-scale));
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
   color: var(--c-cook-text);
-  flex: 1;
+  text-align: center;
+}
+
+.timerDone .timerClock {
+  color: var(--c-red);
+}
+
+.timerBar {
+  block-size: 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--c-cook-line) 70%, transparent);
+  overflow: hidden;
+}
+
+.timerBarFill {
+  display: block;
+  block-size: 100%;
+  background: var(--c-cook-accent);
+  transition: inline-size 250ms linear;
+}
+
+.timerDone .timerBarFill {
+  background: var(--c-red);
+}
+
+.timerMeta,
+.timerDoneText {
+  margin: 0;
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+  text-align: center;
+}
+
+.timerDoneText {
+  font-size: var(--fs-body-lg);
+  font-weight: 700;
+  color: var(--c-red);
 }
 
 .timerActions {
   display: flex;
-  gap: var(--gap-tight);
-  flex: none;
+  gap: var(--gap-in-group);
 }
 
-.timerBtn {
-  min-height: var(--hit-compact);
-  padding: 0 12px;
-  border: 1px solid var(--c-cook-line);
+.timerBtn,
+.timerBtnPrimary {
+  flex: 1;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 2px solid var(--c-cook-text);
   border-radius: var(--r-control);
-  background: transparent;
+  background: var(--c-cook-raised);
   color: var(--c-cook-text);
   font-family: var(--font-body);
-  font-size: var(--fs-meta-lg);
+  font-size: var(--fs-body);
+  font-weight: 600;
   cursor: pointer;
+}
+
+.timerBtnPrimary {
+  background: var(--c-cook-text);
+  color: var(--c-cook-raised);
+  border-color: var(--c-cook-text);
+}
+
+.timerBtn:focus-visible,
+.timerBtnPrimary:focus-visible {
+  outline: 3px solid var(--c-cook-accent);
+  outline-offset: 2px;
+}
+
+/* The step's own row, before a timer exists on it. */
+.timerIdle {
+  flex: 1 1 100%;
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+}
+
+.cancelledNote {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-select);
+  color: var(--c-cook-text);
+  font-size: var(--fs-secondary);
+}
+
+/* Fullscreen: the clock is the centrepiece of the display. */
+.focus .timerClock {
+  font-size: clamp(72px, 14vw, 128px);
+}
+
+.focus .timerBtn,
+.focus .timerBtnPrimary {
+  min-height: 60px;
+  font-size: var(--fs-body-lg);
+}
+
+/* Lines that are not weighed — said under the list, never dropped silently. */
+.miseSkipped {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-secondary);
+  line-height: 1.6;
 }
 
 /* ── the ingredients, on demand ───────────────────────────────────────── */
@@ -723,6 +853,31 @@
   font-family: var(--font-body);
   font-size: var(--fs-meta-lg);
   cursor: pointer;
+}
+
+/* "הדפסה / PDF" in the head: same height as the fullscreen toggle, filled so
+   it reads as the action it is, a glyph beside its word. */
+.printBtn {
+  flex: none;
+  min-height: var(--hit-compact);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-inline: 12px;
+  border: 1px solid var(--c-cook-accent);
+  border-radius: var(--r-control);
+  background: var(--c-cook-accent);
+  color: var(--c-cook-on-accent);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.printBtn:focus-visible {
+  outline: 2px solid var(--c-cook-text);
+  outline-offset: 2px;
 }
 
 .fsBtn[aria-pressed='true'] {
@@ -955,7 +1110,16 @@
   }
 
   .timer,
+  .timerPaused,
   .timerDone {
-    padding-block: 6px;
+    padding-block: 8px;
+  }
+
+  .timerClock {
+    font-size: calc(40px * var(--cook-text-scale));
+  }
+
+  .focus .timerClock {
+    font-size: clamp(56px, 10vh, 96px);
   }
 }

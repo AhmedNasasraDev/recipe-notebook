@@ -272,6 +272,30 @@ export function fakeRepository(opts: FakeRepoOptions = {}): Repository {
       images = images.map((i) => (i.id === image.id ? next : i));
       return next;
     },
+    replaceRecipeImage: async (image: RecipeImage, file: File | Blob) => {
+      if (opts.onAddRecipeImage) opts.onAddRecipeImage(image.recipeId, file);
+      const next: RecipeImage = {
+        ...image,
+        id: `img-${images.length + 1}`,
+        storagePath: `${image.recipeId}/img-${images.length + 1}.webp`,
+        createdAt: new Date().toISOString(),
+      };
+      images = images.map((i) => (i.id === image.id ? next : i));
+      return next;
+    },
+    /* Each copy is a new row with a new path, so a test can delete one side
+       and see the other untouched — the property "שכפול" promises. */
+    copyRecipeImages: async (fromRecipeId: string, toRecipeId: string) => {
+      const source = images.filter((i) => i.recipeId === fromRecipeId);
+      const copies = source.map((i, n) => ({
+        ...i,
+        id: `img-${images.length + n + 1}`,
+        recipeId: toRecipeId,
+        storagePath: `${toRecipeId}/img-${images.length + n + 1}.webp`,
+      }));
+      images = [...images, ...copies];
+      return { copied: copies.length, failed: 0 };
+    },
     signedImageUrl: async (path: string) =>
       opts.signedUrlFails === true ? null : `blob:signed/${path}`,
 

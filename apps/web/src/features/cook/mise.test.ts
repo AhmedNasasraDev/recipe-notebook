@@ -153,3 +153,48 @@ describe('a start that was saved earlier', () => {
     expect(startedFrom(true, false)).toBe(false);
   });
 });
+
+/*
+  ── QA 22.09.2026, §3: the weighing list shows each ingredient once, and
+     nothing that is not an ingredient ──────────────────────────────────────
+*/
+import { miseStateOfKeys, weighingRows } from './mise.js';
+
+describe('weighingRows', () => {
+  const recipe: Recipe = {
+    id: 'r',
+    name: 'בריוש',
+    ingredients: [
+      { id: 'a', name: 'חמאה', qty: 200, unit: 'g' },
+      { id: 'b', name: 'חלב', qty: 100, unit: 'g' },
+      { id: 'c', name: 'חמאה', qty: 50, unit: 'g' },
+      { id: 'd', name: 'משקל בצק לפני אפייה', qty: 1200, unit: 'g' },
+      { id: 'e', name: 'תפוקה', qty: 12, unit: 'g' },
+    ],
+    steps: [{ id: 's', text: 'ללוש' }],
+  } as unknown as Recipe;
+  const rows = compute(recipe, [recipe], { prefs: defaultPrefs() }).rows;
+
+  it('merges a repeated ingredient into one line with the weights added', () => {
+    const { rows: list } = weighingRows(rows);
+    const butter = list.find((l) => l.name === 'חמאה');
+    expect(butter?.g).toBe(250);
+    expect(butter?.count).toBe(2);
+    expect(list.filter((l) => l.name === 'חמאה')).toHaveLength(1);
+    // The tick belongs to the first row's identity, so a saved tick survives.
+    expect(butter?.key).toBe('a');
+  });
+
+  it('leaves the batch facts off the list and names them', () => {
+    const { rows: list, skipped } = weighingRows(rows);
+    expect(list.map((l) => l.name)).toEqual(['חמאה', 'חלב']);
+    expect(skipped).toEqual(['משקל בצק לפני אפייה', 'תפוקה']);
+  });
+
+  it('counts readiness over the reduced list', () => {
+    const { rows: list } = weighingRows(rows);
+    const keys = list.map((l) => l.key);
+    expect(miseStateOfKeys(keys, {})).toEqual({ total: 2, ready: 0, complete: false });
+    expect(miseStateOfKeys(keys, { a: true, b: true })).toEqual({ total: 2, ready: 2, complete: true });
+  });
+});

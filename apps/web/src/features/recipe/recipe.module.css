@@ -29,7 +29,6 @@
 .hero {
   position: relative;
   margin-inline: calc(var(--pad-card) * -1);
-  margin-block-start: -12px;
   overflow: hidden;
   border-end-start-radius: var(--r-card-lg);
   border-end-end-radius: var(--r-card-lg);
@@ -45,26 +44,61 @@
   object-fit: cover;
 }
 
-.hero .topBar {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline: 0;
-  padding: 10px var(--pad-card);
-}
-
-.heroBare {
-  display: contents;
-}
-
 /*
-  The bar itself: back on the RIGHT (first in the source, which in RTL is the
-  right-hand end) and the menu on the left, as the handoff draws it.
+  The bar: back on the RIGHT (first in the source, which in RTL is the
+  right-hand end), the print action in the middle, the menu on the left.
+  Sticky at the top of the scroller, on the page's own background, so the
+  print action never scrolls away (QA 22.09.2026, §2). The negative margins
+  and matching padding make it span the frame edge to edge like the hero.
 */
 .topBar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--gap-in-group);
+  margin-inline: calc(var(--pad-card) * -1);
+  margin-block-start: -12px;
+  padding: 8px var(--pad-card);
+  background: var(--c-app-bg);
+}
+
+/* "הדפסה / שמירה כ-PDF": the one primary control in the bar. Filled, tall
+   enough for a thumb, a glyph beside its word. */
+.printTop {
+  flex: 1 1 auto;
+  min-height: var(--hit-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--c-green);
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-surface);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.printTop:hover {
+  background: var(--c-green-ink);
+}
+
+.printTop:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 2px;
+}
+
+.printTopText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /*
@@ -1614,4 +1648,16 @@
 .focusOk {
   font-size: var(--fs-meta);
   color: var(--c-green-ink);
+}
+
+/* The focal-point save that did not land: said beside the buttons, in the
+   error colour, with the panel still open. */
+.focusError {
+  flex: 1 1 100%;
+  padding: 8px 12px;
+  border-radius: var(--r-control);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-secondary);
+  line-height: 1.5;
 }

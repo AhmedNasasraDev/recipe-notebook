@@ -136,6 +136,7 @@ export function RecipeEditScreen() {
     listRecipeImages,
     addRecipeImage,
     removeRecipeImage,
+    replaceRecipeImage,
     setRecipeImageFocus,
     signedImageUrl,
   } = useAppData();
@@ -176,6 +177,7 @@ export function RecipeEditScreen() {
     list: listRecipeImages,
     add: addRecipeImage,
     remove: removeRecipeImage,
+    replace: replaceRecipeImage,
     sign: signedImageUrl,
     focus: setRecipeImageFocus,
   });

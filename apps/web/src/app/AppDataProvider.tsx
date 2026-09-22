@@ -128,6 +128,8 @@ export interface AppData {
   listRecipeImages(recipeId: string): Promise<RecipeImage[]>;
   addRecipeImage(recipeId: string, file: File | Blob): Promise<RecipeImage>;
   removeRecipeImage(image: RecipeImage): Promise<void>;
+  replaceRecipeImage(image: RecipeImage, file: File | Blob): Promise<RecipeImage>;
+  copyRecipeImages(fromRecipeId: string, toRecipeId: string): Promise<{ copied: number; failed: number }>;
   /** Moves the focal point — two numbers, no re-upload. Migration 0038. */
   setRecipeImageFocus(image: RecipeImage, focal: { x: number; y: number }): Promise<RecipeImage>;
   signedImageUrl(storagePath: string): Promise<string | null>;
@@ -472,6 +474,14 @@ export function AppDataProvider({
     (image: RecipeImage) => repo.removeRecipeImage(image),
     [repo],
   );
+  const replaceRecipeImage = useCallback(
+    (image: RecipeImage, file: File | Blob) => repo.replaceRecipeImage(image, file),
+    [repo],
+  );
+  const copyRecipeImages = useCallback(
+    (from: string, to: string) => repo.copyRecipeImages(from, to),
+    [repo],
+  );
   const signedImageUrl = useCallback(
     (path: string) => repo.signedImageUrl(path),
     [repo],
@@ -534,6 +544,8 @@ export function AppDataProvider({
       recipeThumbs,
       addRecipeImage,
       removeRecipeImage,
+      replaceRecipeImage,
+      copyRecipeImages,
       setRecipeImageFocus,
       signedImageUrl,
       listPlans,
@@ -575,6 +587,8 @@ export function AppDataProvider({
       recipeThumbs,
       addRecipeImage,
       removeRecipeImage,
+      replaceRecipeImage,
+      copyRecipeImages,
       setRecipeImageFocus,
       signedImageUrl,
       listPlans,

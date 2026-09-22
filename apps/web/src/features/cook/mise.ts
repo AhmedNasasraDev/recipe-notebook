@@ -120,3 +120,70 @@ export function restoreMise(
 export function startedFrom(savedStarted: boolean, sameScale: boolean): boolean {
   return savedStarted && sameScale;
 }
+
+/*
+  ── THE WEIGHING LIST, AS IT SHOULD READ ────────────────────────────────────
+
+  QA 22.09.2026, §3. Two things a cook found on the list that do not belong:
+
+    · the same ingredient twice — a pasted recipe that named the butter in
+      the ingredients AND in an instruction ("מוסיפים 250 גרם חמאה") kept
+      both as rows; the parser is fixed, and recipes saved before the fix
+      still carry the pair. Here they become ONE line with the two weights
+      added, marked so the cook knows the recipe lists it twice.
+    · lines that are facts about the batch, not ingredients — "משקל בצק
+      לפני אפייה 1200 גרם" — which cannot be weighed out. They are left off
+      the list and NAMED under it, so nothing disappears silently.
+*/
+export interface WeighRow {
+  /** the tick key: the first row's identity */
+  key: string;
+  name: string;
+  /** grams for this batch; null when a row could not be resolved */
+  g: number | null;
+  /** how many recipe rows this line stands for */
+  count: number;
+  /** the first of them — for the label, the note, the provenance */
+  row: ComputedRow;
+}
+
+const NOT_AN_INGREDIENT = /^(?:משקל|פחת|תפוקה|סה"כ|סה״כ|סך\s*הכל|סך\s*הכול)(?=\s|:|$)/u;
+
+const normalName = (name: unknown): string =>
+  String(name ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+
+export function weighingRows(rows: readonly ComputedRow[]): {
+  rows: WeighRow[];
+  skipped: string[];
+} {
+  const out: WeighRow[] = [];
+  const skipped: string[] = [];
+  const byName = new Map<string, WeighRow>();
+  rows.forEach((row, i) => {
+    const name = String(row.ing.name ?? '').trim();
+    if (NOT_AN_INGREDIENT.test(name)) {
+      skipped.push(name);
+      return;
+    }
+    const norm = normalName(name);
+    const seen = norm === '' ? undefined : byName.get(norm);
+    /* Two weights add; a row nobody could weigh stays on its own line. */
+    if (seen && seen.g !== null && row.g !== null) {
+      seen.g += row.g;
+      seen.count += 1;
+      return;
+    }
+    const line: WeighRow = { key: miseKeyOf(row, i), name, g: row.g, count: 1, row };
+    out.push(line);
+    if (norm !== '' && !seen) byName.set(norm, line);
+  });
+  return { rows: out, skipped };
+}
+
+/** `miseState` for a list that is already reduced to its tick keys. */
+export function miseStateOfKeys(keys: readonly string[], ticks: MiseTicks): MiseState {
+  const total = keys.length;
+  let ready = 0;
+  for (const k of keys) if (ticks[k] === true) ready += 1;
+  return { total, ready, complete: total > 0 && ready === total };
+}

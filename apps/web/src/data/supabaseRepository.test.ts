@@ -428,3 +428,46 @@ describe('a brand-new account starts empty (requirement 6)', () => {
     expect(cats.length).toBeGreaterThan(0);
   });
 });
+
+/*
+  ── QA 22.09.2026, finding 1: "שמירת מיקום התמונה נכשלה (PGRST204)" ─────────
+
+  The real project had not had migration 0038 applied, so the two focal
+  columns did not exist. PostgREST reports a column named in the request body
+  that is missing from its schema cache as PGRST204 — not as Postgres's
+  42703, which was the only code the repository recognised — and the person
+  got a generic sentence with a code in it instead of the one fact that
+  explains the failure. Pinned with a client that answers exactly what the
+  real one answered.
+*/
+describe('a focal point on a database without migration 0038', () => {
+  it('names the missing migration for PGRST204 as well as for 42703', async () => {
+    for (const code of ['PGRST204', '42703']) {
+      const client = {
+        from: () => ({
+          update: () => ({
+            eq: () => ({
+              select: () => ({
+                single: async () => ({
+                  data: null,
+                  error: { code, message: "Could not find the 'focal_x' column of 'recipe_images'" },
+                }),
+              }),
+            }),
+          }),
+        }),
+        storage: { from: () => ({}) },
+      } as unknown as TypedSupabaseClient;
+      const repo = createSupabaseRepository({ client, userId: USER_A });
+      await expect(
+        repo.setRecipeImageFocus(
+          {
+            id: 'i1', recipeId: 'ra1', storagePath: 'ra1/i1.webp', ord: 0, width: 1, height: 1,
+            bytes: 1, caption: '', createdAt: 'x', focalX: 50, focalY: 50,
+          },
+          { x: 10, y: 10 },
+        ),
+      ).rejects.toThrow(/מיגרציה 0038/);
+    }
+  });
+});

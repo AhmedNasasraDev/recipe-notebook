@@ -19,6 +19,28 @@
 }
 
 
+.printTop {
+  min-height: var(--hit-min);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--c-green);
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-surface);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.printTop:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 2px;
+}
+
 .topTitle {
   margin-inline-start: auto;
   font-size: var(--fs-secondary);

@@ -109,6 +109,9 @@ import {
   LayoutGrid,
   MessageCircle,
   NotebookText,
+  Pause,
+  Play,
+  Printer,
   Search,
   Send,
   Settings,
@@ -117,6 +120,7 @@ import {
   Trash2,
   Users,
   Wheat,
+  X,
   type LucideIcon,
 } from 'lucide-react';
 import type { CSSProperties, JSX } from 'react';
@@ -196,6 +200,14 @@ export const ThermometerIcon = inlineGlyph(Thermometer);
 
 /** The time chip, and the timer controls. */
 export const ClockIcon = inlineGlyph(Clock);
+
+/** The timer's own controls — each one beside its word, never alone. */
+export const PauseIcon = inlineGlyph(Pause);
+export const PlayIcon = inlineGlyph(Play);
+export const CancelIcon = inlineGlyph(X);
+
+/** "הדפסה / שמירה כ-PDF" on the recipe, the order sheet and Cook Mode. */
+export const PrintIcon = inlineGlyph(Printer);
 
 /**
  * A spoon — כף and כפית on the measuring-tools screen.
