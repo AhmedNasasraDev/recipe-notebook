@@ -375,12 +375,27 @@ for (const a of arrivals) {
   amount, which is why the corrected cue list is recomputed from the holds
   rather than guessed.
 */
+/*
+  A hold names its caption by `line` — the 1-based number in the DELIVERED
+  film, which is what the narration is measured against — and is mapped here
+  onto the recorder's own index, skipping the captions the cut dropped. The
+  first version took the number as the recorder's index, and every hold after
+  the cut landed three captions off.
+*/
+const keptIndex = [];
+for (let i = 0; i < take.cues.length; i += 1) if (!(cut && cut.cues.includes(i))) keptIndex.push(i);
 const holds = fs.existsSync(HOLDS)
-  ? JSON.parse(fs.readFileSync(HOLDS, 'utf8')).filter((h) => h.seconds > 0.05)
+  ? JSON.parse(fs.readFileSync(HOLDS, 'utf8'))
+      .filter((h) => h.seconds > 0.05)
+      .map((h) => {
+        const cue = keptIndex[(h.line ?? h.cue + 1) - 1];
+        if (cue === undefined) throw new Error(`hold on line ${h.line} — the film has ${keptIndex.length}`);
+        return { cue, seconds: h.seconds, line: h.line ?? h.cue + 1 };
+      })
   : [];
 if (holds.length > 0) {
   console.log(
-    `\nholds: ${holds.map((h) => `${h.cue + 1}+${h.seconds.toFixed(2)}s`).join(' ')} ` +
+    `\nholds: ${holds.map((h) => `${h.line}+${h.seconds.toFixed(2)}s`).join(' ')} ` +
       `(${holds.reduce((s2, h) => s2 + h.seconds, 0).toFixed(1)}s added)`,
   );
 }
@@ -511,8 +526,11 @@ if (holds.length > 0) {
   /* Hold points in the timeline AFTER the cut, which is the timeline the
      expression below sees. */
   const shiftOf = (t) => (cut && t >= cut.to ? t - (cut.to - cut.from) : t);
+  /* A third of a second INTO the window, not at its first frame: a caption
+     that opens on a page load opens on a white flash, and freezing that would
+     hold the flash. By 0.3s the screen and its caption are both settled. */
   const terms = holds
-    .map((h) => `gte(T,${shiftOf(startOfCue(h.cue)).toFixed(3)})*${h.seconds.toFixed(3)}`)
+    .map((h) => `gte(T,${(shiftOf(startOfCue(h.cue)) + 0.3).toFixed(3)})*${h.seconds.toFixed(3)}`)
     .join('+');
   steps.push(`[${chain}]setpts='PTS+(${terms})/TB',fps=25[heldv]`);
   chain = 'heldv';
