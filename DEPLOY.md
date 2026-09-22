@@ -26,7 +26,7 @@ npm run build              # packages/engine ואז apps/web → apps/web/dist
 
 1. **Authentication → URL Configuration**
    - `Site URL` = כתובת הפריסה (למשל `https://app.example.com`). היום הערך הוא `http://127.0.0.1:5199`, ולכן קישור אימות המייל מפנה למחשב המקומי ומשתמש אמיתי לא יכול לאשר את החשבון מהטלפון.
-   - `Redirect URLs`: אותה כתובת, וגם כתובות preview אם יש.
+   - `Redirect URLs`: אותה כתובת, וגם כתובת ה-Preview מ-Vercel (סעיף 4) לצורך בדיקות — בלי למחוק את הקיימות.
 2. **Authentication → Providers → Email**: `Confirm email` דלוק (כפי שהוא היום). אם רוצים הרשמה בלי אימות, לכבות — ההודעות באפליקציה מטפלות בשני המצבים.
 3. **Authentication → Password**: מומלץ להדליק `Leaked password protection` (אזהרת אבטחה פתוחה של Supabase).
 4. **Edge Function `send-group-invite`** — לפרוס מחדש את הגרסה שבמאגר (`supabase/functions/send-group-invite/index.ts`), שמוסיפה מענה ל-preflight ו-CORS. בלי זה הדפדפן חוסם את הקריאה ואף מייל הזמנה לא נשלח:
@@ -38,12 +38,13 @@ npm run build              # packages/engine ואז apps/web → apps/web/dist
 6. **Storage**: buckets פרטיים `recipe-images` (webp, עד 2MB) ו-`avatars` (webp, עד 512KB) קיימים.
 7. **אזהרות אבטחה של Supabase שלא טופלו** (החלטה של בעל הפרויקט): 9 פונקציות `SECURITY DEFINER` ניתנות להרצה למשתמשים מחוברים (`approve_group_join`, `course_rank`, `group_rank`, `group_roster`, `lesson_rank`, `redeem_group_invite`, `reject_group_invite`, `request_group_join`, `shares_group_with`). כולן בודקות `auth.uid()` והרשאות בגוף הפונקציה; הן מכוונות. אפשר להשאיר, ואפשר לצמצם בהמשך.
 
-## 4. פריסה (Vercel, לדוגמה)
+## 4. פריסה (Vercel)
 
-- Framework: Vite · Root: `apps/web` · Build: `npm run build` (מהשורש) · Output: `apps/web/dist`.
-- Rewrite: כל נתיב → `/index.html`.
-- Environment Variables: השניים מסעיף 2 (Production, וגם Preview אם רוצים).
-- אין במאגר `vercel.json` או GitHub Actions — **דחיפה למאגר אינה מפרסמת כלום** עד שמחברים את הפרויקט ידנית.
+- ההגדרות נמצאות ב-`vercel.json` בשורש המאגר: Framework Vite, Install `npm ci`, Build `npm run build` (בונה קודם את המנוע ואז את האפליקציה), Output `apps/web/dist`, ו-rewrite של כל נתיב ל-`/index.html`. Root Directory של הפרויקט ב-Vercel נשאר **שורש המאגר** (לא `apps/web`), אחרת המנוע לא נבנה.
+- Environment Variables: השניים מסעיף 2 (Preview, ו-Production כשמפרסמים).
+- **Preview פרטי** (22.09.2026): הפרויקט `recipe-notebook-preview` ב-Vercel, עם Vercel Authentication על כל הפריסות. הוא **אינו מקושר** למאגר ב-GitHub, ולכן **דחיפה למאגר אינה מפרסמת כלום**; כל פריסה נוצרת ידנית מ-commit מסוים. אין ב-Vercel פריסת Production של האפליקציה האמיתית.
+- לפני פרסום לציבור: לחבר את המאגר לפרויקט (Settings → Git), להגדיר את `main` כענף Production, ולהעביר את משתני הסביבה גם ל-Production. אחרי החיבור, כל דחיפה ל-`main` תפרסם.
+- קישור אימות המייל חוזר לכתובת שממנה נרשמו (`emailRedirectTo` = origin), בתנאי שהכתובת רשומה ב-Redirect URLs של Supabase; אחרת Supabase נופל ל-Site URL.
 
 ## 5. בדיקה אחרי הפרסום (10 דקות)
 

@@ -207,9 +207,18 @@ export function AuthProvider({
   const signUp = useCallback(
     async (email: string, password: string): Promise<SignUpOutcome> => {
       if (!client) throw new AuthError('אין חיבור לשרת, ולכן לא ניתן ליצור חשבון.');
+      /*
+        The confirmation link returns to the origin the person signed up from
+        (a preview deployment, the published app, a local dev server), not to
+        the project's single Site URL. Supabase honours it only when the origin
+        is in Authentication → URL Configuration → Redirect URLs, and falls
+        back to the Site URL otherwise — so this never makes a link worse, and
+        it is what lets a preview deployment be tested end to end.
+      */
       const { data, error } = await client.auth.signUp({
         email: email.trim(),
         password,
+        options: typeof window === 'undefined' ? undefined : { emailRedirectTo: window.location.origin },
       });
       if (error) throw new AuthError(error.message);
 
