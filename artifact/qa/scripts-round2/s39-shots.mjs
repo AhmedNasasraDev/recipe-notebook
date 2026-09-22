@@ -1,0 +1,22 @@
+import { launch, BASE, sleep, shot, check, results, DESK } from './drv.mjs';
+import fs from 'node:fs';
+const id = fs.readFileSync('brioche-id.txt', 'utf8').trim();
+const { browser, page } = await launch({ storageState: 'state-qa1.json' });
+await page.goto(BASE + `/recipe/${id}/cook`); await page.waitForSelector('li label', { timeout: 20000 });
+await page.getByRole('button', { name: /מעבר להכנה|מתחילים בהכנה/ }).click(); await sleep(600);
+const head = await page.evaluate(() => { const h = document.querySelector('header'); const r = h.getBoundingClientRect(); const kids = [...h.children].map((c) => { const b = c.getBoundingClientRect(); return { t: (c.getAttribute('aria-label') || c.textContent).trim().slice(0, 14), l: Math.round(b.left), r: Math.round(b.right) }; }); return { w: innerWidth, kids }; });
+check('H01', 'cook head: every control fully inside the viewport (wraps instead of clipping)', head.kids.every((k) => k.l >= 0 && k.r <= head.w), JSON.stringify(head));
+await shot(page, 'W28-cook-steps-phone');
+await page.setViewportSize({ width: 820, height: 1180 }); await sleep(500); await shot(page, 'W29-cook-tablet');
+await page.goto(BASE + `/recipe/${id}`); await page.waitForSelector('main', { timeout: 20000 }); await sleep(2500); await shot(page, 'W30-recipe-tablet');
+await page.setViewportSize(DESK); await sleep(500);
+await page.goto(BASE + `/recipe/${id}/cook`); await page.waitForSelector('header', { timeout: 20000 }); await sleep(1000); await shot(page, 'W31-cook-desktop');
+// the printed sheet, as the browser lays it out for paper
+await page.goto(BASE + `/recipe/${id}`); await page.waitForSelector('main', { timeout: 20000 }); await page.waitForSelector('img[aria-hidden="true"]', { timeout: 15000 }).catch(() => {}); await sleep(500);
+await page.emulateMedia({ media: 'print' }); await page.setViewportSize({ width: 794, height: 1123 });
+await page.evaluate(() => window.dispatchEvent(new Event('beforeprint'))); await sleep(800);
+await page.screenshot({ path: '/home/user/recipe-notebook/artifact/qa/shots-real/W32-print-sheet.png', fullPage: true });
+await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+await page.emulateMedia({ media: 'screen' });
+console.log(JSON.stringify(results.filter(r => r.pass === false)));
+await browser.close();
