@@ -84,7 +84,21 @@ interface InviteRow {
   groups: { name: string } | null;
 }
 
-const JSON_HEADERS = { 'Content-Type': 'application/json' };
+/*
+  CORS. The browser calls this function from the app's own origin, and a
+  cross-origin call is preceded by an OPTIONS preflight that the function
+  must answer — without it, every call from the app failed in the browser
+  before reaching this code ("No 'Access-Control-Allow-Origin' header"), and
+  no invitation email was ever sent (QA 22.09.2026). The wildcard origin is
+  safe here: the request still carries the caller's own JWT, and the read
+  below is decided by row-level security, not by the origin.
+*/
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+const JSON_HEADERS = { 'Content-Type': 'application/json', ...CORS_HEADERS };
 
 /** One reply shape for everything, so no branch can leak by being different. */
 function reply(body: Record<string, unknown>, status = 200): Response {
@@ -165,6 +179,7 @@ function escapeHtml(value: string): string {
 }
 
 Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (req.method !== 'POST') return reply({ sent: false, reason: 'method not allowed' }, 405);
 
   const authorization = req.headers.get('Authorization') ?? '';

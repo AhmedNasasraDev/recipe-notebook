@@ -21,7 +21,7 @@
 // hands it out will look, and does not decorate a student's page with a string
 // they have no use for.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { BackControl } from '../components/BackLink.js';
 import { ChatIcon, ChevronIcon, LessonsIcon } from '../shell/Icons.js';
@@ -55,6 +55,9 @@ export function GroupScreen() {
   const [publishTo, setPublishTo] = useState<string | null>(null);
   const [publishRecipe, setPublishRecipe] = useState('');
 
+  /** one repair per mount — React's development double-invoke must not write two codes */
+  const healedCode = useRef(false);
+
   const load = useCallback(async () => {
     try {
       let detail = await api.getGroup(groupId);
@@ -63,7 +66,14 @@ export function GroupScreen() {
         none. Whoever may manage the group gives it one, once, on the way in;
         a student sees no code either way.
       */
-      if (detail && detail.code === null && can(detail.myRole, 'perms') && detail.joinBy.includes('code')) {
+      if (
+        detail &&
+        detail.code === null &&
+        can(detail.myRole, 'perms') &&
+        detail.joinBy.includes('code') &&
+        !healedCode.current
+      ) {
+        healedCode.current = true;
         try {
           await api.updateGroup(groupId, { code: generateJoinCode() });
           detail = (await api.getGroup(groupId)) ?? detail;
