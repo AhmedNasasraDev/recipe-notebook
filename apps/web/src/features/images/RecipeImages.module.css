@@ -230,7 +230,9 @@
 }
 
 .retryBtn:disabled {
-  opacity: 0.6;
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
   cursor: default;
 }
 

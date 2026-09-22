@@ -387,3 +387,79 @@
     background: var(--c-white);
   }
 }
+
+/* ── the quantity control and the two blocks (QA 22.09.2026, §6) ──────── */
+.pickTabs {
+  display: flex;
+  gap: var(--gap-tight);
+}
+
+.pickTab,
+.pickTabOn {
+  flex: 1;
+  min-height: var(--hit-min);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  cursor: pointer;
+}
+
+.pickTabOn {
+  border-color: var(--c-green);
+  background: var(--c-select);
+  font-weight: 600;
+}
+
+.noQty {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-secondary);
+  line-height: 1.6;
+}
+
+.blocks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--gap-in-group);
+}
+
+.block,
+.blockEmpty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  padding: 10px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+}
+
+.blockEmpty {
+  border-style: dashed;
+}
+
+.blockTitle {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+  color: var(--c-muted);
+}
+
+.blockNote {
+  margin: 0;
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+
+@media print {
+  .blocks {
+    grid-template-columns: 1fr 1fr;
+  }
+}

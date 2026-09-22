@@ -8,8 +8,13 @@
 // The scale arriving through the URL is the design decision worth testing
 // directly — it is what makes the printed sheet reproducible.
 
-import { describe, expect, it } from 'vitest';
-import { screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { memoryIdb, resetMemoryIdb } from '../test/memoryIdb.js';
+
+// The order details are kept in the device mirror, which is idb-keyval.
+vi.mock('idb-keyval', () => memoryIdb());
+
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { defaultPrefs, type Recipe } from '@recipe-notebook/engine';
 import { OrderScreen } from './OrderScreen.js';
@@ -74,6 +79,10 @@ function show(
   });
 }
 
+beforeEach(() => {
+  resetMemoryIdb();
+});
+
 describe('the quantities are the ones for THIS order', () => {
   it('uses the recipe quantities when the link carries no scale', async () => {
     show();
@@ -93,8 +102,8 @@ describe('the quantities are the ones for THIS order', () => {
     show({ query: '?mode=units&v=6' });
     const sheet = await screen.findByLabelText('דף ההזמנה');
     expect(sheet).toHaveTextContent('3 ק"ג');
-    expect(screen.getByLabelText('פרטי ההזמנה')).toHaveTextContent(/לפי מספר יחידות/);
-    expect(screen.getByLabelText('פרטי ההזמנה')).toHaveTextContent(/×3/);
+    expect(screen.getByLabelText('כמות לייצור')).toHaveTextContent(/לפי מספר יחידות/);
+    expect(screen.getByLabelText('כמות לייצור')).toHaveTextContent(/×3/);
   });
 
   it('scales by final weight', async () => {
@@ -183,9 +192,24 @@ describe('the order details', () => {
     expect(sheet).toHaveTextContent('1042');
   });
 
-  it('says plainly that they are not saved', async () => {
+  it('says plainly where they are kept, and that the account does not hold them', async () => {
     show();
-    expect(await screen.findByText(/אינם נשמרים במערכת/)).toBeInTheDocument();
+    expect(await screen.findByText(/נשמרים במכשיר הזה בלבד/)).toBeInTheDocument();
+    expect(screen.getByText(/אינם נשמרים בחשבון/)).toBeInTheDocument();
+  });
+
+  it('keeps the details on this device across a reload of the sheet', async () => {
+    const user = userEvent.setup();
+    const first = show();
+    await screen.findByLabelText('דף ההזמנה');
+    await user.type(screen.getByLabelText('שם הלקוח'), 'דנה לוי');
+    await user.type(screen.getByLabelText('מספר הזמנה'), '1042');
+    first.unmount();
+
+    show();
+    const sheet = await screen.findByLabelText('דף ההזמנה');
+    await waitFor(() => expect(sheet).toHaveTextContent('דנה לוי'));
+    expect(screen.getByLabelText('מספר הזמנה')).toHaveValue('1042');
   });
 
   it('puts the note to the client on the sheet', async () => {
@@ -281,5 +305,86 @@ describe('what the sheet carries and what it does not', () => {
   it('says so when the recipe is not in the notebook', async () => {
     show({ id: 'nope' });
     expect(await screen.findByText('המתכון הזה לא נמצא במחברת.')).toBeInTheDocument();
+  });
+});
+
+/*
+  ── QA 22.09.2026, §6: the base recipe and the order are two different things ──
+*/
+describe('the base recipe and the order are kept apart', () => {
+  it('with no quantity chosen, says so and shows nothing as if it were ordered', async () => {
+    show();
+    const sheet = await screen.findByLabelText('דף ההזמנה');
+    expect(screen.getByLabelText('כמות לייצור')).toHaveTextContent(
+      'לא הוגדרה כמות לייצור. יש לבחור כמה יחידות או אצוות להכין כדי לחשב את ההזמנה.',
+    );
+    expect(sheet).toHaveTextContent('המתכון הבסיסי — אצווה אחת');
+    expect(sheet).toHaveTextContent('תפוקה בסיסית');
+    expect(sheet).toHaveTextContent('2 יחידות');
+    expect(sheet).toHaveTextContent('משקל ליחידה');
+    expect(sheet).toHaveTextContent('700 גר');
+    expect(sheet).not.toHaveTextContent('יחידות להזמנה');
+    expect(sheet).not.toHaveTextContent('מספר אצוות');
+    expect(sheet).toHaveTextContent('אצווה אחת (כמו במתכון)');
+  });
+
+  it('20 units: ten batches, the total weight, and the ingredients ×10', async () => {
+    show({ query: '?mode=units&v=20' });
+    const sheet = await screen.findByLabelText('דף ההזמנה');
+    expect(sheet).toHaveTextContent('יחידות להזמנה');
+    expect(sheet).toHaveTextContent('20 יחידות');
+    expect(sheet).toHaveTextContent('10 אצוות');
+    expect(sheet).toHaveTextContent('משקל כולל לייצור');
+    expect(sheet).toHaveTextContent('17.2 ק"ג'); // 1720 g × 10
+    expect(sheet).toHaveTextContent('10 ק"ג'); // flour 1000 g × 10
+  });
+
+  it('half a batch', async () => {
+    show({ query: '?mode=batches&v=0.5' });
+    const sheet = await screen.findByLabelText('דף ההזמנה');
+    expect(sheet).toHaveTextContent('0.5 אצוות');
+    expect(sheet).toHaveTextContent('500 גר'); // flour
+    expect(sheet).toHaveTextContent('1 יחידות');
+  });
+
+  it('a double batch', async () => {
+    show({ query: '?mode=batches&v=2' });
+    const sheet = await screen.findByLabelText('דף ההזמנה');
+    expect(sheet).toHaveTextContent('2 אצוות');
+    expect(sheet).toHaveTextContent('2 ק"ג');
+    expect(sheet).toHaveTextContent('4 יחידות');
+  });
+
+  it('a recipe with no yield can still be ordered in batches, and never in units', async () => {
+    const noYield = { ...BREAD, id: 'plain', name: 'בלי תפוקה', yieldUnits: '', unitWeight: '' } as Recipe;
+    show({ id: 'plain', recipes: [noYield], query: '?mode=batches&v=2' });
+    const sheet = await screen.findByLabelText('דף ההזמנה');
+    expect(sheet).toHaveTextContent('2 אצוות');
+    expect(sheet).toHaveTextContent('2 ק"ג');
+    expect(sheet).not.toHaveTextContent('יחידות להזמנה');
+    // The base block states the batch weight, since there is no unit count.
+    expect(sheet).toHaveTextContent('תפוקה בסיסית');
+    expect(sheet).toHaveTextContent('1.72 ק"ג');
+  });
+
+  it('the quantity control writes the link, so the sheet and the URL agree', async () => {
+    const user = userEvent.setup();
+    show();
+    await screen.findByLabelText('דף ההזמנה');
+    await user.click(screen.getByRole('button', { name: 'אצוות' }));
+    await user.type(screen.getByLabelText('אצוות'), '3');
+    const sheet = screen.getByLabelText('דף ההזמנה');
+    await waitFor(() => expect(sheet).toHaveTextContent('3 אצוות'));
+    expect(sheet).toHaveTextContent('3 ק"ג');
+    expect(screen.getByLabelText('כמות לייצור')).not.toHaveTextContent(/לא הוגדרה כמות/);
+  });
+
+  it('refuses a quantity that is not a positive number, and says which sheet it shows', async () => {
+    const user = userEvent.setup();
+    show();
+    await screen.findByLabelText('דף ההזמנה');
+    await user.type(screen.getByLabelText('יחידות'), '0');
+    expect(await screen.findByRole('alert')).toHaveTextContent(/מספר גדול מאפס/);
+    expect(screen.getByLabelText('דף ההזמנה')).toHaveTextContent('אצווה אחת (כמו במתכון)');
   });
 });

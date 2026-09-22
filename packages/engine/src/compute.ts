@@ -361,13 +361,17 @@ function emptyComputed(f: number): Computed {
 
 /** Scaling factor for the four scaling modes (spec §6). Same engine, one path. */
 export function scaleFactor(
-  mode: 'recipe' | 'units' | 'weight' | 'stock',
+  mode: 'recipe' | 'units' | 'weight' | 'stock' | 'batches',
   value: number,
   baseline: Computed,
   stockIngredientId?: string,
 ): number {
   const v = Number(value);
   if (mode === 'recipe' || !v || v <= 0) return 1;
+  // "Two batches" or "half a batch": the number IS the factor. The one mode
+  // that needs no baseline, which is why a recipe with no yield can still be
+  // ordered in batches (QA 22.09.2026, §6).
+  if (mode === 'batches') return v;
   // Half of a declared 12 is exactly ×0.5: `unitsActual` is the declared
   // count unless the batch was weighed (see types.ts), so the baseline is
   // the recipe's own statement and a measured batch is the measured truth.

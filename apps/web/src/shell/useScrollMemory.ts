@@ -64,26 +64,48 @@ export function useScrollMemory(ref: RefObject<HTMLElement | null>): void {
     */
     const top = remembered.get(at) ?? 0;
     let frame = 0;
+    /*
+      WHAT IS REMEMBERED IS THE LAST OFFSET THE PERSON SCROLLED TO — not what
+      the element reports on the way out.
+
+      QA 22.09.2026, §7, measured: the notebook's 300px came back as 0 and
+      the recipe's 900px came back as 0. The cleanup runs AFTER React has
+      committed the next screen, and by then the element is either showing a
+      shorter page (a scroll offset a short page cannot hold is clamped to
+      0) or, when the whole shell unmounted for the order sheet, detached
+      from the document (a detached element reports 0). So the offset is
+      tracked as it happens, from the scroll event, and that is what the
+      cleanup records.
+
+      `applied`: until the remembered offset has been put back, the element
+      sits wherever the previous screen left it, and recording that would
+      overwrite the memory. Development StrictMode runs effect → cleanup →
+      effect on mount, with the cleanup landing before the animation frame.
+    */
+    let last = top;
+    let applied = top === 0;
+    const onScroll = () => {
+      last = el.scrollTop;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
     if (top > 0) {
       frame = requestAnimationFrame(() => {
         frame = requestAnimationFrame(() => {
           if (ref.current) ref.current.scrollTop = top;
+          applied = true;
         });
       });
     } else {
       /* A screen arrived at fresh starts at the top, which is also what a
          person expects when they open something new. */
       el.scrollTop = 0;
+      last = 0;
     }
 
-    /*
-      Record on the way out rather than on every scroll event: one write per
-      navigation instead of one per frame of a flick, and the value that
-      matters is the last one anyway.
-    */
     return () => {
       if (frame !== 0) cancelAnimationFrame(frame);
-      remember(at, el.scrollTop);
+      el.removeEventListener('scroll', onScroll);
+      if (applied) remember(at, last);
     };
   }, [at, ref]);
 }

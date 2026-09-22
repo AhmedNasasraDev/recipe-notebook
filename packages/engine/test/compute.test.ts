@@ -5,6 +5,7 @@ import {
   scaleFactor,
   type Recipe,
 } from '../src/index.js';
+import { formatGrams } from '../src/format.js';
 import { DEFAULT_PREFS, prefsWithCup } from './helpers.js';
 
 const P240 = prefsWithCup(240);
@@ -380,5 +381,22 @@ describe('bake loss needs BOTH weights', () => {
     const c = compute({ ...base, weightBefore: '', weightAfter: '' } as never, [], { prefs });
     expect(c.bakeLoss).toBe(0);
     expect(c.scaleWeight).toBe(85);
+  });
+});
+
+describe('formatGrams at production quantities (QA 22.09.2026, §6)', () => {
+  it('keeps the zeros that are part of the number', () => {
+    expect(formatGrams(10000)).toBe('10 ק"ג');
+    expect(formatGrams(20000)).toBe('20 ק"ג');
+    expect(formatGrams(100000)).toBe('100 ק"ג');
+    expect(formatGrams(1000)).toBe('1 ק"ג');
+  });
+
+  it('still trims the zeros after the point', () => {
+    expect(formatGrams(1500)).toBe('1.5 ק"ג');
+    expect(formatGrams(1250)).toBe('1.25 ק"ג');
+    expect(formatGrams(17200)).toBe('17.2 ק"ג');
+    expect(formatGrams(10500)).toBe('10.5 ק"ג');
+    expect(formatGrams(700)).toBe("700 גר'");
   });
 });

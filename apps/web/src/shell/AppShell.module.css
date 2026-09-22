@@ -19,6 +19,28 @@
 }
 
 .frame {
+  /*
+    ── THE DOCUMENT MUST NEVER BECOME SCROLLABLE ──────────────────────────
+
+    QA 22.09.2026, §7: on a phone the tab bar sometimes sat in the middle of
+    the screen, and opening "עוד פעולות" or coming back from the order sheet
+    jumped the page. Measured: `document.scrollingElement.scrollHeight` was
+    2735px in an 874px viewport while nothing visible extended past it. The
+    cause was `.visuallyHidden` — `position: absolute` — on the file inputs
+    and labels deep inside the recipe page. With no positioned ancestor their
+    containing block was the initial containing block, so they ESCAPED the
+    scroller's clipping and their static position 2,700px down the page gave
+    the document itself 1,860px of scrollable overflow. Anything that scrolls
+    the document — `scrollIntoView` on the actions panel, the browser
+    restoring scroll on Back, a focused field — then pushed the whole frame
+    up, tab bar and all.
+
+    `position: relative` here and on `.content` makes the scroller the
+    containing block for every absolutely positioned descendant, so they are
+    clipped and scrolled with the page, and the document has nothing to
+    scroll. The nav script (artifact/qa) measures it.
+  */
+  position: relative;
   width: 100%;
   max-width: var(--frame-w);
   height: 100vh;
@@ -85,6 +107,9 @@
 }
 
 .content {
+  /* See `.frame`: the scroller is the containing block for its own
+     absolutely positioned descendants. */
+  position: relative;
   flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;

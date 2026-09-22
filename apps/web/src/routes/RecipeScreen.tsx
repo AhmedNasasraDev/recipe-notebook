@@ -61,6 +61,7 @@ type Tab<T> = { id: T; label: string; srLabel?: string };
 const SCALE_TABS: readonly Tab<ScaleMode>[] = [
   { id: 'recipe', label: 'כמו במתכון', srLabel: 'כמויות כמו במתכון' },
   { id: 'units', label: 'יחידות' },
+  { id: 'batches', label: 'אצוות' },
   { id: 'weight', label: 'משקל' },
   { id: 'stock', label: 'לפי מלאי' },
 ];
@@ -74,6 +75,7 @@ const VIEW_TABS: readonly Tab<ViewMode>[] = [
 const PLACEHOLDER: Record<ScaleMode, string> = {
   recipe: '',
   units: 'מספר יחידות',
+  batches: 'מספר אצוות (למשל 2 או 0.5)',
   weight: 'משקל סופי בגרם',
   stock: 'גרם במלאי',
 };
@@ -215,13 +217,18 @@ export function RecipeScreen() {
     navState?.saved ?? null,
   );
   useEffect(() => {
+    /*
+      Per ARRIVAL, not per mount: this screen stays mounted when "שכפול"
+      navigates from a recipe to its copy, so the notice the copy arrives
+      with was never read (QA 22.09.2026, §4). `location.key` changes on
+      every navigation, mount included.
+    */
     if (navState?.saved) {
+      setSavedNotice(navState.saved);
       navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
     }
-    // Runs for the arrival only: `navState` is read from the entry this screen
-    // was mounted with.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [location.key]);
   useEffect(() => {
     if (savedNotice === null) return;
     const t = setTimeout(() => setSavedNotice(null), 6000);
@@ -1398,7 +1405,7 @@ export function RecipeScreen() {
           canRestore={capabilities.canWrite && recipe.locked !== true}
           lockedReason={
             recipe.locked === true
-              ? 'המתכון מסומן כנוסחה מאושרת לייצור, ולכן שחזור חסום עד ביטול הנעילה (§9).'
+              ? 'המתכון מסומן כנוסחה מאושרת לייצור, ולכן שחזור חסום עד ביטול הנעילה.'
               : !capabilities.canWrite
                 ? 'אין כרגע חיבור, ולכן אי אפשר לשחזר.'
                 : null

@@ -96,3 +96,11 @@ describe('the round trip, which is the reason both live in one file', () => {
     expect(SCALE_MODE_TEXT.weight).toBe('לפי משקל סופי');
   });
 });
+
+describe('batches (QA 22.09.2026, §6)', () => {
+  it('round-trips "two batches" and "half a batch" through the link', () => {
+    expect(scaleQuery('batches', '2', '', 2)).toBe('?mode=batches&v=2');
+    expect(readScale(new URLSearchParams('mode=batches&v=2'), baseline)).toEqual({ mode: 'batches', factor: 2 });
+    expect(readScale(new URLSearchParams('mode=batches&v=0.5'), baseline)).toEqual({ mode: 'batches', factor: 0.5 });
+  });
+});

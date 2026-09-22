@@ -25,9 +25,9 @@
 
 import { scaleFactor, type Computed } from '@recipe-notebook/engine';
 
-export type ScaleMode = 'recipe' | 'units' | 'weight' | 'stock';
+export type ScaleMode = 'recipe' | 'units' | 'weight' | 'stock' | 'batches';
 
-export const SCALE_MODES: readonly ScaleMode[] = ['recipe', 'units', 'weight', 'stock'];
+export const SCALE_MODES: readonly ScaleMode[] = ['recipe', 'units', 'weight', 'stock', 'batches'];
 
 /** What each mode is called on screen. One set of words, three screens. */
 export const SCALE_MODE_TEXT: Record<ScaleMode, string> = {
@@ -35,6 +35,7 @@ export const SCALE_MODE_TEXT: Record<ScaleMode, string> = {
   units: 'לפי מספר יחידות',
   weight: 'לפי משקל סופי',
   stock: 'לפי מלאי של רכיב',
+  batches: 'לפי מספר אצוות',
 };
 
 export interface ScaleChoice {

@@ -34,7 +34,7 @@
 // different "order number" on every render: a number that looks like a record
 // and is not one. An empty field prints as empty.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { BackControl } from '../components/BackLink.js';
 import { PrintIcon } from '../shell/Icons.js';
@@ -42,15 +42,11 @@ import { compute, formatGrams, formatNis } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
 import { calcState } from '../features/recipe/completeness.js';
-import { readScale, SCALE_MODE_TEXT } from '../features/recipe/scaleLink.js';
+import { readScale, SCALE_MODE_TEXT, scaleQuery, type ScaleMode } from '../features/recipe/scaleLink.js';
+import { readOrderDraft, writeOrderDraft, type OrderDraft } from '../data/offlineMirror.js';
 import styles from './OrderScreen.module.css';
 
-interface OrderDetails {
-  client: string;
-  no: string;
-  date: string;
-  note: string;
-}
+type OrderDetails = OrderDraft;
 
 const FIELDS: readonly { key: keyof OrderDetails; label: string; placeholder: string }[] = [
   { key: 'client', label: 'שם הלקוח', placeholder: 'למשל דנה לוי' },
@@ -59,20 +55,67 @@ const FIELDS: readonly { key: keyof OrderDetails; label: string; placeholder: st
   { key: 'note', label: 'הערה ללקוח', placeholder: '' },
 ];
 
+/*
+  HOW MUCH TO MAKE — chosen HERE as well as on the recipe page.
+
+  QA 22.09.2026, §6: the sheet showed the recipe's base weight and it was
+  not clear how much was actually to be produced. So the quantity is a
+  control on this screen, in the three ways a kitchen states an order —
+  units, batches, final weight — and it writes the URL, so the sheet stays
+  reproducible and the link still carries the order. Without a quantity the
+  sheet says so and shows the base recipe as a base recipe, never as an order.
+*/
+const ORDER_MODES: readonly { id: ScaleMode; label: string; placeholder: string }[] = [
+  { id: 'units', label: 'יחידות', placeholder: 'כמה יחידות להכין' },
+  { id: 'batches', label: 'אצוות', placeholder: 'כמה אצוות (למשל 2 או 0.5)' },
+  { id: 'weight', label: 'משקל סופי', placeholder: 'משקל סופי בגרם' },
+];
+
+const EMPTY: OrderDetails = { client: '', no: '', date: '', note: '' };
+
+const fmtBatches = (f: number): string => {
+  const r = Math.round(f * 100) / 100;
+  return Number.isInteger(r) ? String(r) : r.toFixed(2).replace(/0$/, '');
+};
+
 export function OrderScreen() {
   const { recipeId } = useParams<{ recipeId: string }>();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const { recipes, prefs, catalog } = useAppData();
 
-  const [details, setDetails] = useState<OrderDetails>({
-    client: '',
-    no: '',
-    date: '',
-    note: '',
-  });
+  const [details, setDetails] = useState<OrderDetails>(EMPTY);
+  /** false until the device's copy has been read, so it is not overwritten with blanks */
+  const [detailsLoaded, setDetailsLoaded] = useState(false);
 
   const recipe = recipes.find((r) => r.id === recipeId) ?? null;
   const pro = prefs.pro === true;
+
+  /*
+    THE DETAILS SURVIVE A RELOAD. Typed once, kept on this device per
+    recipe — there is still no orders table, and the sheet says so — so
+    re-printing after a refresh does not start from blank fields.
+  */
+  useEffect(() => {
+    if (!recipeId) return;
+    let cancelled = false;
+    setDetailsLoaded(false);
+    void readOrderDraft(recipeId)
+      .then((saved) => {
+        if (cancelled) return;
+        setDetails(saved ?? EMPTY);
+        setDetailsLoaded(true);
+      })
+      .catch(() => {
+        if (!cancelled) setDetailsLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [recipeId]);
+  useEffect(() => {
+    if (!recipeId || !detailsLoaded) return;
+    void writeOrderDraft(recipeId, details);
+  }, [recipeId, details, detailsLoaded]);
 
   const priced = useMemo(
     () => recipes.map((r) => resolveFromCatalog(r, catalog)),
@@ -99,6 +142,32 @@ export function OrderScreen() {
     [pricedRecipe, priced, scale.factor, prefs],
   );
 
+  /*
+    The quantity control mirrors the URL: what it shows IS what the link
+    says. The chosen WAY of stating it (units / batches / weight) is kept
+    here as well, because a tab chosen before any number is typed has no
+    number to put in the address yet.
+  */
+  const rawMode = params.get('mode');
+  const urlMode: ScaleMode | null =
+    rawMode === 'units' || rawMode === 'batches' || rawMode === 'weight' ? rawMode : null;
+  const [pickModeLocal, setPickModeLocal] = useState<ScaleMode>(urlMode ?? 'units');
+  const pickMode: ScaleMode = urlMode ?? pickModeLocal;
+  const pickValue = params.get('v') ?? '';
+  const setPick = (mode: ScaleMode, value: string) => {
+    setPickModeLocal(mode);
+    if (!baseline) return;
+    const trimmed = value.trim();
+    if (trimmed === '') {
+      setParams({}, { replace: true });
+      return;
+    }
+    // `scaleQuery` writes the same string the recipe page writes; the factor
+    // it is handed only decides whether a ×1 collapses to "as written".
+    const q = scaleQuery(mode, trimmed, '', 2);
+    setParams(new URLSearchParams(q.replace(/^\?/, '')), { replace: true });
+  };
+
   if (!recipe || !computed || !baseline) {
     return (
       <div className={styles.missing}>
@@ -110,6 +179,17 @@ export function OrderScreen() {
 
   const calc = calcState(computed);
   const bakerPct = computed.flour > 0 && pro;
+  /** Is there an order at all, or only the recipe as written? */
+  const ordered = scale.mode !== 'recipe';
+  const badPick = pickValue.trim() !== '' && !(Number(pickValue) > 0);
+  const baseUnits = baseline.unitsActual > 0 ? Math.round(baseline.unitsActual) : null;
+  const unitWeight =
+    Number(recipe.unitWeight) > 0
+      ? Number(recipe.unitWeight)
+      : baseline.scaleWeight > 0
+        ? baseline.scaleWeight
+        : null;
+  const orderUnits = computed.unitsActual > 0 ? Math.round(computed.unitsActual) : null;
 
   const set = (key: keyof OrderDetails, value: string) =>
     setDetails((d) => ({ ...d, [key]: value }));
@@ -131,7 +211,57 @@ export function OrderScreen() {
       </div>
 
       <div className={styles.body}>
-        {/* ── the details, none of which is stored ─────────────────────── */}
+        {/* ── how much: the order's quantity ───────────────────────────── */}
+        <section className={`${styles.form} noprint`} aria-label="כמות לייצור">
+          <h2 className={styles.formTitle}>כמות לייצור</h2>
+          <div className={styles.pickTabs} role="group" aria-label="איך מציינים את הכמות">
+            {ORDER_MODES.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                className={pickMode === m.id ? styles.pickTabOn : styles.pickTab}
+                aria-pressed={pickMode === m.id}
+                onClick={() => setPick(m.id, pickMode === m.id ? pickValue : '')}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="order-qty">
+              {ORDER_MODES.find((m) => m.id === pickMode)?.label ?? 'כמות'}
+            </label>
+            <input
+              id="order-qty"
+              className={styles.input}
+              inputMode="decimal"
+              value={pickValue}
+              placeholder={ORDER_MODES.find((m) => m.id === pickMode)?.placeholder ?? ''}
+              onChange={(e) => setPick(pickMode, e.target.value)}
+              aria-invalid={badPick || undefined}
+            />
+          </div>
+          {badPick && (
+            <p className={styles.warnBody} role="alert">
+              הכמות חייבת להיות מספר גדול מאפס. עד אז הדף מציג את המתכון הבסיסי.
+            </p>
+          )}
+          {ordered ? (
+            <p className={styles.formNote}>
+              ההזמנה: <strong>{SCALE_MODE_TEXT[scale.mode]}</strong>
+              {' · מקדם ×'}
+              <span className="ltr">{scale.factor.toFixed(2)}</span>
+              {' לעומת אצווה אחת של המתכון.'}
+            </p>
+          ) : (
+            <p className={styles.noQty}>
+              לא הוגדרה כמות לייצור. יש לבחור כמה יחידות או אצוות להכין כדי לחשב את
+              ההזמנה. בינתיים הדף מציג את המתכון הבסיסי — אצווה אחת, כמויות כמו במתכון.
+            </p>
+          )}
+        </section>
+
+        {/* ── the details, kept on this device ─────────────────────────── */}
         <section className={`${styles.form} noprint`} aria-label="פרטי ההזמנה">
           <h2 className={styles.formTitle}>פרטי ההזמנה</h2>
           {FIELDS.map((f) => (
@@ -149,19 +279,9 @@ export function OrderScreen() {
             </div>
           ))}
           <p className={styles.formNote}>
-            הפרטים האלה נכנסים לדף המודפס ואינם נשמרים במערכת — אין במחברת מסך
-            הזמנות, ולכן אין מקום שבו הזמנה נשמרת. מי שצריך היסטוריית הזמנות
-            צריך מסך הזמנות, לא שדה בדף הדפסה.
-          </p>
-          <p className={styles.formNote}>
-            הכמויות בדף נלקחות מ&quot;כמה להכין&quot; שבמתכון:{' '}
-            <strong>{SCALE_MODE_TEXT[scale.mode]}</strong>
-            {scale.factor !== 1 && (
-              <>
-                {' · מקדם ×'}
-                <span className="ltr">{scale.factor.toFixed(2)}</span>
-              </>
-            )}
+            הפרטים האלה נכנסים לדף המודפס ונשמרים במכשיר הזה בלבד, לכל מתכון בנפרד —
+            הם אינם נשמרים בחשבון: אין במחברת מסך הזמנות, ולכן אין מקום שבו הזמנה
+            נשמרת. מי שצריך היסטוריית הזמנות צריך מסך הזמנות, לא שדה בדף הדפסה.
           </p>
         </section>
 
@@ -200,7 +320,9 @@ export function OrderScreen() {
           <header className={styles.sheetHead}>
             <div>
               <h1 className={styles.sheetTitle}>{recipe.name}</h1>
-              <p className={styles.sheetSub}>דף הזמנה לייצור</p>
+              <p className={styles.sheetSub}>
+                {ordered ? 'דף הזמנה לייצור' : 'דף הזמנה לייצור — המתכון הבסיסי, ללא כמות שהוזמנה'}
+              </p>
             </div>
             <div className={styles.sheetSide}>
               {details.no && (
@@ -217,32 +339,66 @@ export function OrderScreen() {
             </div>
           </header>
 
-          <div className={styles.stats}>
-            <Stat
-              k="יחידות להפקה"
-              v={computed.unitsActual > 0 ? String(Math.round(computed.unitsActual)) : '—'}
-            />
-            <Stat
-              k="משקל לשקילה ליחידה"
-              v={computed.scaleWeight > 0 ? formatGrams(computed.scaleWeight) : '—'}
-            />
-            <Stat k="תשואה" v={formatGrams(computed.actualYield)} />
-            {pro && (
-              <Stat
-                k="פחת אפייה"
-                // §1.1's null ≠ 0 rule: a loss of 0.0% is a measurement, and
-                // an unmeasured loss is not zero. Both weights are needed.
-                v={
-                  Number(recipe.weightBefore) > 0 && recipe.weightAfter !== undefined &&
-                  String(recipe.weightAfter).trim() !== ''
-                    ? `${computed.bakeLoss.toFixed(1)}%`
-                    : 'לא נמדד'
-                }
-              />
-            )}
+          {/*
+            TWO BLOCKS, NEVER MIXED. The left one is a fact about the recipe:
+            what one batch makes. The right one is the order: how many were
+            asked for, how many batches that is, and what it weighs. With no
+            quantity chosen the second block is a sentence, not numbers that
+            would read as an order nobody placed.
+          */}
+          <div className={styles.blocks}>
+            <div className={styles.block}>
+              <h2 className={styles.blockTitle}>המתכון הבסיסי — אצווה אחת</h2>
+              <div className={styles.stats}>
+                <Stat
+                  k="תפוקה בסיסית"
+                  v={baseUnits !== null ? `${baseUnits} יחידות` : formatGrams(baseline.actualYield)}
+                />
+                {baseUnits !== null && (
+                  <Stat k="משקל אצווה" v={formatGrams(baseline.actualYield)} />
+                )}
+                {unitWeight !== null && (
+                  <Stat k="משקל ליחידה" v={formatGrams(unitWeight)} />
+                )}
+                {pro && (
+                  <Stat
+                    k="פחת אפייה"
+                    // §1.1's null ≠ 0 rule: a loss of 0.0% is a measurement, and
+                    // an unmeasured loss is not zero. Both weights are needed.
+                    v={
+                      Number(recipe.weightBefore) > 0 && recipe.weightAfter !== undefined &&
+                      String(recipe.weightAfter).trim() !== ''
+                        ? `${computed.bakeLoss.toFixed(1)}%`
+                        : 'לא נמדד'
+                    }
+                  />
+                )}
+              </div>
+            </div>
+            <div className={ordered ? styles.block : styles.blockEmpty}>
+              <h2 className={styles.blockTitle}>ההזמנה</h2>
+              {ordered ? (
+                <div className={styles.stats}>
+                  {orderUnits !== null && <Stat k="יחידות להזמנה" v={`${orderUnits} יחידות`} />}
+                  <Stat k="מספר אצוות" v={`${fmtBatches(scale.factor)} אצוות`} />
+                  <Stat k="משקל כולל לייצור" v={formatGrams(computed.actualYield)} />
+                  {unitWeight !== null && (
+                    <Stat k="משקל לשקילה ליחידה" v={formatGrams(unitWeight)} />
+                  )}
+                </div>
+              ) : (
+                <p className={styles.blockNote}>
+                  לא הוגדרה כמות לייצור. הכמויות שלמטה הן לאצווה אחת, כמו במתכון.
+                </p>
+              )}
+            </div>
           </div>
 
-          <h2 className={styles.sectionTitle}>רכיבים לשקילה</h2>
+          <h2 className={styles.sectionTitle}>
+            {ordered
+              ? `רכיבים לשקילה — ${fmtBatches(scale.factor)} אצוות`
+              : 'רכיבים לשקילה — אצווה אחת (כמו במתכון)'}
+          </h2>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -377,7 +533,7 @@ export function OrderScreen() {
           </button>
         </div>
         <p className={`${styles.note} noprint`}>
-          הערות אישיות (§8) אינן נכנסות לדף ההזמנה. הערת המתכון הציבורית כן.
+          הערות אישיות אינן נכנסות לדף ההזמנה. הערת המתכון הציבורית כן.
         </p>
       </div>
     </div>

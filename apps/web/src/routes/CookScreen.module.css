@@ -41,9 +41,13 @@
 
 .head {
   display: flex;
+  /* Four controls and a name on a 360px phone do not fit one line; the
+     controls wrap and the name takes its own line under them rather than
+     the last control being cut off at the edge (seen at 402px, QA 22.09). */
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--gap-in-group);
+  justify-content: flex-start;
+  gap: var(--gap-tight) var(--gap-in-group);
 }
 
 /*
@@ -54,7 +58,7 @@
   simulation chip is pinned.
 */
 .recipeName {
-  flex: 1;
+  flex: 1 1 100%;
   font-family: var(--font-display);
   font-size: var(--fs-body-lg);
   color: var(--c-cook-text);
@@ -598,7 +602,7 @@
 
 .timerState {
   font-size: var(--fs-body);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   color: var(--c-cook-text);
 }
 
@@ -614,7 +618,7 @@
   display: block;
   font-family: var(--font-display);
   font-size: calc(48px * var(--cook-text-scale));
-  font-weight: 700;
+  font-weight: var(--fw-title);
   line-height: 1.05;
   letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
@@ -628,7 +632,7 @@
 
 .timerBar {
   block-size: 8px;
-  border-radius: 4px;
+  border-radius: var(--r-control);
   background: color-mix(in srgb, var(--c-cook-line) 70%, transparent);
   overflow: hidden;
 }
@@ -654,7 +658,7 @@
 
 .timerDoneText {
   font-size: var(--fs-body-lg);
-  font-weight: 700;
+  font-weight: var(--fw-title);
   color: var(--c-red);
 }
 

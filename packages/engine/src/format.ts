@@ -38,9 +38,14 @@ export function round1(n: number): number {
 export function formatGrams(g: number): string {
   if (g >= 1000) {
     const kg = g / 1000;
-    return (
-      kg.toFixed(g % 1000 === 0 ? 0 : 2).replace(/\.?0+$/, '') + ' ק"ג'
-    );
+    /*
+      QA 22.09.2026, §6: the trailing-zero trim used to run on the WHOLE
+      number, so 10 kg printed as "1 ק"ג" and 20 kg as "2 ק"ג" — on the order
+      sheet, at exactly the quantities a production order is placed in.
+      Zeros are trimmed only after a decimal point now.
+    */
+    const text = kg.toFixed(g % 1000 === 0 ? 0 : 2);
+    return text.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '') + ' ק"ג';
   }
   return (g >= 10 ? Math.round(g) : Math.round(g * 10) / 10) + " גר'";
 }

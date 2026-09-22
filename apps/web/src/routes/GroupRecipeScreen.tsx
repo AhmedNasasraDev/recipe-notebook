@@ -299,7 +299,7 @@ export function GroupRecipeScreen() {
       <section className={styles.card}>
         <h2 className={styles.h2}>הערה אישית</h2>
         <p className={styles.hint}>
-          §8: ההערה שייכת לחשבון שלכם. היא אינה נשלחת לקבוצה, אינה מופיעה בדף
+          ההערה שייכת לחשבון שלכם. היא אינה נשלחת לקבוצה, אינה מופיעה בדף
           הזמנה או בתווית, ואף מדריך אינו יכול לקרוא אותה.
         </p>
         <label className={styles.srOnly} htmlFor="item-note">

@@ -36,6 +36,10 @@ const KEY = {
   */
   noteDraft: (userId: string, recipeId: string) =>
     `rn.noteDraft.v1.${userId}.${recipeId}`,
+  /* The order sheet's details — client, number, date, note — per recipe.
+     Device state, like the cook progress: there is no orders table, and a
+     reload of the sheet must not lose what was typed (QA 22.09.2026, §6). */
+  orderDraft: (recipeId: string) => `rn.orderDraft.v1.${recipeId}`,
 } as const;
 
 async function safeGet<T>(key: string): Promise<T | null> {
@@ -333,6 +337,31 @@ export async function writeNoteDraft(
 export async function clearNoteDraft(userId: string, recipeId: string): Promise<void> {
   await safeDel(KEY.noteDraft(userId, recipeId));
 }
+
+// ── the order sheet's details (§2 screen 9) ────────────────────────────────
+
+export interface OrderDraft {
+  client: string;
+  no: string;
+  date: string;
+  note: string;
+}
+
+const isOrderDraft = (v: unknown): v is OrderDraft =>
+  typeof v === 'object' &&
+  v !== null &&
+  ['client', 'no', 'date', 'note'].every((k) => typeof (v as Record<string, unknown>)[k] === 'string');
+
+export async function readOrderDraft(recipeId: string): Promise<OrderDraft | null> {
+  const stored = await safeGet<OrderDraft>(KEY.orderDraft(recipeId));
+  return isOrderDraft(stored) ? stored : null;
+}
+
+export const writeOrderDraft = (recipeId: string, draft: OrderDraft): Promise<boolean> =>
+  safeSet(KEY.orderDraft(recipeId), draft);
+
+export const clearOrderDraft = (recipeId: string): Promise<void> =>
+  safeDel(KEY.orderDraft(recipeId));
 
 export async function clearMirror(): Promise<void> {
   try {
