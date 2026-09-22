@@ -3,32 +3,27 @@
 //   node artifact/scripts/film-voice.mjs <folder-with-cue-01.wav …>
 //
 // ─────────────────────────────────────────────────────────────────────────────
-// WHY THIS FILE EXISTS AND WHY IT IS NOT ALREADY RUN
+// WHERE THE NARRATION COMES FROM
 //
-// Ahmed asked for the walkthrough to be narrated in Hebrew, with the voice
-// embedded in the video. The narration could not be produced in this
-// environment, and the measurements behind that sentence are in NARRATION.md:
-// outbound network reaches package registries and nothing else, so no neural
-// voice can be fetched, and the one offline synthesiser available (espeak-ng)
-// reads unvocalised Hebrew letter by letter.
-//
-// So the last step is written, tested as far as it can be without audio, and
-// left ready: drop one file per caption into a folder and run this. It is one
-// command, and it does the part that is actually easy to get wrong — putting
-// each sentence where its caption really is.
+// Ahmed connected ElevenLabs to this session, so the voice is generated
+// through that connector — eleven_v3, one clip per caption, downloaded into
+// `.film/voice/` as `cue-NN.mp3`. Before that connection existed this script
+// was written and left ready, because nothing in the environment could speak
+// Hebrew: the measurements behind that are still in NARRATION.md.
 //
 // HOW EACH SENTENCE FINDS ITS PLACE
 //
-// `cues.json` stamps every line from the harness's clock, and the film's own
-// clock runs about one and a half percent slower: 386.0 seconds of recording
-// became a 391.8 second file. That is not drift in the damaging sense — it is
-// a constant rate difference, and the proof is in this script. It finds the
-// white flash that every full page load paints, and checks that each one
-// lands in the fraction of a second before the caption that follows it. On
-// the take this was written against, twelve flashes landed between 0.05 and
-// 0.9 seconds before their caption, which is exactly the gap the recorder
-// waits. One multiplication is therefore enough, and if a future take ever
-// stops behaving that way this script says so and writes nothing.
+// `.film/cues-final.json`, written by film-sync.mjs, holds every caption's
+// time IN THE DELIVERED FILM — after the caption advances, the dropped
+// stretch and the holds that give a long line room. Those are the numbers
+// used here, so a clip lands where its caption and its screen actually are.
+//
+// If that file is missing this falls back to `.film/cues.json`, the
+// recorder's own clock, and fits it to the film the way it used to: the
+// recorder's clock runs about two percent slow, the white flash of every page
+// load is visible in the picture, and each flash must sit just before the
+// caption that follows it. That check is what makes the fit trustworthy, and
+// it refuses to write anything when it fails.
 
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -49,8 +44,11 @@ if (!voiceDir) {
 }
 
 const video = path.join(ROOT, 'recipe-notebook-walkthrough.mp4');
-const take = JSON.parse(fs.readFileSync(path.join(FILM, 'cues.json'), 'utf8'));
+const FINAL = path.join(FILM, 'cues-final.json');
+const exact = fs.existsSync(FINAL);
+const take = JSON.parse(fs.readFileSync(exact ? FINAL : path.join(FILM, 'cues.json'), 'utf8'));
 if (!fs.existsSync(video)) throw new Error(`no film at ${video}`);
+console.log(exact ? 'times: from the edit (cues-final.json)' : "times: fitted from the recorder's clock");
 
 /* Where the caption panel starts, in the recorded geometry: the flash check
    looks inside it, because the application to its left is busy all the time
@@ -110,7 +108,7 @@ function navigationFlashes() {
 }
 
 const filmLength = duration(video);
-const rate = filmLength / take.duration;
+const rate = exact ? 1 : filmLength / take.duration;
 const startOf = (i) => take.cues[i].t * rate;
 
 /*
@@ -122,7 +120,7 @@ const startOf = (i) => take.cues[i].t * rate;
   long before. If that holds for all of them, the mapping is right everywhere
   in the film, not only on average.
 */
-const flashes = navigationFlashes();
+const flashes = exact ? [] : navigationFlashes();
 const offsets = [];
 for (const flash of flashes) {
   const i = take.cues.findIndex((_, n) => startOf(n) >= flash - 0.25);
