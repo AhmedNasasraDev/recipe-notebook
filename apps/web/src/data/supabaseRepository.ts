@@ -392,6 +392,29 @@ export function createSupabaseRepository({
     async deleteRecipe(id: string): Promise<void> {
       requireOnline('המתכון');
 
+      /*
+        The photographs go FIRST. The storage policy (migration 0029) lets the
+        owner of the recipe delete its files — and once the recipe row is gone
+        there is no owner to recognise, so the files became undeletable
+        orphans (QA 22.09.2026: three files left behind by deleted recipes,
+        removable only from the dashboard). Best effort: a file that cannot be
+        removed must not stop the recipe from being deleted.
+      */
+      try {
+        const { data: rows } = await client
+          .from('recipe_images')
+          .select('storage_path')
+          .eq('recipe_id', id);
+        const paths = (rows ?? [])
+          .map((r) => (r as { storage_path?: string }).storage_path)
+          .filter((p): p is string => typeof p === 'string' && p !== '');
+        if (paths.length > 0) {
+          await client.storage.from(RECIPE_IMAGE_BUCKET).remove(paths);
+        }
+      } catch {
+        /* the recipe is still deleted below */
+      }
+
       // `delete_recipe` rather than a plain DELETE. The guarantee is the
       // foreign key from migration 0008, which no client can get around — but
       // that constraint is DEFERRED (so that deleting an account still
