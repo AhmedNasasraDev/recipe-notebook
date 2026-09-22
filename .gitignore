@@ -13,3 +13,6 @@ figma/dist/
 # The walkthrough take: a 15MB WebM and its caption panels are build output,
 # not source. The finished MP4 and its chapter list are committed.
 .film/
+
+# Viewing exports (MHTML screen documentation): built output, not source.
+exports/
