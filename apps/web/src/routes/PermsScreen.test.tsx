@@ -206,9 +206,32 @@ describe('invitations', () => {
     render_({ groups: [seed('instructor')] });
     await userEvent.click(await screen.findByRole('button', { name: 'יצירת הזמנה' }));
     expect(await screen.findByRole('status')).toHaveTextContent('נוצר קישור הזמנה');
-    // Twice on screen on purpose: once as the link just created, and once on
-    // the invitation's own row in the list below.
-    expect(screen.getAllByText(/\/join\/token-1$/)).toHaveLength(2);
+    // Twice on screen on purpose: once for the link just created, and once on
+    // the invitation's own row in the list below. As a COPY action, not as
+    // sixty-four characters to select by hand (QA 22.09.2026, acceptance
+    // finding 9).
+    expect(screen.getAllByRole('button', { name: 'העתקת הקישור' })).toHaveLength(2);
+    expect(screen.queryByText(/\/join\/token-1$/)).not.toBeInTheDocument();
+  });
+
+  it('copies the link to the clipboard, and shows the link itself only when it cannot', async () => {
+    const writeText = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    render_({ groups: [seed('instructor')] });
+    await userEvent.click(await screen.findByRole('button', { name: 'יצירת הזמנה' }));
+    const [copy] = await screen.findAllByRole('button', { name: 'העתקת הקישור' });
+    await userEvent.click(copy!);
+    expect(writeText).toHaveBeenCalledWith(expect.stringMatching(/\/join\/token-1$/));
+    expect(await screen.findByRole('button', { name: 'הקישור הועתק ✓' })).toBeInTheDocument();
+
+    // No clipboard at all: the characters come back, as the only way left.
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: async () => { throw new Error('denied'); } },
+      configurable: true,
+    });
+    const [second] = screen.getAllByRole('button', { name: 'העתקת הקישור' });
+    await userEvent.click(second!);
+    expect(await screen.findByLabelText('קישור ההזמנה')).toHaveTextContent(/\/join\/token-1$/);
   });
 
   it('refuses an address that is obviously not one, without asking the server', async () => {
@@ -254,7 +277,7 @@ describe('invitations', () => {
     expect(status).toHaveTextContent('שירות המייל אינו מחובר');
     expect(status).not.toHaveTextContent('נשלחה');
     // ...and the link is on screen, so the invitation is still usable.
-    expect(screen.getAllByText(/\/join\/token-1$/).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'העתקת הקישור' }).length).toBeGreaterThan(0);
   });
 
   it('lists an invitation with its state and how long it has left', async () => {

@@ -104,7 +104,7 @@ const COMPARED_ING_FIELDS: ReadonlyArray<{ key: string; label: string }> = [
   { key: 'qty', label: 'כמות' },
   { key: 'unit', label: 'יחידה' },
   { key: 'price', label: 'מחיר' },
-  { key: 'priceUnit', label: 'ליחידת מחיר' },
+  { key: 'priceUnit', label: 'יחידת המחיר' },
   { key: 'waterPct', label: 'אחוז מים' },
   { key: 'gPer100', label: 'צפיפות' },
   { key: 'unitWeight', label: 'משקל ליחידה' },

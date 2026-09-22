@@ -1011,3 +1011,49 @@ describe('the hero photograph, and where it is looked at (Ahmed, stage 7)', () =
     expect(screen.queryByRole('button', { name: 'התאמת מיקום התמונה' })).toBeNull();
   });
 });
+
+describe('comparing a version against the live recipe (QA 22.09.2026, acceptance finding 7)', () => {
+  it('reports no price change when the only difference is a frozen catalogue price', async () => {
+    // A stored version is frozen with its catalogue prices filled in
+    // (migration 0011). The live recipe's row carries no price of its own —
+    // the centre supplies ₪4/kg — so the two must compare as equal.
+    const live: Recipe = {
+      id: 'b',
+      name: 'בריוש',
+      category: 'בצקים',
+      ingredients: [
+        { id: 'i1', name: 'קמח לחם', ingredientKey: 'קמח לחם', qty: 500, unit: 'g', flour: true },
+      ],
+      steps: [{ id: 's1', text: 'ללוש' }],
+    };
+    const frozen: Recipe = {
+      ...live,
+      ingredients: [{ ...live.ingredients![0]!, price: 4, priceUnit: 'ק"ג' }],
+    };
+    const user = userEvent.setup();
+    renderRoute(<RecipeScreen />, {
+      path: '/recipe/:recipeId',
+      route: '/recipe/b',
+      repository: fakeRepository({
+        prefs: prefsAt(240),
+        recipes: [live],
+        catalog: [
+          {
+            id: 'cat-flour', key: 'קמח לחם', name: 'קמח לחם', purchaseUnit: 'kg', packageQty: 1,
+            packageCount: 1, purchaseTotal: 4, usablePct: null, supplier: '', purchasedAt: null,
+            priceUpdatedAt: null, note: '', purchasePrice: 4, price: 4, priceUnit: 'ק"ג', allergens: [],
+          },
+        ],
+        versions: [
+          { id: 'v1', recipeId: 'b', tag: 'V1', what: '', createdAt: '2026-09-22T20:46:00Z', snapshot: frozen },
+        ],
+      }),
+    });
+    await screen.findByText('בריוש');
+    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(await screen.findByRole('button', { name: 'השוואת גרסה 1 לגרסה הנוכחית' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('אין הבדל בין שתי הגרסאות האלה');
+    expect(dialog).not.toHaveTextContent('מחיר');
+  });
+});

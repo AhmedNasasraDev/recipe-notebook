@@ -994,7 +994,7 @@ export function RecipeScreen() {
                   {!unresolved && row.provenance.source !== 'exact' && (
                     <SourceBadge provenance={row.provenance} />
                   )}
-                  <span className={styles.convertHint}>המר</span>
+                  <span className={styles.convertHint}>המרה</span>
                 </button>
               </li>
             );
@@ -1319,7 +1319,7 @@ export function RecipeScreen() {
                   ],
                   [
                     'יחידות בפועל',
-                    computed.unitsActual ? derived(computed.unitsActual.toFixed(1)) : '—',
+                    computed.unitsActual ? derived(String(Math.round(computed.unitsActual * 10) / 10)) : '—',
                   ],
                 ]}
               />
@@ -1350,7 +1350,9 @@ export function RecipeScreen() {
                         computed.costPerUnit ? priced(formatNis(computed.costPerUnit)) : '—',
                       ],
                       ['עלות לק"ג', priced(formatNis(computed.costPerKg))],
-                      ['יעד פוד קוסט', `${recipe.targetFC ?? 0}%`],
+                      // 0 is how "no target" is stored (the column defaults to 0), and
+                      // "0%" read as a target of zero (QA 22.09.2026, acceptance finding 10).
+                      ['יעד פוד קוסט', Number(recipe.targetFC) > 0 ? `${recipe.targetFC}%` : 'לא הוגדר'],
                       [
                         'מחיר מכירה לפני מע"מ',
                         computed.price ? priced(formatNis(computed.price)) : '—',
@@ -1399,8 +1401,17 @@ export function RecipeScreen() {
         {/* ── §9 version history ─────────────────────────────────────────── */}
         <VersionHistory
           versions={versions}
-          recipe={recipe}
-          recipes={recipes}
+          /*
+            The PRICED recipe, not the raw one. A stored version is frozen with
+            its catalogue prices filled in (migration 0011's snapshot), so
+            comparing it against the raw live recipe — whose rows carry no
+            price of their own — reported "מחיר 4 ← —" on every priced row for
+            an edit that touched no price (QA 22.09.2026, acceptance finding
+            7). Resolution is idempotent, so the frozen side passes through
+            unchanged and both sides are compared on equal terms.
+          */
+          recipe={pricedRecipe ?? recipe}
+          recipes={pricedNotebook}
           prefs={prefs}
           canRestore={capabilities.canWrite && recipe.locked !== true}
           lockedReason={

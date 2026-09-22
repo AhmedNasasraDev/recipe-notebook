@@ -66,6 +66,16 @@ function readRedirectError(): RedirectError | null {
 
 const REDIRECT_ERROR: RedirectError | null = readRedirectError();
 
+/*
+  A confirmation link that WORKED says so in the address too — GoTrue sends
+  the person back with `#access_token=…&type=signup`. The client library
+  consumes the fragment, so this is read once at module load, like the error
+  above, and the one screen that comes next says "אומת" instead of opening as
+  if nothing had happened (QA 22.09.2026, acceptance finding 31).
+*/
+const VERIFIED_AT_LOAD: boolean =
+  typeof window !== 'undefined' && /(^|[#&])type=signup(&|$)/.test(window.location.hash);
+
 /** The Hebrew for a failed link, or null when the address carried no error. */
 export function redirectErrorText(err: RedirectError | null): string | null {
   if (!err) return null;
@@ -94,6 +104,8 @@ export interface Auth {
   unconfiguredReason: 'missing-env' | 'service-role-key-in-browser' | null;
   /** the error a failed confirmation link arrived with, in Hebrew; null when none */
   redirectError: string | null;
+  /** true for the page load that arrived through a working confirmation link */
+  justVerified: boolean;
   signUp(email: string, password: string): Promise<SignUpOutcome>;
   signIn(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
@@ -296,6 +308,7 @@ export function AuthProvider({
       client,
       unconfiguredReason: status0.configured ? null : status0.reason,
       redirectError: redirectErrorText(REDIRECT_ERROR),
+      justVerified: VERIFIED_AT_LOAD,
       signUp,
       signIn,
       signOut,

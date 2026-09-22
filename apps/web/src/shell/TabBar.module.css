@@ -122,7 +122,7 @@
 */
 .label {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.2;
   white-space: nowrap;
 }

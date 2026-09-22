@@ -107,7 +107,7 @@ export function RecipeImages({ state, canWrite, canEdit }: Props) {
                     <span className={styles.frameNote}>…</span>
                   ) : url === null ? (
                     <span className={styles.frameNote}>
-                      התמונה אינה זמינה לצפייה מהחשבון הזה
+                      התמונה לא נמצאה בשרת. אפשר להסיר אותה או להעלות תמונה אחרת.
                     </span>
                   ) : (
                     <img

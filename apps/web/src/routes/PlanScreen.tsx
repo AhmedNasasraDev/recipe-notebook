@@ -627,6 +627,12 @@ export function PlanScreen() {
             ) : live.lines.length === 0 ? (
               <p className={styles.empty}>אין עדיין מה לקנות.</p>
             ) : (
+              <>
+              {live.lines.some((l) => l.onHand === null) && (
+                <p className={styles.hint}>
+                  שורה בלי כמות במחסן מציגה את הדרישה המלאה. שדה ריק אינו אפס.
+                </p>
+              )}
               <ul className={styles.plainList}>
                 {live.lines.map((l) => (
                   <li key={l.key} className={styles.buyLine}>
@@ -672,7 +678,18 @@ export function PlanScreen() {
                       <div className={styles.buyCell}>
                         <dt>צריך לקנות</dt>
                         <dd className="ltr" aria-label={`צריך לקנות ${l.name}`}>
-                          {l.toBuy === null ? '—' : `${qty(l.toBuy)} ${l.unit}`}
+                          {/*
+                            A material outside the centre has no purchase unit,
+                            so `toBuy` is null — but the REQUIREMENT is known,
+                            and "—" read as "unknown" next to a figure two cells
+                            up (QA 22.09.2026, acceptance finding 8). The
+                            requirement in grams is what there is to buy.
+                          */}
+                          {l.toBuy !== null
+                            ? `${qty(l.toBuy)} ${l.unit}`
+                            : l.grams > 0
+                              ? formatGrams(l.grams)
+                              : '—'}
                         </dd>
                       </div>
                       {l.packages !== null && l.packageQty !== null && (
@@ -697,16 +714,18 @@ export function PlanScreen() {
                       </div>
                     </dl>
 
-                    {l.onHand === null && (
-                      <p className={styles.hint}>
-                        לא הוזנה כמות במחסן, ולכן מוצגת הדרישה המלאה. שדה ריק
-                        אינו אפס.
-                      </p>
-                    )}
-                    {l.why && <p className={styles.missing}>{l.why}</p>}
+                    {/*
+                      The not-in-the-centre sentence is not repeated here: the
+                      link in the row's head already says it, and the stock
+                      note is said ONCE above the list (QA 22.09.2026,
+                      acceptance finding 28). What stays per row is a reason
+                      specific to that row — a unit that cannot be converted.
+                    */}
+                    {l.why && l.inCatalog && <p className={styles.missing}>{l.why}</p>}
                   </li>
                 ))}
               </ul>
+              </>
             )}
 
             <div className={styles.totalRow} aria-label="עלות הרכש">

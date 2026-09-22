@@ -17,12 +17,16 @@
   written" view, which converts nothing and computes no weight — it restates
   the recipe's own number in the recipe's own unit.
 
-  WHY A NULL WEIGHT IS AN EM DASH IN EVERY VIEW
+  WHY A NULL WEIGHT PRINTS THE WRITTEN QUANTITY, AND SAYS SO
 
-  Because the app does not know it. A row the engine could not resolve to a
-  weight has no honest number to print, in any view, and printing the written
-  quantity as though it were verified is how a kitchen ends up weighing the
-  wrong thing. The hint says why.
+  It used to print an em dash in every view: the app does not know the
+  weight, so it printed nothing. QA 22.09.2026 (acceptance, finding 3) showed
+  what nothing looks like on a bench — "ביצים —" on the weighing list for a
+  recipe that says "4 ביצים". The recipe's own number is not a verified
+  weight, but it is not unknown either, and a cook who reads "4 יח'" with
+  "כמות לפי המתכון" under it knows exactly what to do. No gram figure is
+  invented: the text is the recipe's quantity in the recipe's unit, and the
+  hint says that is all it is.
 */
 
 import { formatGrams, homeMeasure, unitLabel, type ComputedRow } from '@recipe-notebook/engine';
@@ -44,7 +48,10 @@ export function rowLabel(
   prefs: MeasurementPrefs,
 ): RowLabel {
   if (row.g === null) {
-    return { text: '—', hint: 'אין נתון אמין' };
+    const written = asWritten(row, factor);
+    return written === ''
+      ? { text: '—', hint: 'אין כמות במתכון' }
+      : { text: written, hint: 'כמות לפי המתכון' };
   }
   if (view === 'g' || row.ing.subId) {
     return { text: formatGrams(row.g), hint: '' };
@@ -54,15 +61,23 @@ export function rowLabel(
     return home?.ok
       ? { text: home.text, hint: formatGrams(row.g) }
       : // §5.4: a row with no reliable data stays in grams and is marked as such
-        { text: formatGrams(row.g), hint: 'נשקל בגרם, אין נתון אמין' };
+        { text: formatGrams(row.g), hint: 'בגרמים — אין נתון להמרה לכלי מדידה' };
   }
   // "as written": keep the recipe's own unit, scaled
-  const qty = Number(row.ing.qty ?? 0) * factor;
-  const rounded =
-    Math.abs(qty - Math.round(qty)) < 0.01 ? Math.round(qty) : Math.round(qty * 100) / 100;
-  const text = `${rounded} ${unitLabel(row.ing.unit)}`;
+  const text = asWritten(row, factor);
   const grams = formatGrams(row.g);
   // The gram hint is only worth showing when it adds something. For an
   // ingredient already written in grams it would just repeat the line.
   return { text, hint: text === grams ? '' : grams };
+}
+
+/** The recipe's own number in the recipe's own unit, scaled; '' when there is none. */
+function asWritten(row: ComputedRow, factor: number): string {
+  const raw = row.ing.qty;
+  if (raw === undefined || raw === null || String(raw).trim() === '') return '';
+  const qty = Number(raw) * factor;
+  if (!Number.isFinite(qty)) return '';
+  const rounded =
+    Math.abs(qty - Math.round(qty)) < 0.01 ? Math.round(qty) : Math.round(qty * 100) / 100;
+  return `${rounded} ${unitLabel(row.ing.unit)}`.trim();
 }

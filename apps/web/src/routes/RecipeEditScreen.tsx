@@ -980,6 +980,7 @@ export function RecipeEditScreen() {
                           value={row.price}
                           onChange={(e) => patchIngredient(i, { price: e.target.value })}
                           aria-label={`מחיר של ${label}`}
+                          placeholder="0.00"
                         />
                         {/*
                           Where this row's price comes from (stage-7 requirement 2).
@@ -1014,7 +1015,7 @@ export function RecipeEditScreen() {
                       </div>
                       <div className={styles.field}>
                         <label className={styles.label} htmlFor={`pu-${row.key}`}>
-                          ליחידת מחיר
+                          יחידת המחיר
                         </label>
                         <select
                           id={`pu-${row.key}`}
@@ -1060,6 +1061,7 @@ export function RecipeEditScreen() {
                           value={row.unitWeight}
                           onChange={(e) => patchIngredient(i, { unitWeight: e.target.value })}
                           aria-label={`משקל ליחידה של ${label}`}
+                          placeholder="למשל 60"
                         />
                       </div>
                       <div className={styles.field}>
@@ -1320,6 +1322,7 @@ export function RecipeEditScreen() {
                       value={step.temp}
                       onChange={(e) => patchStep(i, { temp: e.target.value })}
                       aria-label={`טמפרטורה בשלב ${i + 1}`}
+                      placeholder="180"
                     />
                   </div>
                   <div className={styles.field}>
@@ -1333,6 +1336,7 @@ export function RecipeEditScreen() {
                       value={step.minutes}
                       onChange={(e) => patchStep(i, { minutes: e.target.value })}
                       aria-label={`זמן בדקות בשלב ${i + 1}`}
+                      placeholder="20"
                     />
                   </div>
                   {/*

@@ -222,7 +222,7 @@ export function NotebookScreen() {
             </p>
             <Link to="/recipe/new" className={styles.emptyCta}>
               יצירת המתכון הראשון
-            </Link>
+            </Link>{' '}
             {capabilities.canWrite && (
               <Link to="/paste" className={styles.emptyAlt}>
                 או הדבקת מתכון מטקסט

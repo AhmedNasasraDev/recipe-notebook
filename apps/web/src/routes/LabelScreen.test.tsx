@@ -181,13 +181,13 @@ describe('§13a the HACCP line', () => {
     expect(label).not.toHaveTextContent('HACCP');
     expect(label).not.toHaveTextContent('לא תועד');
     // §13a's edge case, said out loud: no status is not "undocumented".
-    expect(screen.getByText(/היעדר סטטוס אינו/)).toBeInTheDocument();
+    expect(screen.getByText(/אינה מציגה מספר אצווה או סטטוס בטיחות מזון/)).toBeInTheDocument();
   });
 
   it('does not block printing on a missing record (§13a UX decision)', async () => {
     show({ recipes: withBatch({ code: 'L3' }) });
     expect(
-      await screen.findByRole('button', { name: 'הדפסה או שמירה כ־PDF' }),
+      await screen.findByRole('button', { name: 'הדפסה / שמירה כ-PDF' }),
     ).toBeEnabled();
   });
 });
@@ -214,7 +214,7 @@ describe('what a label must not carry', () => {
 describe('the net weight says what it is the weight OF', () => {
   it('uses the per-unit weight when the recipe has one', async () => {
     show();
-    expect(await screen.findByLabelText('תווית המוצר')).toHaveTextContent('משקל נטו 120 גר׳');
+    expect(await screen.findByLabelText('תווית המוצר')).toHaveTextContent("משקל נטו 120 גר'");
   });
 
   it('says "תשואת האצווה" when the only weight known is a whole batch', async () => {

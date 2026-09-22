@@ -94,7 +94,7 @@ export function LabelScreen() {
   const unitWeight = Number(recipe.unitWeight);
   const netWeight =
     unitWeight > 0
-      ? { text: `משקל נטו ${String(unitWeight)} גר׳`, perUnit: true }
+      ? { text: `משקל נטו ${String(unitWeight)} גר'`, perUnit: true }
       : { text: `תשואת האצווה ${formatGrams(computed.actualYield)}`, perUnit: false };
 
   return (
@@ -180,10 +180,8 @@ export function LabelScreen() {
           <div className={`${styles.warn} noprint`} role="alert" aria-label="ההרכב אינו מלא">
             <p className={styles.warnTitle}>האחוזים אינם מוצגים, וזה לא תקלה</p>
             <p className={styles.warnBody}>
-              אחוז הוא חלק מסך המשקל. כל עוד משקל של רכיב אחד אינו ידוע, סך המשקל
-              שגוי ולכן כל האחוזים שגויים — וגם סדר הרכיבים אינו ודאי, כי הרכיב
-              החסר עלול להיות הגדול מכולם. תווית מודפסת נקראת כהצהרה, ולכן
-              המערכת מדפיסה שמות בלי אחוזים עד שהנתונים שלמים.
+              כשמשקל של רכיב אחד חסר, כל האחוזים והסדר אינם ודאיים. עד שהנתונים
+              יושלמו התווית מציגה את השמות בלבד.
             </p>
             {comp.missing.length > 0 && (
               <p className={styles.warnList}>
@@ -198,9 +196,8 @@ export function LabelScreen() {
 
         {!batch && (
           <p className={`${styles.note} noprint`}>
-            למתכון הזה לא נרשמה אצווה, ולכן התווית אינה מציגה מספר אצווה ואינה
-            מציגה סטטוס HACCP. היעדר סטטוס אינו &quot;לא תועד&quot; — הוא היעדר
-            אצווה.
+            למתכון הזה לא נרשמה אצווה, ולכן התווית אינה מציגה מספר אצווה או
+            סטטוס בטיחות מזון.
           </p>
         )}
 
@@ -211,8 +208,8 @@ export function LabelScreen() {
         )}
 
         <p className={`${styles.note} noprint`}>
-          ההרכב יורד בסדר משקל ומגולגל גם מתוך מתכוני בסיס: מתכון בסיס מוצהר לפי
-          מה שיש בתוכו, ולא בשמו. הערות אישיות ועלויות אינן נכנסות לתווית.
+          ההרכב מסודר לפי משקל יורד, כולל הרכיבים של מתכוני בסיס. הערות אישיות
+          ועלויות אינן מודפסות.
         </p>
 
         <p className={`${styles.legal} noprint`}>
@@ -223,7 +220,7 @@ export function LabelScreen() {
 
         <div className={`${styles.actions} noprint`}>
           <button type="button" className={styles.printBtn} onClick={() => window.print()}>
-            הדפסה או שמירה כ־PDF
+            הדפסה / שמירה כ-PDF
           </button>
         </div>
       </div>

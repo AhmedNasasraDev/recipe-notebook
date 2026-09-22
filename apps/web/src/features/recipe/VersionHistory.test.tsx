@@ -70,8 +70,8 @@ describe('requirements 3 and 4 — the timeline', () => {
     const section = screen.getByLabelText('היסטוריית גרסאות');
     // §9: "V1…Vn + נוכחית"
     expect(within(section).getByText('נוכחית')).toBeInTheDocument();
-    expect(within(section).getByText('V2')).toBeInTheDocument(); // the live one
-    expect(within(section).getByText('V1')).toBeInTheDocument();
+    expect(within(section).getByText('גרסה 2')).toBeInTheDocument(); // the live one
+    expect(within(section).getByText('גרסה 1')).toBeInTheDocument();
   });
 
   it('shows when each version was taken', () => {
@@ -107,10 +107,10 @@ describe('requirement 5 — viewing a version before restoring', () => {
   it('opens a viewer with the version\'s own ingredients and quantities', async () => {
     const user = userEvent.setup();
     renderHistory();
-    await user.click(screen.getByRole('button', { name: 'צפייה בגרסה V1' }));
+    await user.click(screen.getByRole('button', { name: 'צפייה בגרסה 1' }));
 
-    const dialog = await screen.findByRole('dialog', { name: 'גרסה V1' });
-    const list = within(dialog).getByLabelText('רכיבי גרסה V1');
+    const dialog = await screen.findByRole('dialog', { name: 'גרסה 1' });
+    const list = within(dialog).getByLabelText('רכיבי גרסה 1');
     // the SNAPSHOT's quantities, not the live ones
     expect(within(list).getByText(/600/)).toBeInTheDocument();
     expect(within(list).getByText(/420/)).toBeInTheDocument();
@@ -120,8 +120,8 @@ describe('requirement 5 — viewing a version before restoring', () => {
   it('runs the real engine on the snapshot, so the figures are what it produced', async () => {
     const user = userEvent.setup();
     renderHistory();
-    await user.click(screen.getByRole('button', { name: 'צפייה בגרסה V1' }));
-    const dialog = await screen.findByRole('dialog', { name: 'גרסה V1' });
+    await user.click(screen.getByRole('button', { name: 'צפייה בגרסה 1' }));
+    const dialog = await screen.findByRole('dialog', { name: 'גרסה 1' });
 
     // 600 + 420 = 1020 g, which the shared formatter presents as kilograms
     // above a kilo — the same figure the live recipe page would show.
@@ -143,12 +143,12 @@ describe('requirement 5 — viewing a version before restoring', () => {
         }),
       ],
     });
-    await user.click(screen.getByRole('button', { name: 'צפייה בגרסה V1' }));
-    const dialog = await screen.findByRole('dialog', { name: 'גרסה V1' });
+    await user.click(screen.getByRole('button', { name: 'צפייה בגרסה 1' }));
+    const dialog = await screen.findByRole('dialog', { name: 'גרסה 1' });
 
     // A version may well be the one where a density was still missing, and
     // that is worth seeing before restoring it.
-    expect(within(dialog).getByLabelText('שלמות החישוב של גרסה V1')).toHaveTextContent(
+    expect(within(dialog).getByLabelText('שלמות החישוב של גרסה 1')).toHaveTextContent(
       'אי אפשר לחשב',
     );
     const totalRow = within(dialog).getByText('סך המשקל').closest('div')!;
@@ -158,7 +158,7 @@ describe('requirement 5 — viewing a version before restoring', () => {
   it('closes without restoring anything', async () => {
     const user = userEvent.setup();
     const { onRestore } = renderHistory();
-    await user.click(screen.getByRole('button', { name: 'צפייה בגרסה V1' }));
+    await user.click(screen.getByRole('button', { name: 'צפייה בגרסה 1' }));
     await user.click(screen.getByRole('button', { name: 'סגירה' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(onRestore).not.toHaveBeenCalled();
@@ -169,9 +169,9 @@ describe('requirements 6 and 7 — restoring', () => {
   it('asks first, and says the current state will be kept', async () => {
     const user = userEvent.setup();
     const { onRestore } = renderHistory();
-    await user.click(screen.getByRole('button', { name: 'שחזור גרסה V1' }));
+    await user.click(screen.getByRole('button', { name: 'שחזור גרסה 1' }));
 
-    const dialog = await screen.findByRole('alertdialog', { name: 'אישור שחזור גרסה V1' });
+    const dialog = await screen.findByRole('alertdialog', { name: 'אישור שחזור גרסה 1' });
     // The part nobody expects, and the reason the button is safe to press.
     expect(dialog).toHaveTextContent('הגרסה הנוכחית תישמר בהיסטוריה');
     expect(dialog).toHaveTextContent('שום גרסה לא נמחקת');
@@ -181,9 +181,9 @@ describe('requirements 6 and 7 — restoring', () => {
   it('restores once confirmed', async () => {
     const user = userEvent.setup();
     const { onRestore } = renderHistory();
-    await user.click(screen.getByRole('button', { name: 'שחזור גרסה V1' }));
+    await user.click(screen.getByRole('button', { name: 'שחזור גרסה 1' }));
     const dialog = await screen.findByRole('alertdialog');
-    await user.click(within(dialog).getByRole('button', { name: 'אישור שחזור גרסה V1' }));
+    await user.click(within(dialog).getByRole('button', { name: 'אישור שחזור גרסה 1' }));
 
     expect(onRestore).toHaveBeenCalledTimes(1);
     expect(onRestore.mock.calls[0]![0].tag).toBe('V1');
@@ -192,7 +192,7 @@ describe('requirements 6 and 7 — restoring', () => {
   it('cancels without restoring', async () => {
     const user = userEvent.setup();
     const { onRestore } = renderHistory();
-    await user.click(screen.getByRole('button', { name: 'שחזור גרסה V1' }));
+    await user.click(screen.getByRole('button', { name: 'שחזור גרסה 1' }));
     await user.click(screen.getByRole('button', { name: 'ביטול השחזור' }));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(onRestore).not.toHaveBeenCalled();
@@ -201,9 +201,9 @@ describe('requirements 6 and 7 — restoring', () => {
   it('can be reached from the viewer too', async () => {
     const user = userEvent.setup();
     renderHistory();
-    await user.click(screen.getByRole('button', { name: 'צפייה בגרסה V1' }));
-    const dialog = await screen.findByRole('dialog', { name: 'גרסה V1' });
-    await user.click(within(dialog).getByRole('button', { name: 'שחזור גרסה V1' }));
+    await user.click(screen.getByRole('button', { name: 'צפייה בגרסה 1' }));
+    const dialog = await screen.findByRole('dialog', { name: 'גרסה 1' });
+    await user.click(within(dialog).getByRole('button', { name: 'שחזור גרסה 1' }));
     // the viewer closes and the confirmation takes over
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
   });
@@ -215,10 +215,10 @@ describe('when restore is unavailable', () => {
       canRestore: false,
       lockedReason: 'המתכון מסומן כנוסחה מאושרת לייצור, ולכן שחזור חסום עד ביטול הנעילה (§9).',
     });
-    expect(screen.getByRole('button', { name: 'שחזור גרסה V1' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'שחזור גרסה 1' })).toBeDisabled();
     expect(screen.getByRole('status')).toHaveTextContent('נוסחה מאושרת לייצור');
     // viewing is still allowed — seeing is not changing
-    expect(screen.getByRole('button', { name: 'צפייה בגרסה V1' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'צפייה בגרסה 1' })).toBeEnabled();
   });
 
   it('surfaces a failure instead of pretending the restore worked', () => {
@@ -228,7 +228,7 @@ describe('when restore is unavailable', () => {
 
   it('shows progress on the version being restored', () => {
     renderHistory({ busyId: 'v1' });
-    expect(screen.getByRole('button', { name: 'שחזור גרסה V1' })).toHaveTextContent('משחזר…');
+    expect(screen.getByRole('button', { name: 'שחזור גרסה 1' })).toHaveTextContent('משחזר…');
   });
 });
 
@@ -244,8 +244,8 @@ describe('a snapshot with no content', () => {
 
   it('cannot be viewed or restored', () => {
     renderHistory({ versions: [broken] });
-    expect(screen.getByRole('button', { name: 'צפייה בגרסה V1' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'שחזור גרסה V1' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'צפייה בגרסה 1' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'שחזור גרסה 1' })).toBeDisabled();
   });
 });
 
@@ -255,10 +255,10 @@ describe('accessibility', () => {
     // Without the tag in the name, a screen-reader user navigating by name
     // gets a list of identical "צפייה" and "שחזור" buttons.
     for (const name of [
-      'צפייה בגרסה V1',
-      'שחזור גרסה V1',
-      'צפייה בגרסה V2',
-      'שחזור גרסה V2',
+      'צפייה בגרסה 1',
+      'שחזור גרסה 1',
+      'צפייה בגרסה 2',
+      'שחזור גרסה 2',
     ]) {
       expect(screen.getByRole('button', { name })).toBeInTheDocument();
     }

@@ -247,3 +247,13 @@ describe('an item this account may not see', () => {
     ).toBeInTheDocument();
   });
 });
+
+describe('the quantities read as they do on the recipe page (QA 22.09.2026, finding 6)', () => {
+  it('prints Hebrew units and never the storage codes', async () => {
+    render_({ ...PERM_DEFAULT });
+    const flour = (await screen.findByText('קמח לחם')).closest('li')!;
+    expect(flour).toHaveTextContent("500 גר'");
+    expect(flour.textContent).not.toMatch(/\b(g|ml|tsp|unit)\b/);
+    expect(flour.textContent).not.toContain('גר׳');
+  });
+});

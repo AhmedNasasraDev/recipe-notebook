@@ -140,3 +140,15 @@
   font-weight: var(--fw-title);
   color: var(--c-muted);
 }
+
+/* A link inside a sentence keeps its place in the line but gets a finger-sized
+   target: the padding is paid back with a negative margin, so the text does
+   not move (QA 22.09.2026, acceptance finding 24). */
+.inlineLink {
+  display: inline-block;
+  padding: 10px 6px;
+  margin: -10px -6px;
+  color: var(--c-green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

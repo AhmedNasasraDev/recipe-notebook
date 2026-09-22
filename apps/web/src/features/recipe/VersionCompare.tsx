@@ -30,6 +30,7 @@ import { useMemo, useState } from 'react';
 import { type MeasurementPrefs, type Recipe } from '@recipe-notebook/engine';
 import type { StoredVersion } from '../../data/repository.js';
 import { compareRecipes, type CellValue, type FieldChange } from './versionDiff.js';
+import { versionLabel } from './versionLabel.js';
 import styles from './recipe.module.css';
 
 /**
@@ -95,12 +96,18 @@ function ChangeRow({ change }: { change: FieldChange }) {
       aria-label={`${change.label}, לפני ${cellLabel(change.before)}, אחרי ${cellLabel(change.after)}`}
     >
       <span className={styles.cmpLabel}>{change.label}</span>
+      {/*
+        Words, not an arrow. "4 ← —" in a right-to-left line does not say
+        which side is earlier (QA 22.09.2026, acceptance finding 7); "לפני"
+        and "אחרי" do, in any direction.
+      */}
       <span className={styles.cmpValues}>
-        <span className={styles.cmpBefore}>{formatCell(change.before)}</span>
-        <span className={styles.cmpArrow} aria-hidden="true">
-          ←
+        <span className={styles.cmpBefore}>
+          <span className={styles.cmpWord}>לפני</span> {formatCell(change.before)}
         </span>
-        <span className={styles.cmpAfter}>{formatCell(change.after)}</span>
+        <span className={styles.cmpAfter}>
+          <span className={styles.cmpWord}>אחרי</span> {formatCell(change.after)}
+        </span>
       </span>
     </li>
   );
@@ -132,10 +139,10 @@ export function VersionCompare({
     () => [
       ...versions.map((v) => ({
         value: v.id as CompareSide,
-        label: `גרסה ${v.tag}`,
+        label: versionLabel(v.tag),
         when: when(v.createdAt),
       })),
-      { value: 'current' as CompareSide, label: 'הגרסה הנוכחית', when: '' },
+      { value: 'current' as CompareSide, label: 'גרסה נוכחית', when: '' },
     ],
     [versions],
   );
@@ -249,7 +256,7 @@ export function VersionCompare({
         </div>
 
         <p className={styles.cmpHeading} role="status">
-          {labelOf(from)} ← {labelOf(to)}
+          מ{labelOf(from)} ל{labelOf(to)}
         </p>
 
         {from === to ? (

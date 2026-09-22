@@ -393,26 +393,33 @@ export function createSupabaseRepository({
       requireOnline('המתכון');
 
       /*
-        The photographs go FIRST. The storage policy (migration 0029) lets the
-        owner of the recipe delete its files — and once the recipe row is gone
-        there is no owner to recognise, so the files became undeletable
-        orphans (QA 22.09.2026: three files left behind by deleted recipes,
-        removable only from the dashboard). Best effort: a file that cannot be
-        removed must not stop the recipe from being deleted.
+        THE ROW FIRST, THE PHOTOGRAPHS AFTER — and the paths are read before
+        either, because the rows that hold them cascade away with the recipe.
+
+        It was the other way round: files first, then the row, because the
+        storage policy from 0029 recognised the owner through the recipe and
+        could not delete a file once the recipe was gone. QA 22.09.2026
+        (acceptance, finding 2) showed what that order costs: the network
+        dropped between the two steps, the delete was refused, the recipe
+        stayed — and its photographs were already gone for good. A refused
+        delete must leave the recipe exactly as it was, pictures included.
+
+        Migration 0039 lets the account that UPLOADED a file delete it whether
+        or not the recipe still exists, so the file can go after the row.
+        Removing it is still best effort: the recipe is deleted either way,
+        and a file nothing points at is a leak, not a loss.
       */
+      let paths: string[] = [];
       try {
         const { data: rows } = await client
           .from('recipe_images')
           .select('storage_path')
           .eq('recipe_id', id);
-        const paths = (rows ?? [])
+        paths = (rows ?? [])
           .map((r) => (r as { storage_path?: string }).storage_path)
           .filter((p): p is string => typeof p === 'string' && p !== '');
-        if (paths.length > 0) {
-          await client.storage.from(RECIPE_IMAGE_BUCKET).remove(paths);
-        }
       } catch {
-        /* the recipe is still deleted below */
+        /* no list, nothing to remove afterwards */
       }
 
       // `delete_recipe` rather than a plain DELETE. The guarantee is the
@@ -437,6 +444,14 @@ export function createSupabaseRepository({
           throw new RecipeInUseError(await this.recipesUsing(id));
         }
         throw new SupabaseRepositoryError('מחיקת המתכון נכשלה', error);
+      }
+
+      if (paths.length > 0) {
+        try {
+          await client.storage.from(RECIPE_IMAGE_BUCKET).remove(paths);
+        } catch {
+          /* the recipe is gone; a leftover file is invisible to everyone */
+        }
       }
 
       // Drop the local copy too. Leaving it would make a deleted recipe
@@ -779,21 +794,25 @@ export function createSupabaseRepository({
     async removeRecipeImage(image: RecipeImage): Promise<void> {
       requireOnline('מחיקת תמונה');
       /*
-        The OBJECT first, then the row. Postgres cannot reach into storage, so
-        nothing deletes the file for us (0029 says why there is no trigger). In
-        this order a failure leaves a row pointing at a missing file, which the
-        gallery already has to survive — a signed URL can fail for other
-        reasons. The other order leaves a file nothing points at, which nothing
-        will ever clean up.
+        The ROW first, then the object. Postgres cannot reach into storage, so
+        nothing deletes the file for us (0029 says why there is no trigger).
+
+        It was object-first, on the argument that a row pointing at a missing
+        file is survivable and a file nothing points at is not. QA 22.09.2026
+        (acceptance, finding 2) showed the survivable case from the user's
+        side: a photograph that is gone from the server but still listed on the
+        recipe, with a message that blamed the account. Row first means a
+        failure leaves the picture whole and visible; a file left behind after
+        the row is gone is a leak nobody sees (0039 lets the uploader remove
+        it, so the next delete of the same recipe sweeps it too).
       */
-      const removed = await client.storage
-        .from(RECIPE_IMAGE_BUCKET)
-        .remove([image.storagePath]);
-      if (removed.error) {
-        throw new SupabaseRepositoryError('מחיקת התמונה נכשלה', removed.error);
-      }
       const { error } = await client.from('recipe_images').delete().eq('id', image.id);
       if (error) throw new SupabaseRepositoryError('מחיקת התמונה נכשלה', error);
+      try {
+        await client.storage.from(RECIPE_IMAGE_BUCKET).remove([image.storagePath]);
+      } catch {
+        /* the picture is off the recipe; the file is invisible without its row */
+      }
     },
 
     async setRecipeImageFocus(
@@ -882,21 +901,20 @@ export function createSupabaseRepository({
         await client.storage.from(RECIPE_IMAGE_BUCKET).remove([path]);
         throw new SupabaseRepositoryError('שמירת התמונה נכשלה', error);
       }
-      // The old picture: object, then row. A failure here is reported, but
-      // the new picture is already in place and is what the recipe shows.
-      const removed = await client.storage.from(RECIPE_IMAGE_BUCKET).remove([image.storagePath]);
-      if (removed.error) {
-        throw new SupabaseRepositoryError(
-          'התמונה החדשה נשמרה, אבל מחיקת הישנה נכשלה',
-          removed.error,
-        );
-      }
+      // The old picture: row, then object (see removeRecipeImage for the
+      // order). A failed row delete is reported, because the recipe would then
+      // list two pictures; a leftover file is not, because nobody can see it.
       const gone = await client.from('recipe_images').delete().eq('id', image.id);
       if (gone.error) {
         throw new SupabaseRepositoryError(
           'התמונה החדשה נשמרה, אבל מחיקת הישנה נכשלה',
           gone.error,
         );
+      }
+      try {
+        await client.storage.from(RECIPE_IMAGE_BUCKET).remove([image.storagePath]);
+      } catch {
+        /* the new picture is in place and is what the recipe shows */
       }
       return imageFromRow(data);
     },

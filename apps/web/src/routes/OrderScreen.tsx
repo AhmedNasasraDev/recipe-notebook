@@ -189,6 +189,17 @@ export function OrderScreen() {
       : baseline.scaleWeight > 0
         ? baseline.scaleWeight
         : null;
+  /*
+    What goes on the scale per unit is the RAW weight — the finished weight
+    plus what the oven takes — and that is `scaleWeight`, the same figure
+    "פרטים מקצועיים" prints under the same heading. QA 22.09.2026
+    (acceptance, finding 4): this sheet printed the finished weight under
+    "משקל לשקילה ליחידה", so the recipe page said 114 g and the order sheet
+    said 100 g for the same bread. Without a measured bake loss the two are
+    equal, and the finished weight is all there is.
+  */
+  const weighPerUnit =
+    baseline.scaleWeight > 0 ? baseline.scaleWeight : unitWeight;
   const orderUnits = computed.unitsActual > 0 ? Math.round(computed.unitsActual) : null;
 
   const set = (key: keyof OrderDetails, value: string) =>
@@ -246,7 +257,7 @@ export function OrderScreen() {
               הכמות חייבת להיות מספר גדול מאפס. עד אז הדף מציג את המתכון הבסיסי.
             </p>
           )}
-          {ordered ? (
+          {badPick ? null : ordered ? (
             <p className={styles.formNote}>
               ההזמנה: <strong>{SCALE_MODE_TEXT[scale.mode]}</strong>
               {' · מקדם ×'}
@@ -279,9 +290,8 @@ export function OrderScreen() {
             </div>
           ))}
           <p className={styles.formNote}>
-            הפרטים האלה נכנסים לדף המודפס ונשמרים במכשיר הזה בלבד, לכל מתכון בנפרד —
-            הם אינם נשמרים בחשבון: אין במחברת מסך הזמנות, ולכן אין מקום שבו הזמנה
-            נשמרת. מי שצריך היסטוריית הזמנות צריך מסך הזמנות, לא שדה בדף הדפסה.
+            הפרטים האלה מודפסים על הדף ונשמרים במכשיר הזה בלבד, לכל מתכון בנפרד.
+            הם אינם נשמרים בחשבון.
           </p>
         </section>
 
@@ -358,7 +368,7 @@ export function OrderScreen() {
                   <Stat k="משקל אצווה" v={formatGrams(baseline.actualYield)} />
                 )}
                 {unitWeight !== null && (
-                  <Stat k="משקל ליחידה" v={formatGrams(unitWeight)} />
+                  <Stat k="משקל יחידה מוכנה" v={formatGrams(unitWeight)} />
                 )}
                 {pro && (
                   <Stat
@@ -382,11 +392,11 @@ export function OrderScreen() {
                   {orderUnits !== null && <Stat k="יחידות להזמנה" v={`${orderUnits} יחידות`} />}
                   <Stat k="מספר אצוות" v={`${fmtBatches(scale.factor)} אצוות`} />
                   <Stat k="משקל כולל לייצור" v={formatGrams(computed.actualYield)} />
-                  {unitWeight !== null && (
-                    <Stat k="משקל לשקילה ליחידה" v={formatGrams(unitWeight)} />
+                  {weighPerUnit !== null && (
+                    <Stat k="משקל לשקילה ליחידה" v={formatGrams(weighPerUnit)} />
                   )}
                 </div>
-              ) : (
+              ) : badPick ? null : (
                 <p className={styles.blockNote}>
                   לא הוגדרה כמות לייצור. הכמויות שלמטה הן לאצווה אחת, כמו במתכון.
                 </p>
@@ -529,7 +539,7 @@ export function OrderScreen() {
 
         <div className={`${styles.actions} noprint`}>
           <button type="button" className={styles.printBtn} onClick={() => window.print()}>
-            הדפסה או שמירה כ־PDF
+            הדפסה / שמירה כ-PDF
           </button>
         </div>
         <p className={`${styles.note} noprint`}>

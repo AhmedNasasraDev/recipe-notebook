@@ -111,12 +111,15 @@ describe('the three states before a photo can be shown', () => {
     expect(img).toHaveAttribute('src', 'blob:signed/r1/i1.webp');
   });
 
-  it('says a listed photo cannot be shown when signing refuses', async () => {
-    // A private object this account may not read: the row is visible through
-    // the recipe, the object is not. That is a real state, not an error.
+  it('says a listed photo is missing from the server when signing refuses', async () => {
+    // The row is there and the object is not — a delete that failed halfway,
+    // or a file removed elsewhere. QA 22.09.2026 (acceptance, finding 2): the
+    // sentence used to blame the account ("מהחשבון הזה"), which is wrong for
+    // the owner looking at their own recipe. It now says what is true and
+    // what to do about it.
     show({ images: [image()], signReturnsNull: true });
     expect(
-      await screen.findByText('התמונה אינה זמינה לצפייה מהחשבון הזה'),
+      await screen.findByText('התמונה לא נמצאה בשרת. אפשר להסיר אותה או להעלות תמונה אחרת.'),
     ).toBeInTheDocument();
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });

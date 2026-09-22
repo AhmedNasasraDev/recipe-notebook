@@ -189,7 +189,32 @@ describe('the declaration as text', () => {
       ],
     };
     const text = declarationText(composition(compute(r, [r])));
-    expect(text).toBe('קמח לבן');
+    // Both names, no share for either: the unresolved one is still declared
+    // (QA 22.09.2026, acceptance finding 5), just without a percentage.
+    expect(text).toBe('קמח לבן, אבקת מאצ׳ה');
     expect(text).not.toContain('%');
+  });
+});
+
+describe('an ingredient whose weight is unknown is still declared (QA 22.09.2026, finding 5)', () => {
+  it('lists it by name, last and without a share, instead of dropping it', () => {
+    const r: Recipe = {
+      id: 'r',
+      name: 'בריוש',
+      ingredients: [
+        { id: 'a', name: 'קמח לחם', qty: 500, unit: 'g' },
+        { id: 'b', name: 'חמאה', qty: 250, unit: 'g' },
+        // No weight per egg: unresolved, but plainly IN the product.
+        { id: 'c', name: 'ביצים', qty: 4, unit: 'unit' },
+      ],
+    };
+    const c = composition(compute(r, [r]));
+    expect(c.certain).toBe(false);
+    expect(c.missing).toEqual(['ביצים']);
+    expect(c.lines.map((l) => l.name)).toEqual(['קמח לחם', 'חמאה', 'ביצים']);
+    expect(c.lines.at(-1)).toEqual({ name: 'ביצים', grams: 0, pct: null });
+    // The declaration sentence names it too — the same sentence that says
+    // "מכיל: ביצים" must not omit the eggs from the ingredients.
+    expect(declarationText(c)).toBe('קמח לחם, חמאה, ביצים');
   });
 });

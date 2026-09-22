@@ -385,3 +385,23 @@ describe('requirement I — purchases, suppliers and costs are private', () => {
     expect(await b.purchaseHistory('חמאה 82%')).toHaveLength(1);
   });
 });
+
+describe('requirement G — a target that was never set is not "0%" (QA 22.09.2026, finding 10)', () => {
+  it('labels the row as having no target instead of printing a 0% target', async () => {
+    const user = userEvent.setup();
+    const db = seeded();
+    // The column defaults to 0, which is how "no target" is stored.
+    db['recipes']![0]!['target_fc'] = 0;
+    db['recipes']![0]!['target_gm'] = 0;
+    const p = project(db, USER_A);
+
+    render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
+    await screen.findByRole('heading', { name: 'בריוש' });
+    await user.click(screen.getByText('פרטים מקצועיים'));
+
+    const block = await screen.findByLabelText('מחיר מחושב לפי יעד');
+    expect(block).toHaveTextContent('לפי יעד פוד קוסט (לא הוגדר יעד)');
+    expect(block).toHaveTextContent('לפי יעד רווח גולמי (לא הוגדר יעד)');
+    expect(block).not.toHaveTextContent('0%');
+  });
+});

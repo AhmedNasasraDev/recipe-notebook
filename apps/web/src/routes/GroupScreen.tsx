@@ -60,7 +60,16 @@ export function GroupScreen() {
 
   const load = useCallback(async () => {
     try {
-      let detail = await api.getGroup(groupId);
+      /*
+        The roster does not depend on the group detail, so the two go out
+        together (QA 22.09.2026, acceptance finding 15: the screen said
+        "טוען…" for a chain of round trips that could have been one).
+      */
+      const [first, rosterEarly] = await Promise.all([
+        api.getGroup(groupId),
+        api.roster(groupId).catch(() => null),
+      ]);
+      let detail = first;
       /*
         A group made before codes were written at creation (QA finding 7) has
         none. Whoever may manage the group gives it one, once, on the way in;
@@ -86,7 +95,7 @@ export function GroupScreen() {
         return;
       }
       setGroup(detail);
-      const roster = await api.roster(groupId);
+      const roster = rosterEarly ?? (await api.roster(groupId));
       setMembers(roster);
       const paths = roster.map((m) => m.avatarPath).filter((p): p is string => p !== null);
       setAvatarUrls(await api.avatarUrls(paths));

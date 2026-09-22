@@ -99,6 +99,7 @@ export function composition(computed: Computed): Composition {
   const totalG = [...totals.values()].reduce((a, b) => a + b, 0);
   const certain = missing.length === 0 && totalG > 0;
 
+  const unresolved = [...new Set(missing)];
   const lines: CompositionLine[] = [...totals.entries()]
     .map(([name, grams]) => ({
       name,
@@ -110,7 +111,21 @@ export function composition(computed: Computed): Composition {
     // between two prints is not a declaration.
     .sort((a, b) => b.grams - a.grams || a.name.localeCompare(b.name, 'he'));
 
-  return { lines, totalG, certain, missing: [...new Set(missing)] };
+  /*
+    An ingredient whose weight is unknown is STILL IN THE PRODUCT. QA
+    22.09.2026 (acceptance, finding 5): the eggs of a brioche had no weight,
+    were dropped from "רכיבים:", and the same label said "מכיל: ביצים" two
+    lines down. A declaration that omits an ingredient is a false one, so the
+    unresolved names go on the list too — last, because their place in the
+    descending order cannot be established, and with no share, because no
+    share can. `missing` still names them for the screen's note.
+  */
+  const listed = new Set(lines.map((l) => l.name));
+  for (const name of unresolved) {
+    if (!listed.has(name)) lines.push({ name, grams: 0, pct: null });
+  }
+
+  return { lines, totalG, certain, missing: unresolved };
 }
 
 /**

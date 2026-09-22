@@ -560,3 +560,32 @@ describe('the palette, measured', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+/*
+  NOTHING ON SCREEN BELOW 12px.
+
+  QA 22.09.2026 (acceptance, findings 17–20 and 43): chips at 9.5px, tab
+  labels and table headings at 11px, in nine places. A floor in one test
+  rather than nine fixes, so the tenth place cannot appear. Paper is exempt
+  — the print sheets are sized for A4, not for a phone — so the print
+  feature's own sheets are left out.
+*/
+describe('no text on screen is set below 12px', () => {
+  it('every px font-size in the app stylesheets is at least 12', () => {
+    const sheets = [
+      ...moduleSheets().filter((f) => !f.includes('/features/print/')),
+      join(HERE, 'tokens.css'),
+      join(HERE, 'global.css'),
+    ];
+    const small: string[] = [];
+    for (const file of sheets) {
+      const css = readFileSync(file, 'utf8')
+        // paper only: whatever is inside @media print is not on a screen
+        .replace(/@media\s+print\s*\{[\s\S]*?\n\}/g, '');
+      for (const m of css.matchAll(/font-size:\s*(\d+(?:\.\d+)?)px/g)) {
+        if (Number(m[1]) < 12) small.push(`${file.replace(SRC, '')}: ${m[0]}`);
+      }
+    }
+    expect(small).toEqual([]);
+  });
+});

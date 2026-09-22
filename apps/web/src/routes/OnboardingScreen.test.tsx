@@ -103,7 +103,7 @@ describe('§4 onboarding — three steps, once', () => {
     await screen.findByText('איך נוח לכם לעבוד?');
     await user.click(screen.getByRole('button', { name: 'המשך' }));
     const group = screen.getByRole('heading', { name: 'משקל' }).parentElement!;
-    await user.click(within(group).getByRole('button', { name: 'oz משקל' }));
+    await user.click(within(group).getByRole('button', { name: 'אונקיה' }));
     expect(saved.at(-1)?.touchedUnits).toBe(true);
     expect(saved.at(-1)?.units).toContain('oz');
   });

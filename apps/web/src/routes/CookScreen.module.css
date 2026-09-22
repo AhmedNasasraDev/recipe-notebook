@@ -1038,6 +1038,40 @@
     font-size: 20px;
   }
 
+  /*
+    The weighing list in landscape (QA 22.09.2026, acceptance finding 14):
+    at 402px of height the pinned bar — count, note and a 60px gate — took
+    more than half of it and left one row of the list showing. The bar is
+    folded into one row and the gate to a 44px control; the two sentences
+    that explain the list are dropped, since the list itself is the
+    explanation on a screen this short.
+  */
+  .gateBar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    padding-block: 6px;
+  }
+  .gateBar .count,
+  .gateBar .miseDone,
+  .gateBar .gateNote {
+    margin: 0;
+    font-size: var(--fs-meta-lg);
+  }
+  .gateBar .gateNote {
+    flex-basis: 100%;
+  }
+  .gateBar .start {
+    min-height: 44px;
+    padding: 8px 16px;
+    flex: 1 1 auto;
+  }
+  .miseHelp {
+    display: none;
+  }
+
   .miseHelp {
     /* Still the app's body size — a phone on its side is still a phone — but
        it gives up its leading, which is what the short screen needs. */
@@ -1125,5 +1159,18 @@
 
   .focus .timerClock {
     font-size: clamp(56px, 10vh, 96px);
+  }
+}
+
+/* In fullscreen on a phone the head carries four controls; with the print
+   button's caption they wrap to two lines and "חזרה לשקילה" sits alone on
+   the second (QA 22.09.2026, acceptance finding 42). The icon and its
+   aria-label are the whole button there. */
+@media (max-width: 480px) {
+  .focus .printBtn span {
+    display: none;
+  }
+  .focus .printBtn {
+    padding-inline: 10px;
   }
 }

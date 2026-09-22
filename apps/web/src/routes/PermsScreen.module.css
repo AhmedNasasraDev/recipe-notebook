@@ -222,6 +222,13 @@
   background: var(--c-green-bg);
 }
 
+.copyWrap {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 /*
   The link, selectable and wrapping. `dir=ltr` via the `unicode-bidi` pair,
   because a URL inside an RTL paragraph otherwise has its slashes and query

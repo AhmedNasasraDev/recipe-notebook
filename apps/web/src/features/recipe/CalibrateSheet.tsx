@@ -160,6 +160,7 @@ export function CalibrateSheet({
             id="calib-grams"
             className={`${styles.calibInput} ltr`}
             inputMode="decimal"
+            placeholder="למשל 120"
             value={grams}
             onChange={(e) => setGrams(e.target.value)}
             autoFocus

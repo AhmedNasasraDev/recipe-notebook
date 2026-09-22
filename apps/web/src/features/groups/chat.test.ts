@@ -233,7 +233,7 @@ describe('naming an author without disclosing anything', () => {
   it('builds initials from the first and last word', () => {
     expect(initials('אחמד נסאסרה')).toBe('אנ');
     expect(initials('רונן')).toBe('ר');
-    expect(initials(null)).toBe('•');
+    expect(initials(null)).toBe('');
   });
 });
 

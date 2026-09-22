@@ -35,6 +35,7 @@ import type { Recipe } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import type { GroupDetail, GroupItem } from '../features/groups/types.js';
 import { PERM_LABELS } from '../features/groups/roles.js';
+import { rowLabel } from '../features/recipe/rowLabel.js';
 import styles from './GroupRecipeScreen.module.css';
 
 /** The item, its lesson and its course, found in the loaded tree. */
@@ -243,17 +244,25 @@ export function GroupRecipeScreen() {
           <section className={styles.card}>
             <h2 className={styles.h2}>רכיבים</h2>
             <ul className={styles.rows}>
-              {computed.rows.map((row, i) => (
-                <li key={`${row.ing.name}-${i}`} className={styles.row}>
-                  <span className={styles.rowName}>{row.ing.name}</span>
-                  <span className={styles.rowQty}>
-                    {row.ing.qty} {row.ing.unit}
-                    {row.g !== null && (
-                      <span className={styles.rowGrams}> · {Math.round(row.g)} גר׳</span>
-                    )}
-                  </span>
-                </li>
-              ))}
+              {computed.rows.map((row, i) => {
+                /*
+                  The SAME `rowLabel` the recipe page prints, as written. This
+                  used to print `row.ing.unit` raw — "500 g", "4 unit", "1 tsp"
+                  — the storage codes, in English, next to a second gram
+                  figure (QA 22.09.2026, acceptance finding 6). A student reads
+                  the same Hebrew line the instructor does.
+                */
+                const label = rowLabel(row, 'orig', 1, prefs);
+                return (
+                  <li key={`${row.ing.name}-${i}`} className={styles.row}>
+                    <span className={styles.rowName}>{row.ing.name}</span>
+                    <span className={styles.rowQty}>
+                      <span className="ltr">{label.text}</span>
+                      {label.hint && <span className={styles.rowGrams}> · {label.hint}</span>}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
             {computed.allergens.length > 0 && (
               <p className={styles.meta}>אלרגנים: {computed.allergens.join(', ')}</p>

@@ -865,6 +865,7 @@ export function CookScreen() {
                   id="own-timer"
                   className={styles.ownInput}
                   inputMode="numeric"
+                  placeholder="למשל 10"
                   autoComplete="off"
                   value={ownMinutes}
                   onChange={(e) => setOwnMinutes(e.target.value.replace(/[^\d]/g, ''))}

@@ -213,3 +213,13 @@
   font-size: 14.5px;
   font-weight: 500;
 }
+
+/* The one line a confirmation link earns on arrival (QA 22.09.2026, finding 31). */
+.verified {
+  margin: 0 0 var(--gap-in-group);
+  padding: 10px 12px;
+  border-radius: var(--r-control);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-secondary);
+}

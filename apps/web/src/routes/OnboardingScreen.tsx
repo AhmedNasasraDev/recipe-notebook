@@ -9,6 +9,8 @@ import {
   type ToolId,
 } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
+import { LoadingScreen } from '../app/LoadState.js';
+import { useOptionalAuth } from '../auth/AuthProvider.js';
 import styles from './OnboardingScreen.module.css';
 
 /**
@@ -40,10 +42,11 @@ const TOOL_LABELS: readonly { tool: ToolId; label: string }[] = [
 
 export function OnboardingScreen() {
   const { prefs, setPrefs, ready } = useAppData();
+  const auth = useOptionalAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
 
-  if (!ready) return null;
+  if (!ready) return <LoadingScreen />;
 
   const units = prefs.units ?? [];
 
@@ -81,6 +84,11 @@ export function OnboardingScreen() {
               <span key={i} className={i <= step ? styles.dotOn : styles.dotOff} />
             ))}
           </div>
+          {auth?.justVerified && step === 0 && (
+            <p className={styles.verified} role="status">
+              כתובת האימייל אומתה. ברוכים הבאים!
+            </p>
+          )}
           <h1 className={styles.title}>{TITLES[step]}</h1>
           <p className={styles.sub}>{SUBTITLES[step]}</p>
         </header>

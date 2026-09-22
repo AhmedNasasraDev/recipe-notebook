@@ -100,7 +100,7 @@ export function CostingPanel({ breakdown, profit, target }: CostingPanelProps) {
             margin and a 150% markup; presenting either as the other is the
             most expensive arithmetic mistake in this whole screen.
           */}
-          <dt>Markup % (רווח חלקי עלות)</dt>
+          <dt>תוספת על העלות (רווח חלקי עלות)</dt>
           <dd className="ltr" aria-label="מארקאפ אחוז">
             {pct(profit.markup)}
           </dd>
@@ -138,7 +138,7 @@ export function CostingPanel({ breakdown, profit, target }: CostingPanelProps) {
           <h4 className={styles.subTitle}>מחיר מחושב לפי יעד</h4>
           <dl className={styles.grid}>
             <div className={styles.row}>
-              <dt>{`לפי יעד פוד קוסט ${target.targetFC === null ? '' : `${target.targetFC}%`}`}</dt>
+              <dt>{target.targetFC !== null && target.targetFC > 0 ? `לפי יעד פוד קוסט ${target.targetFC}%` : 'לפי יעד פוד קוסט (לא הוגדר יעד)'}</dt>
               <dd className="ltr" aria-label="מחיר מחושב לפי יעד פוד קוסט">
                 {money(target.fromFoodCost)}
               </dd>
@@ -150,7 +150,7 @@ export function CostingPanel({ breakdown, profit, target }: CostingPanelProps) {
               </div>
             )}
             <div className={styles.row}>
-              <dt>{`לפי יעד רווח גולמי ${target.targetGM === null ? '' : `${target.targetGM}%`}`}</dt>
+              <dt>{target.targetGM !== null && target.targetGM > 0 ? `לפי יעד רווח גולמי ${target.targetGM}%` : 'לפי יעד רווח גולמי (לא הוגדר יעד)'}</dt>
               <dd className="ltr" aria-label="מחיר מחושב לפי יעד רווח גולמי">
                 {money(target.fromMargin)}
               </dd>

@@ -723,7 +723,7 @@
   margin-inline-start: 5px;
   padding: 1px 5px;
   border-radius: var(--r-control);
-  font-size: 9.5px;
+  font-size: 12px;
   font-family: var(--font-body);
   color: var(--c-amber);
   background: var(--c-amber-bg);
@@ -1195,8 +1195,11 @@
   text-decoration: line-through;
   color: var(--c-muted);
 }
-.cmpArrow {
+.cmpWord {
   color: var(--c-muted);
+  font-weight: var(--fw-body);
+  font-size: var(--fs-meta);
+  margin-inline-end: 4px;
 }
 .cmpAfter {
   font-weight: var(--fw-title);

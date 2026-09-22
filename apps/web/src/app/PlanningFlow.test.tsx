@@ -456,3 +456,31 @@ describe('stage-11: a plan that cannot be loaded is still a page', () => {
     expect(screen.getByRole('button', { name: 'התוכניות' })).toBeInTheDocument();
   });
 });
+
+describe('a material outside the centre still says what to buy (QA 22.09.2026, finding 8)', () => {
+  it('prints the requirement in grams under "צריך לקנות", and the stock note once', async () => {
+    const user = userEvent.setup();
+    const db = withPlan();
+    // Butter is in the recipe and nowhere in the centre: no purchase unit,
+    // no package, no price — but 100 cookies still need 5 × 200 g of it.
+    db['ingredients']!.push(
+      ingredientRow('cookies', {
+        id: 'ck2', name: 'חמאה', ingredient_key: 'חמאה', qty: 200, unit: 'g',
+        price: null, price_unit: null, pos: 1,
+      }),
+    );
+    const p = project(db, USER_A);
+
+    render(<AppUnderTest client={p.client} route="/plan/p1" />);
+    await screen.findByRole('heading', { name: 'שישי' });
+    await user.click(screen.getByRole('button', { name: 'רשימת רכש ועלות צפויה' }));
+
+    const list = await screen.findByLabelText('רשימת רכש');
+    expect(within(list).getByLabelText('צריך לקנות חמאה')).toHaveTextContent('1 ק"ג');
+    expect(within(list).getByLabelText('צריך לקנות חמאה')).not.toHaveTextContent('—');
+    // Said once above the list, not under every row.
+    expect(screen.getAllByText(/שדה ריק אינו אפס/)).toHaveLength(1);
+    // The not-in-the-centre link is the one statement of that fact per row.
+    expect(within(list).getAllByText('אינו במרכז חומרי הגלם')).toHaveLength(1);
+  });
+});

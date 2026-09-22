@@ -334,7 +334,7 @@ export function GroupChat({ groupId, role, members, avatarUrls }: GroupChatProps
                         <div className={styles.bubble}>
                           <p className={styles.who}>
                             <span className={styles.name}>
-                              {authorLabel(author?.displayName)}
+                              {mine ? 'אני' : authorLabel(author?.displayName)}
                             </span>
                             {m.kind === 'announcement' && (
                               <span className={styles.tag}>הכרזה</span>

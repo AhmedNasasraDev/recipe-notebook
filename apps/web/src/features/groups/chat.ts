@@ -203,9 +203,11 @@ export function authorLabel(displayName: string | null | undefined): string {
 /** One or two letters for an avatar with no picture. */
 export function initials(displayName: string | null | undefined): string {
   const name = (displayName ?? '').trim();
-  if (name === '') return '•';
+  // No name, no letter: an empty circle reads as "no picture yet", where a
+  // bullet read as a stray character (QA 22.09.2026, acceptance finding 35).
+  if (name === '') return '';
   const words = name.split(/\s+/).filter(Boolean);
-  if (words.length === 1) return [...words[0]!][0] ?? '•';
+  if (words.length === 1) return [...words[0]!][0] ?? '';
   return `${[...words[0]!][0] ?? ''}${[...words[words.length - 1]!][0] ?? ''}`;
 }
 

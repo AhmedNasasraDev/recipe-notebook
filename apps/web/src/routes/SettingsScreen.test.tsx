@@ -127,7 +127,7 @@ describe('§3 the profile can be changed after onboarding', () => {
 describe('§17 language, and §12 privacy: stated, not faked', () => {
   it('says Arabic is planned rather than offering a switch that does nothing', async () => {
     show();
-    expect(await screen.findByText(/ערבית מתוכננת ואינה זמינה/)).toBeInTheDocument();
+    expect(await screen.findByText(/ערבית מתוכננת לשלב הבא/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /ערבית/ })).not.toBeInTheDocument();
   });
 

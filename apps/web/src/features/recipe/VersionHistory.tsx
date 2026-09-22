@@ -27,6 +27,7 @@ import type { StoredVersion } from '../../data/repository.js';
 import { calcState } from './completeness.js';
 import { versionSummary } from './versionDiff.js';
 import { VersionCompare, type CompareSide } from './VersionCompare.js';
+import { versionLabel } from './versionLabel.js';
 import styles from './recipe.module.css';
 
 /** A timestamp as "12.03.2026, 14:20" — LTR, because it is a number. */
@@ -94,7 +95,7 @@ export function VersionHistory({
       <ol className={styles.versionList}>
         <li className={styles.versionCurrent}>
           <div className={styles.versionHead}>
-            <span className={styles.versionTag}>{currentTag}</span>
+            <span className={styles.versionTag}>{versionLabel(currentTag)}</span>
             <span className={styles.versionNow}>נוכחית</span>
           </div>
           <p className={styles.versionMeta}>
@@ -105,7 +106,7 @@ export function VersionHistory({
         {versions.map((v) => (
           <li key={v.id} className={styles.versionItem}>
             <div className={styles.versionHead}>
-              <span className={styles.versionTag}>{v.tag}</span>
+              <span className={styles.versionTag}>{versionLabel(v.tag)}</span>
               <span className={`${styles.versionWhen} ltr`}>{when(v.createdAt)}</span>
             </div>
             {/* requirement 4: enough to identify the version. `what` says what
@@ -123,7 +124,7 @@ export function VersionHistory({
                 className={styles.versionBtn}
                 onClick={() => setViewing(v)}
                 disabled={v.snapshot['snapshotUnavailable'] === true}
-                aria-label={`צפייה בגרסה ${v.tag}`}
+                aria-label={`צפייה ב${versionLabel(v.tag)}`}
               >
                 צפייה
               </button>
@@ -132,7 +133,7 @@ export function VersionHistory({
                 className={styles.versionBtn}
                 onClick={() => setComparing({ from: v.id, to: 'current' })}
                 disabled={v.snapshot['snapshotUnavailable'] === true}
-                aria-label={`השוואת גרסה ${v.tag} לגרסה הנוכחית`}
+                aria-label={`השוואת ${versionLabel(v.tag)} לגרסה הנוכחית`}
               >
                 השוואה
               </button>
@@ -145,7 +146,7 @@ export function VersionHistory({
                   busyId !== null ||
                   v.snapshot['snapshotUnavailable'] === true
                 }
-                aria-label={`שחזור גרסה ${v.tag}`}
+                aria-label={`שחזור ${versionLabel(v.tag)}`}
               >
                 {busyId === v.id ? 'משחזר…' : 'שחזור'}
               </button>
@@ -155,9 +156,9 @@ export function VersionHistory({
               <div
                 className={styles.versionConfirm}
                 role="alertdialog"
-                aria-label={`אישור שחזור גרסה ${v.tag}`}
+                aria-label={`אישור שחזור ${versionLabel(v.tag)}`}
               >
-                <p className={styles.versionConfirmTitle}>לשחזר את {v.tag}?</p>
+                <p className={styles.versionConfirmTitle}>לשחזר את {versionLabel(v.tag)}?</p>
                 <p className={styles.versionConfirmBody}>
                   הגרסה הנוכחית תישמר בהיסטוריה לפני השחזור, כך שאפשר יהיה לבטל
                   גם את השחזור הזה. שום גרסה לא נמחקת.
@@ -170,7 +171,7 @@ export function VersionHistory({
                       setConfirming(null);
                       onRestore(v);
                     }}
-                    aria-label={`אישור שחזור גרסה ${v.tag}`}
+                    aria-label={`אישור שחזור ${versionLabel(v.tag)}`}
                   >
                     כן, לשחזר
                   </button>
@@ -283,12 +284,12 @@ function VersionViewer({
       className={styles.sheetBackdrop}
       role="dialog"
       aria-modal="true"
-      aria-label={`גרסה ${version.tag}`}
+      aria-label={versionLabel(version.tag)}
     >
       <div className={styles.sheet}>
         <header className={styles.sheetHead}>
           <div>
-            <h2 className={styles.sheetTitle}>גרסה {version.tag}</h2>
+            <h2 className={styles.sheetTitle}>{versionLabel(version.tag)}</h2>
             <p className={styles.sheetName}>{snapshot.name || '(בלי שם)'}</p>
           </div>
           <button
@@ -307,7 +308,7 @@ function VersionViewer({
         </p>
 
         <h3 className={styles.sheetSub}>רכיבים</h3>
-        <ul className={styles.versionIngList} aria-label={`רכיבי גרסה ${version.tag}`}>
+        <ul className={styles.versionIngList} aria-label={`רכיבי ${versionLabel(version.tag)}`}>
           {(snapshot.ingredients ?? []).map((ing, i) => {
             const row = computed.rows.find((r) => r.ing.id === ing.id);
             const written = `${ing.qty ?? ''} ${unitLabel(ing.unit)}`.trim();
@@ -356,7 +357,7 @@ function VersionViewer({
               calc.level === 'none' ? styles.calcNoneBox : styles.calcPartialBox
             }
             role="status"
-            aria-label={`שלמות החישוב של גרסה ${version.tag}`}
+            aria-label={`שלמות החישוב של ${versionLabel(version.tag)}`}
           >
             {calc.summary}
           </p>
@@ -385,7 +386,7 @@ function VersionViewer({
           className={styles.calibrateBtn}
           onClick={onRestore}
           disabled={!canRestore}
-          aria-label={`שחזור גרסה ${version.tag}`}
+          aria-label={`שחזור ${versionLabel(version.tag)}`}
         >
           שחזור הגרסה הזאת
         </button>

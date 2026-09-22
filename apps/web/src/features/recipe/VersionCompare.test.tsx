@@ -96,9 +96,9 @@ describe('requirement 7 — any two versions of the same recipe', () => {
     for (const label of ['הגרסה להשוואה מצד אחד', 'הגרסה להשוואה מצד שני']) {
       const picker = screen.getByLabelText(label);
       const options = within(picker).getAllByRole('option').map((o) => o.textContent ?? '');
-      expect(options.some((o) => o.includes('גרסה V1'))).toBe(true);
-      expect(options.some((o) => o.includes('גרסה V2'))).toBe(true);
-      expect(options.some((o) => o.includes('הגרסה הנוכחית'))).toBe(true);
+      expect(options.some((o) => o.includes('גרסה 1'))).toBe(true);
+      expect(options.some((o) => o.includes('גרסה 2'))).toBe(true);
+      expect(options.some((o) => o.includes('גרסה נוכחית'))).toBe(true);
     }
   });
 
@@ -108,8 +108,8 @@ describe('requirement 7 — any two versions of the same recipe', () => {
     await user.selectOptions(screen.getByLabelText('הגרסה להשוואה מצד אחד'), 'v1');
     await user.selectOptions(screen.getByLabelText('הגרסה להשוואה מצד שני'), 'v2');
 
-    expect(screen.getByRole('status')).toHaveTextContent('גרסה V1');
-    expect(screen.getByRole('status')).toHaveTextContent('גרסה V2');
+    expect(screen.getByRole('status')).toHaveTextContent('גרסה 1');
+    expect(screen.getByRole('status')).toHaveTextContent('גרסה 2');
 
     // V1 -> V2 added the salt. The live recipe also has salt, so a comparison
     // that quietly used it as one side would show no addition at all.
@@ -120,8 +120,8 @@ describe('requirement 7 — any two versions of the same recipe', () => {
   it('shows when each version was taken, so they can be told apart', () => {
     renderCompare();
     const picker = screen.getByLabelText('הגרסה להשוואה מצד אחד');
-    expect(within(picker).getByRole('option', { name: /V1.*12\.03\.2026/ })).toBeInTheDocument();
-    expect(within(picker).getByRole('option', { name: /V2.*14\.03\.2026/ })).toBeInTheDocument();
+    expect(within(picker).getByRole('option', { name: /גרסה 1.*12\.03\.2026/ })).toBeInTheDocument();
+    expect(within(picker).getByRole('option', { name: /גרסה 2.*14\.03\.2026/ })).toBeInTheDocument();
   });
 
   it('says so rather than showing an empty result when both sides are the same', async () => {

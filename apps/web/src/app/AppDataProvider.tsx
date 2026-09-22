@@ -54,6 +54,15 @@ export interface AppData {
   /** a human-readable note about where the data is coming from */
   backendNote: string;
   error: string | null;
+  /**
+   * The FIRST load failed and nothing is on screen (QA 22.09.2026, finding
+   * 1). Distinct from `error`, which is the banner over a working notebook:
+   * this one means there is no notebook to put a banner over, so the gate
+   * shows a failure screen with `reload` on it instead of a blank page.
+   */
+  loadFailed: boolean;
+  /** Runs the initial load again. The gate's "ניסיון חוזר". */
+  reload(): void;
   setPrefs(patch: Partial<MeasurementPrefs>): Promise<void>;
   setCalibrations(list: readonly Calibration[]): Promise<void>;
   getRecipe(id: string): Recipe | null;
@@ -255,10 +264,15 @@ export function AppDataProvider({
   const [categories, setCategories] = useState<readonly string[]>([]);
   const [catalog, setCatalog] = useState<readonly CatalogItem[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  // Bumped by `reload()`; the load effect depends on it, so a bump is a load.
+  const [loadRun, setLoadRun] = useState(0);
   const [caps, setCaps] = useState<RepositoryCapabilities>(() => repo.capabilities());
 
   useEffect(() => {
     let cancelled = false;
+    setReady(false);
+    setLoadFailed(false);
     // `void`: the body catches everything, so there is nothing to await and
     // nothing that can reject — but saying so explicitly is what keeps the next
     // edit from adding a throw path nobody handles.
@@ -279,8 +293,12 @@ export function AppDataProvider({
         setCategories(cats);
         setCatalog(materials);
         setCaps(repo.capabilities());
+        setError(null);
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'טעינת הנתונים נכשלה');
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : 'טעינת הנתונים נכשלה');
+          setLoadFailed(true);
+        }
       } finally {
         if (!cancelled) setReady(true);
       }
@@ -288,7 +306,9 @@ export function AppDataProvider({
     return () => {
       cancelled = true;
     };
-  }, [repo]);
+  }, [repo, loadRun]);
+
+  const reload = useCallback(() => setLoadRun((n) => n + 1), []);
 
   // The offline half of the hybrid model needs to know when the network drops,
   // so a screen can say "מוצג מהמכשיר" instead of silently showing stale data.
@@ -523,6 +543,8 @@ export function AppDataProvider({
       capabilities: caps,
       backendNote: describeBackend(caps),
       error,
+      loadFailed,
+      reload,
       setPrefs,
       setCalibrations,
       getRecipe,
@@ -566,6 +588,8 @@ export function AppDataProvider({
       categories,
       caps,
       error,
+      loadFailed,
+      reload,
       setPrefs,
       setCalibrations,
       getRecipe,

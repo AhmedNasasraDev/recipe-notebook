@@ -115,6 +115,19 @@ describe('the sign-in screen, end to end through the provider', () => {
     expect(screen.queryByTestId('status')).not.toBeInTheDocument();
   });
 
+  it('refuses an address that is not an address, without calling the server (QA 22.09.2026, finding 16)', async () => {
+    const user = userEvent.setup();
+    const fake = createFakeAuth({ accounts: { ...CONFIRMED_ACCOUNT } });
+    renderApp(fake);
+    await screen.findByRole('heading', { name: 'מחברת מתכונים' });
+    await user.type(screen.getByLabelText('אימייל'), 'not-an-email');
+    await user.type(screen.getByLabelText('סיסמה'), 'sourdough1');
+    await user.click(screen.getByRole('button', { name: 'כניסה למחברת' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('כתובת האימייל אינה תקינה');
+    expect(screen.queryByText('רגע…')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('status')).not.toBeInTheDocument();
+  });
+
   it('refuses an empty form without calling the server', async () => {
     const user = userEvent.setup();
     const fake = createFakeAuth();

@@ -14,7 +14,7 @@ import { memoryIdb, resetMemoryIdb } from '../test/memoryIdb.js';
 // The order details are kept in the device mirror, which is idb-keyval.
 vi.mock('idb-keyval', () => memoryIdb());
 
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { defaultPrefs, type Recipe } from '@recipe-notebook/engine';
 import { OrderScreen } from './OrderScreen.js';
@@ -117,7 +117,11 @@ describe('the quantities are the ones for THIS order', () => {
     // Not a silent ×1: the sheet has to state which quantities it is showing.
     show({ query: '?mode=units&v=לא-מספר' });
     await screen.findByLabelText('דף ההזמנה');
-    expect(screen.getByText(/כמויות כמו במתכון/)).toBeInTheDocument();
+    // ONE message (QA 22.09.2026, acceptance finding 25): the alert says the
+    // value is unusable and that the sheet shows the base recipe meanwhile;
+    // the "no quantity" note is not stacked under it.
+    expect(screen.getByRole('alert')).toHaveTextContent('הדף מציג את המתכון הבסיסי');
+    expect(screen.queryByText(/לא הוגדרה כמות לייצור\. יש לבחור/)).not.toBeInTheDocument();
   });
 
   it('ignores a mode that is not one of the four', async () => {
@@ -321,7 +325,7 @@ describe('the base recipe and the order are kept apart', () => {
     expect(sheet).toHaveTextContent('המתכון הבסיסי — אצווה אחת');
     expect(sheet).toHaveTextContent('תפוקה בסיסית');
     expect(sheet).toHaveTextContent('2 יחידות');
-    expect(sheet).toHaveTextContent('משקל ליחידה');
+    expect(sheet).toHaveTextContent('משקל יחידה מוכנה');
     expect(sheet).toHaveTextContent('700 גר');
     expect(sheet).not.toHaveTextContent('יחידות להזמנה');
     expect(sheet).not.toHaveTextContent('מספר אצוות');
@@ -386,5 +390,33 @@ describe('the base recipe and the order are kept apart', () => {
     await user.type(screen.getByLabelText('יחידות'), '0');
     expect(await screen.findByRole('alert')).toHaveTextContent(/מספר גדול מאפס/);
     expect(screen.getByLabelText('דף ההזמנה')).toHaveTextContent('אצווה אחת (כמו במתכון)');
+  });
+});
+
+describe('what goes on the scale per unit (QA 22.09.2026, acceptance finding 4)', () => {
+  it('prints the RAW weight per unit under "משקל לשקילה ליחידה", not the finished weight', async () => {
+    // 700 g finished, weighed before and after the oven at 1000 → 900 g: a
+    // 10% bake loss, so 700 g finished means 777.8 g of dough on the scale.
+    const weighed: Recipe = {
+      ...BREAD,
+      id: 'weighed',
+      weightBefore: 1000,
+      weightAfter: 900,
+    };
+    show({ recipes: [weighed], id: 'weighed', pro: true, query: '?mode=units&v=4' });
+    const sheet = await screen.findByLabelText('דף ההזמנה');
+    const raw = within(sheet).getByText('משקל לשקילה ליחידה').closest('div')!;
+    expect(raw).toHaveTextContent("778 גר'");
+    expect(raw).not.toHaveTextContent("700 גר'");
+    // The finished weight keeps its own, differently named line.
+    const finished = within(sheet).getByText('משקל יחידה מוכנה').closest('div')!;
+    expect(finished).toHaveTextContent("700 גר'");
+  });
+
+  it('falls back to the finished weight when no bake loss was measured', async () => {
+    show({ recipes: [BREAD], id: 'bread', query: '?mode=units&v=4' });
+    const sheet = await screen.findByLabelText('דף ההזמנה');
+    const raw = within(sheet).getByText('משקל לשקילה ליחידה').closest('div')!;
+    expect(raw).toHaveTextContent("700 גר'");
   });
 });

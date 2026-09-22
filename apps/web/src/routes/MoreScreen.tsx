@@ -128,7 +128,7 @@ export function MoreScreen() {
         {status === 'signed-in' && user ? (
           <p className={styles.note}>
             מחוברים כ־<span className="ltr">{user.email}</span>. ניהול החשבון
-            והסיסמה נמצא ב<Link to="/settings">הגדרות</Link>.
+            והסיסמה נמצא ב<Link to="/settings" className={styles.inlineLink}>הגדרות</Link>.
           </p>
         ) : (
           <p className={styles.note}>

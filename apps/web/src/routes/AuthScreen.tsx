@@ -34,6 +34,14 @@ export function AuthScreen() {
       setError('יש למלא אימייל וסיסמה.');
       return;
     }
+    // The form is `noValidate` (its own messages, in Hebrew), so the address
+    // is checked here before a round trip is spent on it (QA 22.09.2026,
+    // acceptance finding 16). The shape only: whether the address EXISTS is
+    // the server's answer, never this screen's.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
+      setError('כתובת האימייל אינה תקינה. יש להזין כתובת בצורה name@example.com.');
+      return;
+    }
 
     setBusy(true);
     try {

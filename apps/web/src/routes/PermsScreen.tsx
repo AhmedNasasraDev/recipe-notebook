@@ -54,6 +54,39 @@ import {
 import { authorLabel } from '../features/groups/chat.js';
 import styles from './PermsScreen.module.css';
 
+/*
+  THE INVITATION IS A BUTTON, NOT A STRING.
+
+  The screen printed the whole link — sixty-four hex characters at label
+  size — for the person to select and copy by hand (QA 22.09.2026, acceptance
+  finding 9). What they want is the link on the clipboard; the characters
+  are the app's business. The text is still there for a browser without a
+  clipboard API, and only then.
+*/
+function CopyLink({ link }: { link: string }) {
+  const [state, setState] = useState<'idle' | 'copied' | 'manual'>('idle');
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setState('copied');
+    } catch {
+      setState('manual');
+    }
+  };
+  return (
+    <span className={styles.copyWrap}>
+      <button type="button" className={styles.link} onClick={() => void copy()}>
+        {state === 'copied' ? 'הקישור הועתק ✓' : 'העתקת הקישור'}
+      </button>
+      {state === 'manual' && (
+        <code className={styles.codeSmall} aria-label="קישור ההזמנה">
+          {link}
+        </code>
+      )}
+    </span>
+  );
+}
+
 export function PermsScreen() {
   const { groupId = '' } = useParams();
   const { groups: api } = useAppData();
@@ -325,7 +358,7 @@ export function PermsScreen() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="student@example.com"
+              placeholder="כתובת המייל של המוזמן"
             />
           </label>
           <label className={styles.field}>
@@ -349,7 +382,7 @@ export function PermsScreen() {
 
         {newLink !== null && (
           <p className={styles.linkBox}>
-            <code className={styles.code}>{newLink}</code>
+            <CopyLink link={newLink} />
           </p>
         )}
 
@@ -370,9 +403,7 @@ export function PermsScreen() {
                     </span>
                   </span>
                   <span className={styles.rowActions}>
-                    {state === 'pending' && (
-                      <code className={styles.codeSmall}>{inviteLink(i.token, origin)}</code>
-                    )}
+                    {state === 'pending' && <CopyLink link={inviteLink(i.token, origin)} />}
                     {canRevoke(state) && (
                       <button
                         type="button"

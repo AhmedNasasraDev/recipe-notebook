@@ -221,7 +221,7 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
 
     const section = await screen.findByLabelText('היסטוריית גרסאות');
     expect(within(section).getByText('נוכחית')).toBeInTheDocument();
-    expect(within(section).getByText('V1')).toBeInTheDocument();
+    expect(within(section).getByText('גרסה 1')).toBeInTheDocument();
     // The description was computed by `versionDiff` from the two states and
     // stored with the version — not typed by anyone.
     expect(String(versionsOf(db)[0]!['what'])).toContain('שונתה כמות: מים');
@@ -232,9 +232,9 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
     const user = userEvent.setup();
     await withOneVersion(user);
 
-    await user.click(await screen.findByRole('button', { name: 'צפייה בגרסה V1' }));
-    const dialog = await screen.findByRole('dialog', { name: 'גרסה V1' });
-    const list = within(dialog).getByLabelText('רכיבי גרסה V1');
+    await user.click(await screen.findByRole('button', { name: 'צפייה בגרסה 1' }));
+    const dialog = await screen.findByRole('dialog', { name: 'גרסה 1' });
+    const list = within(dialog).getByLabelText('רכיבי גרסה 1');
     expect(list).toHaveTextContent('420');
     expect(list).not.toHaveTextContent('450');
   }, 30_000);
@@ -243,9 +243,9 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
     const user = userEvent.setup();
     const { db } = await withOneVersion(user);
 
-    await user.click(await screen.findByRole('button', { name: 'שחזור גרסה V1' }));
+    await user.click(await screen.findByRole('button', { name: 'שחזור גרסה 1' }));
     const confirm = await screen.findByRole('alertdialog');
-    await user.click(within(confirm).getByRole('button', { name: 'אישור שחזור גרסה V1' }));
+    await user.click(within(confirm).getByRole('button', { name: 'אישור שחזור גרסה 1' }));
 
     // the formula went back to the 420 g state
     await waitFor(() =>
@@ -260,7 +260,7 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
     expect(String(v2['what'])).toContain('שחזור');
 
     // the new version shows up without a reload
-    expect(await screen.findByText('V2')).toBeInTheDocument();
+    expect(await screen.findByText('גרסה 2')).toBeInTheDocument();
   }, 30_000);
 
   it('restores an OLD version after several saves, and restores again', async () => {
@@ -282,9 +282,9 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
     await openPro(user);
 
     // reach past V2 to the oldest version
-    await user.click(await screen.findByRole('button', { name: 'שחזור גרסה V1' }));
+    await user.click(await screen.findByRole('button', { name: 'שחזור גרסה 1' }));
     let confirm = await screen.findByRole('alertdialog');
-    await user.click(within(confirm).getByRole('button', { name: 'אישור שחזור גרסה V1' }));
+    await user.click(within(confirm).getByRole('button', { name: 'אישור שחזור גרסה 1' }));
     await waitFor(() =>
       expect(db['ingredients']!.find((i) => i['name'] === 'מים')!['qty']).toBe(420),
     );
@@ -292,9 +292,9 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
     await waitFor(() => expect(versionsOf(db)).toHaveLength(3));
 
     // restoring the same version a second time is not a special case
-    await user.click(await screen.findByRole('button', { name: 'שחזור גרסה V1' }));
+    await user.click(await screen.findByRole('button', { name: 'שחזור גרסה 1' }));
     confirm = await screen.findByRole('alertdialog');
-    await user.click(within(confirm).getByRole('button', { name: 'אישור שחזור גרסה V1' }));
+    await user.click(within(confirm).getByRole('button', { name: 'אישור שחזור גרסה 1' }));
     await waitFor(() => expect(versionsOf(db)).toHaveLength(4));
     expect(db['ingredients']!.find((i) => i['name'] === 'מים')!['qty']).toBe(420);
     // nothing was destroyed on the way — V1 is still V1
@@ -318,9 +318,9 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
           : realRpc(n, a)) as never,
     );
 
-    await user.click(await screen.findByRole('button', { name: 'שחזור גרסה V1' }));
+    await user.click(await screen.findByRole('button', { name: 'שחזור גרסה 1' }));
     const confirm = await screen.findByRole('alertdialog');
-    await user.click(within(confirm).getByRole('button', { name: 'אישור שחזור גרסה V1' }));
+    await user.click(within(confirm).getByRole('button', { name: 'אישור שחזור גרסה 1' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('תת־המתכון המקושר אינו קיים');
     // and the live recipe did not move
