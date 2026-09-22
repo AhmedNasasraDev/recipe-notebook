@@ -34,7 +34,7 @@ npm run build              # packages/engine ואז apps/web → apps/web/dist
    npx supabase functions deploy send-group-invite --project-ref <project-ref>
    ```
    וסודות (ראו `supabase/README.md`, "Connecting the invitation email"): `RESEND_API_KEY`, `INVITE_FROM`, `PUBLIC_SITE_URL`. עד שהם קיימים הפונקציה עונה `{ sent: false }` והאפליקציה מציעה להעתיק את הקישור.
-5. **Database**: כל 38 המיגרציות ב-`supabase/migrations` מוחלות (אומת ב-22.09.2026). אין מיגרציה חדשה בסבב הזה.
+5. **Database**: כל 39 המיגרציות ב-`supabase/migrations` מוחלות. מיגרציה `0038_recipe_image_focus` (עמודות `focal_x`/`focal_y` ב-`recipe_images`) הוחלה על הפרויקט ב-22.09.2026 בסבב השני, באישור — בלעדיה שמירת מיקום התמונה נכשלה ב-PGRST204.
 6. **Storage**: buckets פרטיים `recipe-images` (webp, עד 2MB) ו-`avatars` (webp, עד 512KB) קיימים.
 7. **אזהרות אבטחה של Supabase שלא טופלו** (החלטה של בעל הפרויקט): 9 פונקציות `SECURITY DEFINER` ניתנות להרצה למשתמשים מחוברים (`approve_group_join`, `course_rank`, `group_rank`, `group_roster`, `lesson_rank`, `redeem_group_invite`, `reject_group_invite`, `request_group_join`, `shares_group_with`). כולן בודקות `auth.uid()` והרשאות בגוף הפונקציה; הן מכוונות. אפשר להשאיר, ואפשר לצמצם בהמשך.
 
@@ -53,6 +53,8 @@ npm run build              # packages/engine ואז apps/web → apps/web/dist
 2. הרשמה עם מייל חדש → המייל מגיע → הקישור מחזיר **לכתובת הפריסה** ומחובר → שאלות הפתיחה → מחברת ריקה.
 3. F5: נשארים במחברת (לא חוזרים לשאלות הפתיחה).
 4. מתכון חדש עם 2 רכיבים ומחיר עם יחידה → נשמר → F5 → קיים. ניסיון שמירה עם כמות 0 → נחסם.
+4א. במתכון: "הדפסה / שמירה כ-PDF" בסרגל העליון → תצוגת ההדפסה מציגה גיליון נקי (שם, תמונה, רכיבים, שלבים, זמנים, טמפרטורות) בלי כפתורי האפליקציה, ושמירה כ-PDF מהטלפון מייצרת קובץ עם שם המתכון.
+4ב. בתמונה: "התאמת מיקום התמונה" → לחיצה על התמונה → "שמירת המיקום" → "המיקום נשמר" → F5 → החיתוך נשאר.
 5. תמונה למתכון → מופיעה בכרטיס במחברת → פתיחה בדפדפן אחר עם אותו חשבון → מופיעה.
 6. מצב הכנה → טיימר אישי דקה → F5 → הטיימר ממשיך → בסיום נשמע צליל (בטלפון: רטט).
 7. קבוצה חדשה → מוצג "קוד הקבוצה" → מחשבון שני "הצטרפות עם קוד" → בקשה → אישור → חבר.
