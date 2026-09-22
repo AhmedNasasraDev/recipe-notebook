@@ -167,10 +167,13 @@ describe('§6 scaling, through the engine', () => {
     await waitFor(() => {
       expect(screen.getByText(/מקדם ×/)).toBeInTheDocument();
     });
-    // The recipe declares 12 units, so targeting 24 is exactly ×2 — the
-    // declared count is the baseline (QA 22.09.2026, finding 3); the weighed
-    // count (11.9) is reported separately as a warning.
-    expect(screen.getByText('2.00')).toBeInTheDocument();
+    // The demo brioche declares 12 units AND carries a measured yield
+    // (yieldActual 1150 g), and a measured batch is the measured truth: at
+    // 85 g a unit with 12% baking loss that is 11.906 units, so targeting 24
+    // is ×2.02. A recipe with a declared count and no measured yield scales
+    // off the declared count exactly (QA 22.09.2026, finding 3) — see the
+    // engine's acceptance tests.
+    expect(screen.getByText('2.02')).toBeInTheDocument();
   });
 });
 
