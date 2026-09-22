@@ -1,0 +1,3 @@
+PASS E1 desktop 1440×900 14 screens: no text under 12px, no internal markers, no horizontal overflow
+PASS E2 phone 402×874 8 screens: no text under 12px, no internal markers, no horizontal overflow
+SUMMARY: 2/2 passed

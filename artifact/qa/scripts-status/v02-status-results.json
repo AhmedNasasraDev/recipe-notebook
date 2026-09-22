@@ -1,0 +1,42 @@
+[
+ {
+  "n": "1a",
+  "pass": true,
+  "detail": "while recipes load slowly (1.5 s): \"טוען את המחברת…\""
+ },
+ {
+  "n": "1b",
+  "pass": true,
+  "detail": "recipes request fails (settled after 7168 ms): \"המחברת לא נטענה טעינת המחברת נכשלה: אין חיבור לשרת. בדקו את החיבור לאינטרנט ונסו שוב — מה שהוקלד נשאר על המסך. בדקו את החיבור לאינטרנט ונסו \""
+ },
+ {
+  "n": "1c",
+  "pass": true,
+  "detail": "after \"ניסיון חוזר\" (1019 ms): notebook loaded = true"
+ },
+ {
+  "n": "1d",
+  "pass": true,
+  "detail": "Supabase unreachable at start (settled after 7172 ms): \"המחברת לא נטענה טעינת ההעדפות נכשלה: אין חיבור לשרת. בדקו את החיבור לאינטרנט ונסו שוב — מה שהוקלד נשאר על המסך. בדקו את \""
+ },
+ {
+  "n": "16",
+  "pass": true,
+  "detail": "message: \"כתובת האימייל אינה תקינה.\"; token requests sent: 0"
+ },
+ {
+  "n": "6",
+  "pass": true,
+  "detail": "student rows: \"קמח לחם 500 גר' מלח 10 גר' סוכר 60 גר' שמרים טריים 15 גר' ביצים 4 יח' · כמות לפי המתכון חלב 100 מ\"ל · 103 גר' תמצית וניל 1 כפית · כמות לפי המתכון חמאה 250 גר'\""
+ },
+ {
+  "n": "31",
+  "pass": true,
+  "detail": "onboarding after a confirmation link: \"כתובת האימייל אומתה. ברוכים הבאים!\""
+ },
+ {
+  "n": "39",
+  "pass": true,
+  "detail": "empty notebook: \"יצירת המתכון הראשון או הדבקת מתכון מטקסט בית מחבר\""
+ }
+]
