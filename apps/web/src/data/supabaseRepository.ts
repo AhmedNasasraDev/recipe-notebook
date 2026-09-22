@@ -99,10 +99,20 @@ import { createSupabaseGroups } from './supabaseGroups.js';
 import * as mirror from './offlineMirror.js';
 import { DEMO_CATEGORIES } from './demoRecipes.js';
 
-/** The column list used to pull a whole recipe in one round trip. */
+/**
+ * The column list used to pull a whole recipe in one round trip.
+ *
+ * `ingredients` names its foreign key. The table has TWO keys to `recipes` —
+ * `recipe_id` (the recipe the line belongs to) and `sub_recipe_id` (a line
+ * that is itself a recipe, migration 0002) — and PostgREST refuses to guess
+ * between them: without the hint every read of a recipe answered HTTP 300
+ * "more than one relationship was found" (PGRST201), so the notebook never
+ * loaded against the real project. The lines of a recipe are the ones whose
+ * `recipe_id` is this recipe, which is what the hint says.
+ */
 const RECIPE_SELECT = `
   *,
-  ingredients (*),
+  ingredients!ingredients_recipe_id_fkey (*),
   steps (*),
   issues (*),
   trials (*),

@@ -244,12 +244,19 @@ const RLS_DENIED: PostgrestLikeError = {
   code: '42501',
 };
 
-/** `ingredients (*)` inside a select string — the nested-embed syntax. */
+/**
+ * `ingredients (*)` inside a select string — the nested-embed syntax.
+ *
+ * A child may name its foreign key, `ingredients!ingredients_recipe_id_fkey (*)`,
+ * which is how PostgREST is told which of two keys to follow. The hint is
+ * dropped here: this double joins every child on CHILD_FK, so the table name
+ * is all it needs, and the response key is the table name either way.
+ */
 function embeddedTables(select: string | undefined): string[] {
   if (!select) return [];
   // Any column list, not just `(*)`: the plans list embeds
   // `production_plan_items (id)` purely to count them.
-  return [...select.matchAll(/(\w+)\s*\(\s*[^()]*\)/g)].map((m) => m[1]!);
+  return [...select.matchAll(/(\w+)(?:!\w+)?\s*\(\s*[^()]*\)/g)].map((m) => m[1]!);
 }
 
 /**
