@@ -20,9 +20,12 @@
 //      operating itself with no visible cause is hard to follow. So a ring is
 //      drawn at the point about to be clicked, a beat before the real click
 //      happens there. It marks a real event; it does not cause one.
-//   2. CAPTIONS, composited afterwards rather than drawn into the page —
-//      see `caption.mjs`. Burning Hebrew with ffmpeg's `drawtext` is not an
-//      option: it has no bidi shaping, so the words come out reversed.
+//   2. CAPTIONS, painted into the recorded page itself, in a panel beside
+//      the application. They were composited afterwards once, and that is
+//      how the captions ended up describing the wrong screens — see the
+//      layout note below. Burning them in with ffmpeg's `drawtext` was never
+//      an option either: it has no bidi shaping, so Hebrew comes out
+//      reversed.
 //   3. WAITS. Long enough to read a screen. Ahmed allowed exactly this:
 //      "אפשר לקצר זמני המתנה בעריכה, אך לא לזייף התנהגות או תוצאה."
 //
@@ -105,17 +108,42 @@ const BASE = `http://127.0.0.1:${PORT}/index.html`;
   rather than correcting for it: the words and the screen they describe are
   the same frame, so they cannot disagree. ffmpeg is then only a transcode.
 */
-const SIZE = { width: 1440, height: 900 };
-const APP_W = 1000;
-const PANEL_W = SIZE.width - APP_W;
+const LAYOUT = { width: 1920, height: 1200 };
+const APP_W = 1333;
+const PANEL_W = LAYOUT.width - APP_W;
+/*
+  ── WHERE THE EXTRA PIXELS ACTUALLY COME FROM ─────────────────────────────
+
+  Ahmed: "אם ניתן לייצא מחדש ממקור איכותי יותר, עשה זאת; אל תסתפק בהגדלת
+  קובץ קיים ותציג אותה כשיפור בחדות."
+
+  The first attempt asked Playwright to record a 1440×900 page into a
+  2880×1800 file and called the result a 2880×1800 capture. It was not.
+  Playwright fits the page into the video size and NEVER scales it up, so the
+  frames held the page at 1440×900 in the top-left corner with grey padding
+  over the other three quarters — measured by pulling a frame out of the take
+  and looking at it. Encoding that to 1920×1200 would have been precisely the
+  upscale-as-sharpness Ahmed ruled out.
+
+  So the picture is genuinely bigger instead: the viewport is 1920×1200 and
+  the application is laid out at the same 1000×900 CSS box as before with
+  `zoom: 4/3` over it. The layout is identical — the same breakpoints, the
+  same 760px frame, nothing reflows — and Chromium rasterises every glyph at
+  the zoomed size, so the frames hold 1920×1200 of really drawn pixels. The
+  encode is then 1:1 with the capture, with nothing resampled at all.
+*/
+const ZOOM = LAYOUT.width / 1440;
+const SIZE = { ...LAYOUT };
 
 const browser = await chromium.launch({
   executablePath: CHROME,
   args: ['--no-sandbox', '--force-prefers-reduced-motion=false'],
 });
 const ctx = await browser.newContext({
-  viewport: SIZE,
-  deviceScaleFactor: 1,
+  viewport: LAYOUT,
+  /* Rendered at twice the viewport and downsampled into the video, which is
+     supersampling: the same 1920×1200 frame, with finer edges on the type. */
+  deviceScaleFactor: 2,
   recordVideo: { dir: OUT, size: SIZE },
 });
 
@@ -140,20 +168,47 @@ const chapterOrder = [];
  * Ahmed asked to be delivered with the video. One call keeps them identical,
  * which the composited version could not promise.
  */
+/*
+  ── HOW LONG A LINE STAYS UP ──────────────────────────────────────────────
+
+  Ahmed: "התאם את משך הסצנות לאורך ההקראה והשאר רגע להבנת התוצאה. אל תאיץ את
+  הקול כדי להתאים אותו לסצנה קצרה. קצץ המתנות מיותרות."
+
+  So the caption decides its own duration instead of every scene carrying a
+  hand-tuned `wait`. 14 characters a second is an unhurried Hebrew reading
+  pace, and the beat after it is the moment to take in what the screen just
+  did. The floor stops a three-word line from flashing past; the ceiling
+  stops a long one from stalling the film.
+
+  This is also what makes the file ready for a voice track: each line's
+  window is already at least as long as saying it takes.
+*/
+const READ_CPS = 14;
+const holdFor = (text, kind) => {
+  const read = (text.length / READ_CPS) * 1000;
+  const beat = kind === 'title' ? 900 : 1100;
+  return Math.round(Math.min(9500, Math.max(2600, read + beat)));
+};
+
 const say = async (text, opts = {}) => {
   if (opts.chapter) chapter = opts.chapter;
   if (!chapterOrder.includes(chapter)) chapterOrder.push(chapter);
+  const kind = opts.kind ?? 'caption';
   const cue = {
     t: at(),
     chapter,
     text,
-    kind: opts.kind ?? 'caption',
+    kind,
     nth: chapterOrder.indexOf(chapter) + 1,
     count: `${String(cues.length + 1).padStart(2, '0')}`,
   };
   cues.push(cue);
+  await pinPage();
   await page.evaluate((c) => window.__filmSay?.(c), cue);
-  console.log(`${at().toFixed(1).padStart(6)}s  ${chapter} — ${text.slice(0, 70)}`);
+  console.log(`${at().toFixed(1).padStart(6)}s  ${chapter} — ${text.slice(0, 66)}`);
+  /* `hold: false` when something has to happen WHILE the line is up. */
+  if (opts.hold !== false) await wait(holdFor(text, kind));
+  cue.hold = opts.hold === false ? 0 : holdFor(text, kind);
 };
 
 const page = await ctx.newPage();
@@ -167,24 +222,30 @@ await page.route('**/*', (r) =>
    Injected, so it survives every navigation, and built from the product's own
    font and palette so the two halves of the frame look like one thing. */
 await page.addInitScript(
-  ([appW, panelW]) => {
+  ([appW, panelW, zoom]) => {
     const build = () => {
       if (document.getElementById('film-panel')) return;
 
       const css = document.createElement('style');
       css.textContent = `
         html, body { overflow: hidden !important; }
+        /* Laid out in the SAME CSS pixels as before and drawn a third
+           bigger: zoom multiplies the raster, not the layout, so no
+           breakpoint, column or frame width moves because the film got
+           sharper. */
         #root {
           position: absolute !important;
           inset-block: 0 !important;
           left: 0 !important;
-          inline-size: ${appW}px !important;
+          inline-size: ${appW / zoom}px !important;
+          zoom: ${zoom};
         }
         #film-panel {
           position: fixed;
           inset-block: 0;
           right: 0;
-          inline-size: ${panelW}px;
+          zoom: ${zoom};
+          inline-size: ${panelW / zoom}px;
           z-index: 2147483646;
           display: flex;
           flex-direction: column;
@@ -255,6 +316,52 @@ await page.addInitScript(
       if (held) window.__filmSay(JSON.parse(held));
     };
 
+    /*
+      ── A GENTLE PUSH IN ON THE THING BEING TALKED ABOUT ──────────────────
+
+      Ahmed: "הוסף תקריבים עדינים לשדות ולתוצאות שחשוב לקרוא, בלי לחתוך מידע
+      נחוץ או את פאנל ההסבר."
+
+      The transform is on `#root` — the application — and the caption panel is
+      its sibling, so the panel can never be cropped by a zoom however far it
+      goes. The origin is the centre of whatever is being shown, so the thing
+      in question stays put while everything else grows around it.
+
+      Up to 1.3, which is deliberately modest and is also the arithmetic
+      limit below: a price field at 1.3 is comfortably readable and still
+      leaves its row, its label and the rows either side in frame, which is
+      what stops a close-up from hiding the context that makes the number
+      mean something.
+    */
+    window.__filmZoom = ({ y, scale }) => {
+      const root = document.getElementById('root');
+      if (!root) return;
+      root.style.transition = 'transform .7s cubic-bezier(.4,0,.2,1)';
+      if (scale === 1 || y === null) {
+        root.style.transform = '';
+        return;
+      }
+      /*
+        ── THE HORIZONTAL ORIGIN IS NOT NEGOTIABLE ────────────────────────
+
+        A first cut put the origin on the centre of the element, both axes,
+        and a 1.5× push on a price field slid the form's left column out of
+        the picture — "בלי לחתוך מידע", which is the one thing a close-up
+        must not do. So the origin's x is the middle of the app column and
+        only the y follows the element: the card is 760 CSS px inside a 1000
+        px column, so up to 1000/760 = 1.31× it grows symmetrically and every
+        one of its edges stays in frame. Vertical cropping is all a zoom does
+        here, and vertical cropping is what scrolling does anyway.
+
+        Coordinates arrive in viewport pixels, measured by Playwright; the
+        origin is read in the element's own unzoomed pixels, hence the divide.
+      */
+      const host = root.getBoundingClientRect();
+      const capped = Math.min(scale, 1.3);
+      root.style.transformOrigin = `${root.offsetWidth / 2}px ${(y - host.top) / zoom}px`;
+      root.style.transform = `scale(${capped})`;
+    };
+
     window.__filmSay = (cue) => {
       const panel = document.getElementById('film-panel');
       if (!panel) return;
@@ -276,10 +383,33 @@ await page.addInitScript(
       build();
     }
   },
-  [APP_W, PANEL_W],
+  [APP_W, PANEL_W, ZOOM],
 );
 
 const wait = (ms) => page.waitForTimeout(ms);
+
+/**
+ * Push in on one element; `zoomOut()` returns to the whole screen.
+ *
+ * The box is measured HERE, by Playwright, and only the centre point crosses
+ * into the page — so a locator can use Playwright's own syntax and the
+ * browser never has to parse it.
+ */
+const zoomTo = async (locator, scale = 1.25) => {
+  const target = typeof locator === 'string' ? page.locator(locator) : locator;
+  const box = await target.first().boundingBox().catch(() => null);
+  if (!box) return false;
+  await page.evaluate((a) => window.__filmZoom?.(a), {
+    y: box.y + box.height / 2,
+    scale,
+  });
+  await wait(800);
+  return true;
+};
+const zoomOut = async () => {
+  await page.evaluate((a) => window.__filmZoom?.(a), { y: null, scale: 1 });
+  await wait(750);
+};
 
 /** Move the ring to a point, so the click that follows has a visible cause. */
 async function point(x, y) {
@@ -294,6 +424,27 @@ async function point(x, y) {
     [x, y],
   );
   await wait(320);
+}
+
+/*
+  ── A CONTROL THE WORDS DEPEND ON IS NOT OPTIONAL ─────────────────────────
+
+  The price scene used to look for the save button by the text ON it —
+  /שמירה|עדכון/ — inside an `if (count > 0)`. The button's accessible name is
+  its aria-label, "שמירת חומר הגלם", which matches neither: the count was
+  zero, the `if` skipped the click in silence, and the caption that follows
+  it announced a saved price over an edit form that had never been saved.
+  Found by pulling that frame out of the take and reading it.
+
+  So anything a caption asserts is fetched through here, and a build that
+  does not have it fails the take instead of narrating over it.
+*/
+async function need(locator, what) {
+  const found = locator.first();
+  if ((await found.count()) === 0) {
+    throw new Error(`the film needs ${what}, and this build has none`);
+  }
+  return found;
 }
 
 async function tap(locator, { settle = 700 } = {}) {
@@ -326,6 +477,39 @@ async function write(locator, text, { delay = 55 } = {}) {
 }
 
 /** Scroll the app's own scroller, slowly, the way a thumb does. */
+/*
+  ── THE FILM'S PAGE DOES NOT SCROLL; THE APPLICATION INSIDE IT DOES ────────
+
+  `html` and `body` are `overflow: hidden` in the film page, and that stops a
+  PERSON scrolling them — it does not stop the browser. When a save moves
+  focus, Chromium scrolls the nearest scrollable ancestor to reveal the
+  focused thing, and that ancestor is the document: measured at 400px after
+  the wizard's save, which put the top of a recipe's photograph 293px above
+  the frame while the caption said the photograph opens at the top of the
+  page.
+
+  So the document is pinned back to zero before every caption. Nothing the
+  application does is affected — its own scroller is untouched.
+*/
+const pinPage = () =>
+  page.evaluate(() => {
+    const doc = document.scrollingElement;
+    if (doc && doc.scrollTop !== 0) doc.scrollTop = 0;
+    if (document.body.scrollTop !== 0) document.body.scrollTop = 0;
+  });
+
+/** Back to the top of the screen — both scrollers, in one step. */
+async function toTop() {
+  await page.evaluate(() => {
+    const main = document.querySelector('main[class*="content"]');
+    if (main) main.scrollTop = 0;
+    const doc = document.scrollingElement;
+    if (doc) doc.scrollTop = 0;
+    document.body.scrollTop = 0;
+  });
+  await wait(500);
+}
+
 async function scroll(by, steps = 14) {
   for (let i = 0; i < steps; i += 1) {
     await page.evaluate((amount) => {
@@ -379,82 +563,100 @@ async function expectScreen(heading, what) {
 }
 
 try {
-  /* ══ OPENING ═══════════════════════════════════════════════════════════ */
+  /* ══ OPENING ═══════════════════════════════════════════════════════════
+     Ahmed asked the opening to say who this is for and what it is worth,
+     "בהתאם ליכולות שמודגמות בפועל" — so every claim below is demonstrated
+     later in the film and nothing else is claimed. */
   await go('/home', /^בית$/);
-  await say('מחברת מתכונים — מערכת עבודה לקונדיטוריה מקצועית', {
-    chapter: 'פתיחה',
-    kind: 'title',
-  });
-  await wait(2600);
+  await say('מחברת מתכונים', { chapter: 'פתיחה', kind: 'title' });
   await say(
-    'ההקלטה הזאת היא האפליקציה עצמה, רצה בדפדפן. כל לחיצה, הקלדה ושמירה כאן אמיתיות.',
+    'מערכת עבודה לקונדיטוריה מקצועית — לקונדיטור עצמאי, למאפייה ולבית ספר לקונדיטוריה.',
   );
-  await wait(3200);
+  await say(
+    'מתכון אחד שמחושב נכון בכל כמות: עלות אמיתית, המרות לפי הכלים של המטבח, ותהליך הכנה לצד התנור.',
+  );
+  await say('מה שרואים כאן הוא האפליקציה עצמה. כל לחיצה, הקלדה ושמירה מתרחשות באמת.');
 
   /* ══ א. HOME AND NAVIGATION ════════════════════════════════════════════ */
-  await say('מסך הבית והניווט', { chapter: 'א. הבית והניווט', kind: 'title' });
-  await wait(2200);
-  await say('הבית הוא נקודת הפתיחה: חיפוש, שש דרכי כניסה, והמשך מאיפה שעצרת.');
-  await wait(3000);
-  await scroll(320);
-  await say('פעולות מהירות — המחברת, חומרי גלם, כלי מדידה, קבוצות, תכנון וקטגוריות.');
-  await wait(2600);
-  await scroll(360);
-  await say('קטגוריות עם מספר המתכונים בכל אחת, ומתכוני הבסיס עם העלות לקילוגרם.');
-  await wait(3000);
-  await scroll(-680, 10);
+  /*
+    ── A CHAPTER CARD COMES AFTER ITS SCREEN, NOT BEFORE IT ────────────────
 
-  await say('פס הניווט התחתון מחזיק ארבעה אזורים: בית, מחברת, קבוצות ועוד.');
-  await wait(2400);
+    The first cut announced each chapter and THEN navigated, which put
+    "שאר המערכת" in the panel for three and a half seconds while the food
+    cost from the previous chapter was still on the left — measured by
+    pulling that exact frame out of the take. Ahmed: "ודא שכל משפט נשמע בזמן
+    שהכיתובית והפעולה שלו על המסך". So the screen arrives first and the title
+    names what is already there.
+  */
+  await say('הבית והניווט', { chapter: 'א. הבית והניווט', kind: 'title' });
+  await say('הבית פותח את יום העבודה: חיפוש, כניסות מהירות, וחזרה למה שהופסק באמצע.');
+  await scroll(320);
+  await say('הכניסות המהירות מובילות למחברת, לחומרי הגלם, לכלי המדידה, לקבוצות ולתכנון הייצור.');
+  await scroll(360);
+  await say('הקטגוריות מציגות כמה מתכונים יש בכל אחת, ומתכוני הבסיס מציגים את העלות לקילוגרם.');
+  await scroll(-680, 10);
+  await say('פס הניווט התחתון מחלק את המערכת לארבעה אזורים: בית, מחברת, קבוצות ועוד.');
 
   /* ══ ב. THE NOTEBOOK ═══════════════════════════════════════════════════ */
-  await say('מחברת המתכונים והקטגוריות', { chapter: 'ב. המחברת', kind: 'title' });
-  await wait(2000);
   await tap(page.locator('nav[aria-label="ניווט ראשי"] a[href="/notebook"]'));
   await expectScreen(/מחברת מתכונים/, 'the notebook tab');
-  await say('המחברת: כל המתכונים, עם תמונה, קטגוריה, תשואה ומשקל ליחידה.');
-  await wait(2800);
-  await scroll(300);
-  await wait(600);
-  await scroll(-300, 8);
+  await say('מחברת המתכונים', { chapter: 'ב. המחברת', kind: 'title' });
+  await say('המחברת מרכזת את כל המתכונים: תמונה, קטגוריה, תשואה ומשקל ליחידה.');
 
-  await say('סינון לפי קטגוריה — הסינון נשמר בכתובת, כך שחזרה לרשימה מחזירה אותו.');
-  await wait(2400);
+  await say('סינון לפי קטגוריה. הסינון נשמר, כך שחזרה לרשימה מחזירה אותה כפי שהייתה.', {
+    hold: false,
+  });
   await tap(page.getByRole('button', { name: 'בצקים', exact: true }));
-  await say('שלושה מתכוני בצקים.');
   await wait(2200);
+  await say('שלושה מתכוני בצקים.');
   await tap(page.getByRole('button', { name: 'הכל', exact: true }));
 
-  await say('חיפוש חופשי לפי שם, תג או רכיב.');
-  await wait(1800);
+  await say('החיפוש סורק שמות, תגיות ורכיבים — ולא רק את שם המתכון.', { hold: false });
   await write(page.locator('#nb-search'), 'קרם');
-  await say('החיפוש עובד על שמות, תגים ורכיבים — לא רק על השם.');
   await wait(2600);
   await write(page.locator('#nb-search'), '');
-  await wait(600);
+  await wait(500);
 
   /* ══ ג. CREATING A RECIPE ══════════════════════════════════════════════ */
-  await say('יצירת מתכון — אשף בארבעה שלבים', { chapter: 'ג. יצירת מתכון', kind: 'title' });
-  await wait(2200);
   await tap(page.getByRole('link', { name: 'מתכון חדש' }));
   await expectScreen(/מתכון חדש/, 'the editor');
-  await say('שלב 1 — פרטים: שם, קטגוריה, תגים, ותמונה.');
-  await wait(2400);
+  await say('יצירת מתכון', { chapter: 'ג. יצירת מתכון', kind: 'title' });
+  await say('אשף בארבעה שלבים. שלב ראשון: שם, קטגוריה ותגיות.', { hold: false });
   await write(page.getByLabel('שם המתכון'), 'טארט לימון מרנג');
   await tap(page.locator('#r-category'), { settle: 300 });
   await page.selectOption('#r-category', { label: 'עוגות ועוגיות' }).catch(() => {});
-  await wait(700);
-  await say('בחירת קטגוריה מתוך הקטגוריות של המערכת.');
-  await wait(2000);
+  await wait(900);
+  await say('הקטגוריה נבחרת מתוך הקטגוריות של המערכת.');
   await scroll(420);
-  await say(
-    'תמונה אפשר לבחור כבר כאן. במתכון חדש היא מועלית ברגע השמירה הראשונה — לפני זה אין עוד מתכון לשמור אותה עליו.',
+  /*
+    ── A REAL PHOTOGRAPH, THROUGH THE REAL INPUT ───────────────────────────
+
+    The caption used to say a photo can be chosen here while nothing was
+    chosen, and the recipe screen a minute later said "תמונת המתכון נפתחת
+    בראש הדף" over a screen with no photograph on it — the demo repository
+    seeds none. Caught by pulling the frame and looking at it.
+
+    So the film picks one, through the product's own file input: the browser
+    converts it to WebP and the first save uploads it, exactly as it would on
+    a phone. Nothing here is staged — if the conversion or the save broke,
+    the recording would show a recipe with no picture.
+  */
+  const photoInput = await need(
+    page.locator('input[type="file"][accept="image/*"]'),
+    "the editor's photo input",
   );
-  await wait(4200);
+  {
+    await photoInput.setInputFiles(
+      /* The cream photograph, because the recipe being typed is a lemon
+         meringue tart and the dough one would have been a picture of
+         something else. */
+      path.join(ROOT, 'apps', 'web', 'src', 'assets', 'categories', 'creams-640.webp'),
+    );
+  }
+  await say('אפשר לבחור תמונה כבר בשלב הזה. במתכון חדש היא נשמרת יחד עם השמירה הראשונה.');
 
   await tap(page.getByRole('button', { name: /^שלב 2 / }));
-  await say('שלב 2 — חומרי גלם: שם, כמות ויחידה לכל שורה.');
-  await wait(2400);
+  await say('שלב שני: חומרי הגלם. שם, כמות ויחידת מידה לכל שורה.', { hold: false });
   await write(page.getByLabel('שם הרכיב בשורה 1'), 'חמאה 82%');
   await write(page.getByLabel('כמות של חמאה 82%'), '180');
   await tap(page.getByRole('button', { name: 'הוספת רכיב' }));
@@ -463,42 +665,32 @@ try {
   await tap(page.getByRole('button', { name: 'הוספת רכיב' }));
   await write(page.getByLabel('שם הרכיב בשורה 3'), 'ביצים');
   await write(page.getByLabel('כמות של ביצים'), '4');
-  await say('המערכת מחשבת תוך כדי: משקל כולל, שלמות החישוב ומה חסר.');
-  await wait(3000);
   await scroll(320);
-  await wait(1500);
+  await say('המערכת מחשבת תוך כדי הקלדה: משקל כולל, ומה חסר כדי שהחישוב יהיה מלא.');
 
   await tap(page.getByRole('button', { name: /^שלב 3 / }));
-  await say('שלב 3 — אופן ההכנה: שלבים, זמנים וטמפרטורות.');
-  await wait(2200);
+  await say('שלב שלישי: אופן ההכנה — שלבים, זמנים וטמפרטורות.', { hold: false });
   const step1 = page.getByLabel(/הוראה בשלב 1/).first();
   if ((await step1.count()) > 0) {
-    await write(step1, 'להקציף חמאה וסוכר עד בהיר ואוורירי.', { delay: 35 });
+    await write(step1, 'להקציף חמאה וסוכר עד בהיר ואוורירי.', { delay: 32 });
   }
-  await wait(900);
+  await wait(1200);
 
   await tap(page.getByRole('button', { name: /^שלב 4 / }));
-  await say('שלב 4 — סיכום, ואז שמירה.');
-  await wait(2000);
+  await say('שלב רביעי: סיכום לפני שמירה.');
   await tap(page.getByRole('button', { name: /שמירת ה(מתכון|שינויים)/ }), { settle: 1800 });
   await expectScreen(/טארט לימון מרנג/, 'the saved recipe');
-  await say('נשמר. המתכון נפתח, והתוכן שהוקלד נמצא בו.');
-  await wait(3000);
-  await scroll(360);
-  await wait(1600);
-  await scroll(-360, 8);
+  await say('המתכון נשמר ונפתח, עם כל מה שהוקלד בו.');
+  /* The next line is about the photograph at the top of the page, and the
+     save has just scrolled the page 400px down (see pinPage). Saying it over
+     a cropped photograph is the kind of small dishonesty this film is not
+     allowed. */
+  await toTop();
+  await say('התמונה שנבחרה הומרה, נשמרה ונפתחת בראש הדף, בגובה קבוע ובלי עיוות.');
 
-  /* ══ ד. WORKING WITH A RECIPE ══════════════════════════════════════════ */
-  await say('עבודה עם מתכון', { chapter: 'ד. עבודה עם מתכון', kind: 'title' });
-  await wait(2000);
-  await go('/recipe/brioche', /בריוש נאנטר/);
-  await say('תמונת המתכון בראש הדף, בגובה קבוע וללא מתיחה.');
-  await wait(2600);
-
-  await say('למי שמורשה לערוך: התאמת המיקום שנשאר במרכז החיתוך.');
-  await wait(2400);
   const focusBtn = page.getByRole('button', { name: 'התאמת מיקום התמונה' });
   if ((await focusBtn.count()) > 0) {
+    await say('מי שמורשה לערוך יכול לקבוע איזו נקודה בתמונה תישאר במרכז.', { hold: false });
     await tap(focusBtn);
     const band = page.getByRole('button', {
       name: 'בחירת מיקום התמונה — לחיצה על הנקודה שתישאר במרכז',
@@ -507,183 +699,274 @@ try {
     if (box) {
       await point(box.x + box.width * 0.3, box.y + box.height * 0.28);
       await page.mouse.click(box.x + box.width * 0.3, box.y + box.height * 0.28);
-      await wait(900);
-      await say('התמונה זזה מיד — זו תצוגה מקדימה על התמונה האמיתית, בגודל האמיתי.');
-      await wait(2800);
-      await tap(page.getByRole('button', { name: 'שמירת המיקום' }), { settle: 1500 });
-      await say('נשמר. המיקום נשמר על התמונה ולא על הדפדפן, ולכן הוא שורד רענון.');
-      await wait(3000);
+      await wait(1200);
+      await tap(page.getByRole('button', { name: 'שמירת המיקום' }), { settle: 1400 });
+      await say('הנקודה שנבחרה נשמרת יחד עם התמונה.');
     }
   }
+  await scroll(360);
+  await wait(900);
+  await scroll(-360, 8);
+
+  /* ══ ד. WORKING WITH A RECIPE ══════════════════════════════════════════ */
+  await go('/recipe/brioche', /בריוש נאנטר/);
+  await say('עבודה עם מתכון', { chapter: 'ד. עבודה עם מתכון', kind: 'title' });
 
   await scroll(300);
-  await say('שינוי כמות להכנה: לפי יחידות, לפי משקל, או לפי המלאי שיש בפועל.');
-  await wait(3000);
+  await say('כמה להכין: לפי מספר יחידות, לפי משקל סופי, או לפי המלאי שקיים בפועל.', {
+    hold: false,
+  });
   await tap(page.getByRole('button', { name: 'יחידות', exact: true }));
   const units = page.locator('input[inputmode="decimal"], input[type="number"]').first();
   if ((await units.count()) > 0) {
-    await write(units, '24', { delay: 120 });
-    await say('כל הכמויות במתכון חושבו מחדש — כולל המשקל הכולל ומשקל היחידה.');
-    await wait(3200);
+    await write(units, '24', { delay: 130 });
+    await wait(900);
+    await say('כל הכמויות במתכון מחושבות מחדש, יחד עם המשקל הכולל ומשקל היחידה.');
   }
   await scroll(360);
-  await say('כל שורה מציגה המרה: מגרמים לכוסות וחזרה, לפי הכלים שנמדדו בהגדרות.');
-  await wait(3000);
-  const convert = page.getByRole('button', { name: /^המר/ }).first();
-  if ((await convert.count()) > 0) {
-    await tap(convert);
-    await wait(1800);
-  }
+  await say('לכל שורה יש המרה — מגרמים לכוסות ובחזרה — לפי הכלים שנמדדו במערכת.', {
+    hold: false,
+  });
+  /*
+    The whole ingredient row is the button, and its accessible name is the
+    row read out — "500 גר' קמח לחם 13% חלבון המר" — so /^המר/ matched
+    nothing and the sheet never opened under a caption describing it. The
+    flour row by name, and then the sheet itself, checked.
+  */
+  await tap(await need(page.getByRole('button', { name: /קמח לחם/ }), 'the flour row'));
+  await need(page.getByRole('dialog', { name: 'המרת יחידה' }), 'the conversion sheet');
+  await wait(2200);
   await scroll(420);
-  await say('עלויות: עלות לכל שורה, עלות כוללת, עלות ליחידה ולקילוגרם.');
-  await wait(3200);
+  await say('העלויות מחושבות לכל שורה, לכל האצווה, ליחידה ולקילוגרם.');
   await scroll(420);
-  await say('אלרגנים נאספים אוטומטית מחומרי הגלם שבמתכון.');
-  await wait(2600);
+  await say('האלרגנים נאספים אוטומטית מחומרי הגלם של המתכון.');
   await scroll(520);
-  await say('הערה אישית — שמורה לחשבון בלבד, ואינה נוסעת עם המתכון בשיתוף.');
-  await wait(2800);
+  await say('ההערה האישית נשארת פרטית, ואינה חלק מהמתכון שמשותף עם אחרים.');
 
   /* ══ ה. THE FULL PREPARATION ═══════════════════════════════════════════ */
-  await say('תהליך הכנה מלא', { chapter: 'ה. מצב הכנה', kind: 'title' });
-  await wait(2000);
   await go('/recipe/brioche', /בריוש נאנטר/);
+  await say('מצב הכנה', { chapter: 'ה. מצב הכנה', kind: 'title' });
   await scroll(240);
   await tap(page.getByRole('link', { name: 'מצב הכנה' }), { settle: 1600 });
   await expectScreen(/הכנת חומרי גלם/, 'cook mode');
-  await say('מיז־אן־פלאס: כל חומרי הגלם בכמות של ההכנה הזאת, לסימון לפני שמתחילים.');
-  await wait(3400);
+  await say('מיז אן פלאס: כל חומרי הגלם בכמות של ההכנה הזאת, לשקילה ולסימון לפני שמתחילים.');
   const boxes = page.locator('section[aria-label="הכנת חומרי גלם"] input[type="checkbox"]');
   const n = await boxes.count();
   for (let i = 0; i < Math.min(3, n); i += 1) {
-    await tap(boxes.nth(i), { settle: 380 });
+    await tap(boxes.nth(i), { settle: 340 });
   }
-  await say('המסך אומר כמה נותרו — ואפשר לעבור להכנה גם לפני שהכול סומן.');
-  await wait(3000);
+  await say('המסך סופר כמה נותרו, ומאפשר להתחיל גם לפני שהכול סומן.');
   for (let i = 3; i < n; i += 1) {
-    await tap(boxes.nth(i), { settle: 260 });
+    await tap(boxes.nth(i), { settle: 240 });
   }
   await say('הכול מוכן.');
-  await wait(1800);
   await tap(page.getByRole('button', { name: /מתחילים בהכנה/ }), { settle: 1600 });
-  await say('שלבי העבודה, אחד בכל פעם, בטקסט גדול למטבח.');
-  await wait(3000);
+  await say('שלבי העבודה מופיעים אחד בכל פעם, בטקסט גדול שנקרא מרחוק.');
   const timer = page.getByRole('button', { name: /טיימר|דקות/ }).first();
   if ((await timer.count()) > 0) {
     await tap(timer, { settle: 1400 });
-    await say('טיימר לשלב, מתוך הזמן שנרשם במתכון.');
-    await wait(2600);
+    await say('טיימר לשלב, לפי הזמן שנרשם במתכון.');
   }
-  await tap(page.getByRole('button', { name: 'הבא' }), { settle: 1100 });
-  await tap(page.getByRole('button', { name: 'הבא' }), { settle: 1100 });
-  await say('ההתקדמות נשמרת על המכשיר — יציאה וחזרה מחזירות לאותו שלב.');
-  await wait(2800);
+  await tap(page.getByRole('button', { name: 'הבא' }), { settle: 1000 });
+  await tap(page.getByRole('button', { name: 'הבא' }), { settle: 1000 });
+  await say('ההתקדמות נשמרת על המכשיר. אפשר לצאת ולחזור.', { hold: false });
   await tap(page.getByRole('button', { name: 'יציאה' }), { settle: 1400 });
   await scroll(240);
-  await tap(page.getByRole('link', { name: 'מצב הכנה' }), { settle: 1600 });
-  await say('חזרנו — וההכנה ממשיכה מהשלב שבו עצרנו, לא מההתחלה.');
-  await wait(3200);
+  await tap(page.getByRole('link', { name: 'מצב הכנה' }), { settle: 1700 });
+  await say('החזרה ממשיכה מהשלב שבו ההכנה נעצרה.');
 
-  /* ══ ו. INGREDIENTS AND COSTS ══════════════════════════════════════════ */
-  await say('חומרי גלם ועלויות', { chapter: 'ו. חומרי גלם ועלויות', kind: 'title' });
-  await wait(2000);
+  /* ══ ו. INGREDIENTS AND COSTS ══════════════════════════════════════════
+     REBUILT, because the first cut's words and its actions disagreed. It
+     typed 52 into the PACKAGE COUNT field while the caption spoke about a
+     price per kilogram, and the arithmetic in that caption was wrong as
+     well. The fixture is 10 packages of 1 kg for 340 — 34 a kilogram — so
+     the demonstration is now a supplier raising that total to 420, which is
+     42 a kilogram, and the recipe's costs following it. */
+  /*
+    ── WHAT THE CENTRE ACTUALLY MOVES, AND WHAT IT DOES NOT ───────────────
+
+    This scene was written to show a supplier's price changing and the
+    recipe's cost following it. Then the check below — read the recipe's
+    raw-material cost before and after — reported 19.21 → 19.21, twice, and
+    the reason turned out to be by design rather than broken:
+
+      · `features/pricing/catalog.ts`: a recipe row with a price OF ITS OWN
+        keeps it. The centre is the source only for rows that have none.
+      · every row in the demo data carries its own price — the brioche's
+        butter says 38 a kilogram while the centre says 34 — so nothing in
+        this dataset inherits, and nothing follows the centre.
+
+    Ahmed's rule for exactly this case is "אם מתגלה באג בחישוב... תעד אותו
+    והצג את הבעיה לפני שאתה משנה": so the calculation is untouched, the
+    finding is written up for him, and the film says what is true instead of
+    what the scene was hoping for. The price change in the centre is real and
+    checked; the sentence about recipes states the rule rather than claiming
+    a movement the viewer cannot see.
+  */
+  const openFoodCost = async () => {
+    const summary = await need(
+      page.locator('summary', { hasText: 'פרטים מקצועיים' }),
+      'the professional-details disclosure',
+    );
+    await tap(summary, { settle: 1000 });
+    const panel = await need(page.locator('[aria-label="פוד קוסט"]'), 'the food-cost panel');
+    await panel.scrollIntoViewIfNeeded().catch(() => {});
+    await wait(600);
+    return panel;
+  };
   await go('/ingredients', /^חומרי גלם$/);
+  await say('חומרי גלם ועלויות', { chapter: 'ו. חומרי גלם ועלויות', kind: 'title' });
   await say('מרכז חומרי הגלם: מחיר אחד לכל חומר, במקום אחד.');
-  await wait(2800);
-  await say('כאן היה חסר כפתור חזרה — הוא נוסף, והוא חוזר למסך שממנו באת.');
-  await wait(2800);
-  await scroll(260);
-  await say('נשנה את מחיר החמאה ונראה מה זה עושה לעלות של מתכון.');
-  await wait(2600);
-  const editButtons = page.getByRole('button', { name: /^עריכת חמאה/ });
-  if ((await editButtons.count()) > 0) {
-    await tap(editButtons.first(), { settle: 900 });
-    const price = page.locator('input[inputmode="decimal"]').first();
-    if ((await price.count()) > 0) {
-      await write(price, '52', { delay: 150 });
-      await say('340 ש״ח ל־10 ק״ג הופכים ל־52 ש״ח לקילוגרם.');
-      await wait(2400);
-      const save = page.getByRole('button', { name: /שמירה|עדכון/ }).first();
-      if ((await save.count()) > 0) await tap(save, { settle: 1400 });
-    }
+  await say('בכל מסך פנימי יש חזרה, שמחזירה למסך הקודם.');
+  await scroll(240);
+
+  const butter = await need(page.locator('li', { hasText: 'חמאה 82%' }), 'the butter row');
+  await butter.scrollIntoViewIfNeeded().catch(() => {});
+  await zoomTo(butter, 1.3);
+  await say('חמאה: עשר חבילות של קילוגרם, בשלוש מאות וארבעים שקלים. שלושים וארבעה שקלים לקילוגרם.');
+  await zoomOut();
+
+  await tap(await need(page.getByRole('button', { name: /^עריכת חמאה/ }), 'the edit button'), {
+    settle: 900,
+  });
+  await say('הספק העלה מחיר. אותן עשר חבילות עולות עכשיו ארבע מאות ועשרים שקלים.', {
+    hold: false,
+  });
+  /* The TOTAL PAID field, by its id — not "the first decimal input", which is
+     how the first cut ended up editing the package count. */
+  const total = await need(page.locator('#ic-total'), 'the total-paid field');
+  await total.scrollIntoViewIfNeeded().catch(() => {});
+  await zoomTo('#ic-total', 1.3);
+  await write(total, '420', { delay: 180 });
+  await wait(1800);
+  await zoomOut();
+  /* By the accessible name, which is the aria-label and not the word on the
+     button — see `need`. */
+  await tap(await need(page.getByRole('button', { name: 'שמירת חומר הגלם' }), 'the save button'), {
+    settle: 1500,
+  });
+
+  /*
+    THE SAVE EITHER HAPPENED OR THE FILM DOES NOT GET TO SAY IT DID.
+
+    The row's own text is the evidence: thirty-four a kilogram before, forty-
+    two after. Reading it back here is what turns the next caption from a
+    claim into a description.
+  */
+  const updated = await need(page.locator('li', { hasText: 'חמאה 82%' }), 'the butter row');
+  const rowText = (await updated.textContent()) ?? '';
+  if (!/42[.,]00/.test(rowText)) {
+    throw new Error(`the butter row still reads «${rowText.replace(/\s+/g, ' ').trim()}»`);
   }
-  await go('/recipe/brioche', /בריוש נאנטר/);
-  await scroll(900);
-  await say('אותו מתכון, אחרי שינוי המחיר: העלויות חושבו מחדש מהמחיר החדש.');
-  await wait(3400);
+  await zoomTo(updated, 1.3);
+  await say('המחיר לקילוגרם עלה משלושים וארבעה לארבעים ושניים שקלים.');
+  await zoomOut();
+
+  /*
+    ── THIS ONE NAVIGATION IS BY HAND, AND IT HAS TO BE ────────────────────
+
+    `go()` loads the page again, and the demo repository lives in the
+    bundle's memory: a reload puts every fixture back to its opening state.
+    So the first cut of this scene saved a new butter price, reloaded into
+    the recipe, and showed the OLD cost under a caption saying costs follow
+    the new price — 19.21 before and 19.21 after, caught by the check below
+    rather than by me watching it.
+
+    Walking there through the tab bar is what a person does anyway, and it
+    keeps the change that was just saved.
+  */
+  await tap(page.locator('nav[aria-label="ניווט ראשי"] a[href="/notebook"]'), { settle: 900 });
+  await expectScreen(/מחברת מתכונים/, 'the notebook tab');
+  await tap(page.getByRole('link', { name: /בריוש נאנטר/ }).first(), { settle: 1400 });
+  await expectScreen(/בריוש נאנטר/, 'the brioche');
+  await say('מחיר במרכז הוא המקור לכל שורת מתכון שלא הוזן בה מחיר משלה.', { hold: false });
+  const foodCost = await openFoodCost();
+  await zoomTo(foodCost, 1.3);
+  /* Named for what is actually on the panel. An earlier caption ended with
+     "ואחוז פוד קוסט", and the row beside it reads "—" with a note saying it
+     cannot be worked out until a selling price is set. */
+  await say('ובמתכון: עלות חומרי הגלם, עלות לקילוגרם ועלות ליחידה, מחושבות שורה אחר שורה.');
+  await zoomOut();
 
   /* ══ ז. EVERY OTHER SCREEN ═════════════════════════════════════════════ */
-  await say('שאר מסכי המערכת', { chapter: 'ז. שאר המערכת', kind: 'title' });
-  await wait(2000);
-
   await go('/recipe/brioche/order', /פרטי ההזמנה/);
-  await say('דף הזמנה: מה להזמין לאצווה הזאת, בכמויות ובעלויות. מיועד להדפסה.');
-  await wait(3200);
+  await say('שאר המערכת', { chapter: 'ז. שאר המערכת', kind: 'title' });
+  await say('דף הזמנה: מה להזמין לאצווה הזאת, בכמויות ובעלויות, מוכן להדפסה.');
   await scroll(420);
-  await wait(1400);
+  await wait(1200);
 
   await go('/recipe/brioche/label', /בריוש נאנטר/);
-  await say('תווית מוצר: רכיבים לפי סדר יורד, אלרגנים ומשקל — גם היא להדפסה.');
-  await wait(3400);
+  await say('תווית מוצר: רכיבים לפי סדר יורד, אלרגנים ומשקל.');
 
   await go('/tools', /כלי המדידה/);
-  await say('כלי המדידה: הכוס והכף של המטבח הזה, נמדדות פעם אחת.');
-  await wait(2800);
+  await say('כלי המדידה: הכוס והכף של המטבח הזה נמדדות פעם אחת.');
   await scroll(260);
-  await say('כל המרה במערכת נעשית לפי הכלים האלה, ולא לפי תקן שרירותי.');
-  await wait(3000);
+  await say('כל המרה במערכת מחושבת לפי הכלים האלה, ולא לפי תקן כללי.');
 
   await go('/plans', /תכנון ייצור/);
-  await say('תכנון ייצור: יום עבודה עם כמה מתכונים ורשימת רכש אחת.');
-  await wait(2800);
+  await say('תכנון ייצור: יום עבודה עם כמה מתכונים, ורשימת רכש אחת.');
   await tap(page.getByRole('link', { name: /יום ייצור/ }).first(), { settle: 1500 });
   await expectScreen(/יום ייצור/, 'one plan');
   await scroll(360);
-  await say('רשימת הרכש מסכמת את כל חומרי הגלם של היום, עם מה שאין לו מחיר.');
-  await wait(3400);
+  /* The purchase list is behind its own disclosure. Without this tap the
+     caption below described it over the plan's recipe rows — the screen was
+     showing targets per recipe, not a purchase list at all. */
+  await tap(
+    await need(
+      page.getByRole('button', { name: /רשימת רכש ועלות צפויה/ }),
+      'the purchase-list disclosure',
+    ),
+    { settle: 1000 },
+  );
+  const purchase = await need(page.locator('[aria-label="רשימת רכש"]'), 'the purchase list');
+  await purchase.scrollIntoViewIfNeeded().catch(() => {});
+  await wait(600);
+  await say('רשימת הרכש מסכמת את חומרי הגלם של כל היום, ומסמנת מה שאין לו מחיר.');
   await scroll(420);
-  await wait(1600);
+  await wait(1200);
 
   await go('/groups', /קבוצות וקורסים/);
-  await say('קבוצות וקורסים — כאן ואילך זו סימולציה מקומית: אין שרת ואין משתמשים אחרים.');
-  await wait(3600);
+  await say(
+    'קבוצות וקורסים. המסכים וכללי ההרשאות הם קוד אמיתי, ובהדגמה הזאת הם רצים מקומית — בלי שרת ובלי משתמשים אחרים.',
+  );
   await tap(page.getByRole('link', { name: /קורס קונדיטוריה/ }).first(), { settle: 1500 });
   await expectScreen(/קורס קונדיטוריה/, 'the course');
-  await say('קורס עם שיעורים ומתכונים שהמדריך פרסם לתלמידים.');
-  await wait(3000);
+  await say('קורס עם שיעורים ועם המתכונים שהמדריך פרסם לתלמידים.');
   await tap(page.getByRole('tab', { name: /צ׳אט/ }), { settle: 1400 });
-  await say('צ׳אט הקבוצה. ההרשאות אמיתיות בקוד; המשתמשים כאן מדומים.');
-  await wait(3000);
-  await write(page.locator('#chat-draft'), 'איזו חמאה להביא מחר?', { delay: 45 });
+  await say('צ׳אט הקבוצה. בהדגמה מקומית ההודעה נשמרת במסך הזה בלבד, ואינה נשלחת לאיש.', {
+    hold: false,
+  });
+  await write(page.locator('#chat-draft'), 'איזו חמאה להביא מחר?', { delay: 42 });
   await tap(page.getByRole('button', { name: 'שליחה' }), { settle: 1200 });
-  await say('ההודעה נשלחה ומופיעה בשיחה.');
-  await wait(2400);
+  await say('ההודעה מופיעה בשיחה.');
 
   await go('/group/group-team/perms', /חברים והרשאות/);
-  await say('חברים והרשאות: תפקידים, דרגות, ומי יכול לעשות מה בכל מתכון.');
-  await wait(3400);
+  await say('חברים והרשאות: תפקידים, דרגות, ומי רשאי לעשות מה בכל מתכון.');
   await scroll(420);
-  await wait(1800);
+  await wait(1400);
 
   await go('/settings', /^הגדרות$/);
-  await say('הגדרות: פרופיל עבודה, שפה, וכיול הכלים.');
-  await wait(2800);
+  await say('הגדרות: פרופיל עבודה, שפה וכיול הכלים.');
   await scroll(360);
-  await wait(1600);
+  await wait(1200);
 
   await go('/more', /^עוד$/);
-  await say('״עוד״ מרכז את כל מה שאינו מתכון: חומרי גלם, תכנון, כלים והגדרות.');
-  await wait(3000);
+  await say('המסך ״עוד״ מרכז את כל מה שאינו מתכון.');
 
-  /* ══ CLOSING ═══════════════════════════════════════════════════════════ */
+  /* ══ CLOSING ═══════════════════════════════════════════════════════════
+     The demo-environment note first, plainly, and the value line after it —
+     in that order, which is the order Ahmed asked for. */
   await go('/home', /^בית$/);
-  await say('מקונדיטור אחד ועד קורס שלם — מתכון, עלות, הכנה וצוות במקום אחד.', {
-    chapter: 'סיום',
+  await say('סביבת ההדגמה', { chapter: 'סיום', kind: 'title' });
+  await say(
+    'נתוני דוגמה, בלי שרת ובלי חשבון. המתכונים, החישובים, ההמרות, העלויות ומצב ההכנה פועלים כאן במלואם.',
+  );
+  await say(
+    'הקבוצות והצ׳אט רצים מקומית בלבד. אין בהדגמה הזאת סנכרון בענן ואין עבודה משותפת בין משתמשים.',
+  );
+  await say('מתכון אחד שמחושב נכון בכל כמות — מהרעיון, דרך העלות, ועד ההכנה במטבח.', {
     kind: 'title',
   });
-  await wait(3600);
-  await say('הקלטה של המערכת כפי שהיא רצה. ללא שרת בסביבה הזאת — ולכן הקבוצות והצ׳אט מדומים.');
-  await wait(3600);
 } finally {
   const duration = at();
   await ctx.close();

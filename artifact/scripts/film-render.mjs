@@ -49,7 +49,9 @@ execFileSync(
     '-i', source,
     /* The recording is variable-rate; a constant 25fps is what players and
        editors expect, and conforming it here rather than at capture time
-       keeps the capture untouched. */
+       keeps the capture untouched. Nothing is RESIZED: the capture already
+       holds 1920×1200 of drawn pixels (see film.mjs on how it got there), so
+       resampling it could only cost sharpness. */
     '-vf', 'fps=25',
     '-c:v', 'libx264', '-preset', 'slow', '-crf', '21', '-pix_fmt', 'yuv420p',
     '-movflags', '+faststart',
@@ -107,6 +109,55 @@ lines.push(
 const chaptersFile = path.join(ROOT, 'WALKTHROUGH_CHAPTERS.md');
 fs.writeFileSync(chaptersFile, `${lines.join('\n')}\n`);
 
+/*
+  ── THE NARRATION SCRIPT, GENERATED FROM THE FILM ─────────────────────────
+
+  Ahmed asked for narration IN the video. It could not be produced here and
+  the reason is written down in NARRATION.md rather than glossed over: this
+  environment reaches package registries and nothing else, so no neural voice
+  can be fetched, and the one offline synthesiser installed (espeak-ng) reads
+  unvocalised Hebrew letter by letter.
+
+  What CAN be delivered is a script that cannot drift from the film, because
+  it is generated from the same cue list the film painted: every line, the
+  second it appears, and the window it has. Each window is at least as long
+  as an unhurried reading of the line — that is what `holdFor` guarantees in
+  film.mjs — so a voice recorded to this script fits without being sped up,
+  which is the thing Ahmed ruled out.
+*/
+const narration = [
+  '# מחברת מתכונים — תסריט קריינות',
+  '',
+  `${take.cues.length} משפטים · ${mmss(take.duration)} · מיועד להקראה מעל הסרטון.`,
+  '',
+  '## איך להקריא',
+  '',
+  '- קצב רגוע, טון מקצועי ובטוח. בלי הדגשה מכירתית ובלי האצה.',
+  '- כל משפט נקרא כשהכיתובית שלו על המסך. חלון הזמן של כל משפט רשום בטבלה,',
+  '  והוא ארוך לפחות כמו הקראה שקטה שלו — אין צורך למהר.',
+  '- בין המשפטים יש שקט. אין צורך למלא אותו.',
+  '',
+  '## הגייה',
+  '',
+  '- «מיז אן פלאס» — mise en place, בהגייה צרפתית מרוככת.',
+  '- «בריוש נאנטר» — Brioche Nanterre.',
+  '- «פוד קוסט» — כפי שנהוג במטבח המקצועי, לא «עלות מזון».',
+  '- מספרים, מטבע ויחידות כתובים במילים בתסריט («שלוש מאות וארבעים שקלים»,',
+  '  «קילוגרם»), כדי שלא ייקראו כקיצור.',
+  '',
+  '## הטקסט, לפי הסדר',
+  '',
+  '| # | מופיע ב־ | חלון | הטקסט |',
+  '| --- | --- | --- | --- |',
+];
+for (const [i, cue] of take.cues.entries()) {
+  const window = cue.hold ? `${(cue.hold / 1000).toFixed(1)} שנ׳` : 'רץ עם הפעולה';
+  narration.push(`| ${String(i + 1).padStart(2, '0')} | ${mmss(cue.t)} | ${window} | ${cue.text} |`);
+}
+const narrationFile = path.join(ROOT, 'WALKTHROUGH_NARRATION.md');
+fs.writeFileSync(narrationFile, `${narration.join('\n')}\n`);
+
 console.log(`${out} — ${(bytes / 1024 / 1024).toFixed(1)}MB`);
 console.log(chaptersFile);
+console.log(narrationFile);
 console.log(`${mmss(take.duration)} · ${chapters.length} chapters · ${take.cues.length} captions`);
