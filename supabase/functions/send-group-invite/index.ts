@@ -2,18 +2,18 @@
 //
 // DEPLOYED, AND ONE DISCREPANCY WORTH KNOWING ABOUT
 //
-// Version 1 is live on project qxdpsomelzpvphkhkqrw (status ACTIVE,
-// verify_jwt on). The deployed copy is this code EXACTLY, with this header
-// abbreviated to a pointer at this file — the deploy went through a tool that
-// takes the source inline, and the commentary is long. The next
-// `supabase functions deploy send-group-invite` from this repository replaces
-// it with this file verbatim and the difference disappears.
+// Version 2 is live on project qxdpsomelzpvphkhkqrw (status ACTIVE,
+// verify_jwt on), deployed 22.09.2026 with the CORS answer below. The deployed
+// copy is this code EXACTLY, with this header abbreviated to a pointer at this
+// file — the deploy went through a tool that takes the source inline, and the
+// commentary is long. The next `supabase functions deploy send-group-invite`
+// from this repository replaces it with this file verbatim.
 //
-// NOT VERIFIED RUNNING. This sandbox has no route to *.supabase.co, so the
-// function has been deployed but never called. What is known: it is ACTIVE and
-// it type-checked on deploy. What is not known: anything about its behaviour
-// at runtime. The first real call will be the first test of it, and the UI is
-// built so that a failure there is reported rather than swallowed.
+// VERIFIED RUNNING from the browser on 22.09.2026: the preflight is answered,
+// the POST reaches the function with the caller's token, and without the mail
+// secrets it answers `{ sent: false, reason: "שירות המייל אינו מחובר…" }`,
+// which the screen shows. Version 1 answered no preflight, so every call from
+// the app was blocked by the browser before reaching it.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 // WHY THIS IS AN EDGE FUNCTION AT ALL
