@@ -1,0 +1,22 @@
+import { launch, BASE, sleep } from './drv.mjs';
+import { waitMain } from './walk.mjs';
+import fs from 'node:fs';
+const id = fs.readFileSync('brioche-id.txt', 'utf8').trim();
+const { browser, page } = await launch({ storageState: 'state-qa1.json' });
+await page.goto(BASE + `/recipe/${id}/edit`); await waitMain(page); await sleep(1500);
+await page.getByRole('button', { name: /המשך לחומרי גלם/ }).click(); await sleep(800);
+const r = await page.evaluate(async () => {
+  const scrollers = [...document.querySelectorAll('*')].filter((e) => { const s = getComputedStyle(e); return /(auto|scroll)/.test(s.overflowY) && e.scrollHeight > e.clientHeight + 5; });
+  const sc = scrollers[0] || document.scrollingElement;
+  sc.scrollTop = sc.scrollHeight; window.scrollTo(0, document.body.scrollHeight);
+  await new Promise((r) => setTimeout(r, 500));
+  const inputs = [...document.querySelectorAll('main input, main textarea, main select')];
+  const last = inputs[inputs.length - 1]; const lb = last.getBoundingClientRect();
+  const footer = [...document.querySelectorAll('button')].find((b) => /המשך לאופן ההכנה/.test(b.textContent)); const fb = footer.getBoundingClientRect();
+  const nav = document.querySelector('nav[aria-label="ניווט ראשי"]')?.getBoundingClientRect();
+  const addBtn = [...document.querySelectorAll('button')].find((b) => /הוספת רכיב/.test(b.textContent))?.getBoundingClientRect();
+  return { scroller: sc.tagName + '.' + sc.className, lastInput: { label: last.getAttribute('aria-label'), top: lb.top, bottom: lb.bottom }, footerTop: fb.top, navTop: nav?.top, addBtn: addBtn && { top: addBtn.top, bottom: addBtn.bottom }, vh: innerHeight };
+});
+console.log(JSON.stringify(r));
+await page.screenshot({ path: '/home/user/recipe-notebook/artifact/qa/shots-accept/probe-editor-footer-bottom.png' });
+await browser.close();

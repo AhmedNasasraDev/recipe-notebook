@@ -1,0 +1,7 @@
+{
+ "url": "/join/sometoken",
+ "placeholders": [
+  "אימייל",
+  "סיסמה"
+ ]
+}

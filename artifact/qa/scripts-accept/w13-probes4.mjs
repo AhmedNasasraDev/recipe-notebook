@@ -1,0 +1,48 @@
+import { launch, BASE, sleep } from './drv.mjs';
+import { audit, waitMain } from './walk.mjs';
+import fs from 'node:fs';
+const G = fs.readFileSync('group2-id.txt', 'utf8').trim();
+const say = (l) => console.log(l);
+const step = async (name, fn) => { try { await fn(); } catch (e) { say(`${name}: ERROR ${String(e).replace(/\s+/g, ' ').slice(0, 700)}`); await page.screenshot({ path: `/home/user/recipe-notebook/artifact/qa/shots-accept/probe-fail-${name.slice(0, 3)}.png` }).catch(() => {}); } };
+const { browser, page, errors, net } = await launch({ storageState: 'state-qa1.json' });
+const body = async () => (await page.locator('body').innerText()).replace(/\s+/g, ' ').trim();
+const go = async (u, sel = 'main', ms = 1800) => { await page.goto(BASE + u); await waitMain(page, sel); await sleep(ms); };
+const ctl = async () => JSON.stringify(await page.locator('button, a, summary, input, [role=tab]').evaluateAll((els) => els.map((e) => `${e.tagName.toLowerCase()}${e.type ? ':' + e.type : ''}=${(e.getAttribute('aria-label') || e.textContent || e.placeholder || '').trim().slice(0, 40)}`)));
+await step('P5 group controls', async () => {
+  await go(`/group/${G}`, 'main', 5000);
+  say('GROUP controls: ' + await ctl());
+  const btn = page.getByRole('button', { name: 'הוספת קורס' });
+  say(`P5 add-course count=${await btn.count()} box=${JSON.stringify(await btn.first().boundingBox().catch(() => null))}`);
+  await btn.first().click({ timeout: 8000 }); await sleep(800);
+  let b = await body(); say(`P5 course empty submit → ${(b.match(/[^.]*(שם|חובה|ריק)[^.]*\./) || ['no message'])[0]}`);
+  say('P5 inputs: ' + JSON.stringify(await page.locator('input, textarea').evaluateAll((els) => els.map((e) => `${e.type}|${e.placeholder}|${e.getAttribute('aria-label')}|${e.id}`))));
+  await page.locator('input[type=text]').last().fill('בדיקה-QA קורס'); await btn.first().click({ timeout: 8000 }); await sleep(3000);
+  b = await body(); const ci = b.indexOf('בדיקה-QA קורס'); say(`P5 after course: ${ci < 0 ? 'NOT SHOWN: ' + b.slice(0, 300) : b.slice(ci, ci + 300)}`);
+  await audit(page, 'group-with-course');
+  say('P5 controls now: ' + await ctl());
+  const addLesson = page.getByRole('button', { name: /הוספת שיעור|שיעור חדש/ }).first();
+  if (await addLesson.count()) {
+    await addLesson.click({ timeout: 8000 }); await sleep(800); b = await body(); say(`P5 lesson empty submit → ${(b.match(/[^.]*(שם|חובה|ריק)[^.]*\./) || ['no message'])[0]}`);
+    await page.locator('input[type=text]').last().fill('בדיקה-QA שיעור 1'); await addLesson.click({ timeout: 8000 }); await sleep(3000);
+    b = await body(); const li = b.indexOf('בדיקה-QA שיעור'); say(`P5 after lesson: ${li < 0 ? 'NOT SHOWN' : b.slice(li, li + 400)}`);
+    await audit(page, 'group-with-lesson');
+    say('P5 controls after lesson: ' + await ctl());
+  } else say('P5 no add-lesson button');
+});
+await step('P6 password', async () => {
+  await go('/settings');
+  await page.getByRole('button', { name: 'שינוי סיסמה', exact: true }).click(); await sleep(600);
+  const upd = page.getByRole('button', { name: 'עדכון הסיסמה', exact: true });
+  say(`P6 update count=${await upd.count()} box=${JSON.stringify(await upd.first().boundingBox().catch(() => null))} viewport=${JSON.stringify(page.viewportSize())}`);
+  await page.screenshot({ path: '/home/user/recipe-notebook/artifact/qa/shots-accept/probe-pw-form.png' });
+  await upd.first().click({ timeout: 8000 }); await sleep(1000); let b = await body(); say(`P6 empty submit: ${(b.match(/[^.]*(למלא|חובה|ריק|נדרש|קצר|תווים)[^.]*\./g) || ['no message']).join(' | ')}`);
+  const pw = page.locator('input[type=password]');
+  await pw.nth(0).fill('wrong-current'); await pw.nth(1).fill('newpass123'); await pw.nth(2).fill('newpass124');
+  await upd.first().click({ timeout: 8000 }); await sleep(1000); b = await body(); say(`P6 mismatch: ${(b.match(/[^.]*(תואמ|זהות|שונות)[^.]*\./g) || ['no message']).join(' | ')}`);
+  await page.screenshot({ path: '/home/user/recipe-notebook/artifact/qa/shots-accept/probe-pw-mismatch.png' });
+  await pw.nth(2).fill('newpass123'); await upd.first().click({ timeout: 8000 }); await sleep(4000); b = await body(); say(`P6 wrong current: ${(b.match(/[^.]*(סיסמה[^.]*(נכונ|שגוי|נכשל)|נכשל)[^.]*\./g) || ['no message']).join(' | ')}`);
+  await page.screenshot({ path: '/home/user/recipe-notebook/artifact/qa/shots-accept/probe-pw-wrong.png' });
+});
+say('ERRORS: ' + JSON.stringify(errors.filter((e) => !/ERR_FAILED|40[04]/.test(e)).slice(0, 6)));
+say('NET: ' + JSON.stringify(net.filter((n) => n.s >= 400).map((n) => `${n.m} ${n.u.slice(0, 90)} ${n.s}`).slice(0, 8)));
+await browser.close();
