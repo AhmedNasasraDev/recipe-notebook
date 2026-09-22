@@ -199,6 +199,24 @@ describe('professional calculations survive the merge', () => {
     expect(c.trueHydration).toBeLessThan(c.hydration);
   });
 
+  it('a price with no price unit is named, not silently costed per kilo (QA finding 5)', () => {
+    const r: Recipe = {
+      id: 'no-unit',
+      name: 'בלי יחידה',
+      ingredients: [
+        { id: 'a', name: 'קמח', qty: 350, unit: 'גרם', price: 4 },
+        { id: 'b', name: 'חמאה', qty: 100, unit: 'גרם', price: 40, priceUnit: 'ק"ג' },
+      ],
+      steps: [],
+    };
+    const c = compute(r, [r], { prefs: DEFAULT_PREFS });
+    expect(c.rows[0]!.priced).toBe(false);
+    expect(c.rows[0]!.cost).toBe(0);
+    expect(c.rows[1]!.priced).toBe(true);
+    expect(c.cost).toBeCloseTo(4, 9);
+    expect(c.warnings.some((w) => w.includes('בלי יחידת מחיר'))).toBe(true);
+  });
+
   it('baking loss, scale weight and the 5% warning behave as specified', () => {
     const c = compute(DOUGH, [DOUGH], { prefs: DEFAULT_PREFS });
     expect(c.bakeLoss).toBeCloseTo(12, 6);

@@ -30,6 +30,7 @@ import { normalizeCalibrations } from '@recipe-notebook/engine';
 import { createLocalDemoRepository, firstRunPrefs } from '../data/localDemoRepository.js';
 import { createSupabaseRepository } from '../data/supabaseRepository.js';
 import {
+  SavedButNotReloadedError,
   WriteNotAllowedError,
   type GroupRepository,
   type IdentityRepository,
@@ -344,7 +345,33 @@ export function AppDataProvider({
 
   const saveRecipe = useCallback(
     async (recipe: Recipe, options?: SaveOptions): Promise<Recipe> => {
-      const saved = await repo.saveRecipe(recipe, options);
+      let saved: Recipe;
+      try {
+        saved = await repo.saveRecipe(recipe, options);
+      } catch (e) {
+        /*
+          The row was written and only the read-back failed. Refetch the whole
+          notebook, which is the one read that also refreshes everything else;
+          when it succeeds the saved recipe is in it and the screen can carry
+          on as if nothing happened. When it fails too, the error goes up with
+          the id, so the screen can still go to the recipe rather than offer
+          a retry that would create a duplicate.
+        */
+        if (e instanceof SavedButNotReloadedError) {
+          try {
+            const list = await repo.listRecipes();
+            setRecipes(list);
+            const found = list.find((r) => r.id === e.recipeId);
+            if (found) {
+              setError(null);
+              return found;
+            }
+          } catch {
+            /* reported below, with the id */
+          }
+        }
+        throw e;
+      }
       // Replace by id rather than refetching the notebook: the repository
       // already re-read the recipe after writing it, so this list is as fresh
       // as a round trip would make it, for one less round trip.

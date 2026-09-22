@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { useLeaveGuard } from './UnsavedGuard.js';
 import { ICON_STROKE, TAB_ICON } from './Icons.js';
 import styles from './TabBar.module.css';
 
@@ -60,6 +61,8 @@ export function tabOf(pathname: string): string {
 export function TabBar() {
   const { pathname } = useLocation();
   const current = tabOf(pathname);
+  // A screen with unsaved work registers a question; the bar asks it first.
+  const mayLeave = useLeaveGuard();
 
   return (
     <nav className={styles.bar} aria-label="ניווט ראשי">
@@ -89,6 +92,9 @@ export function TabBar() {
             a screen reader reads — the sighted cue is the dot below.
           */
           aria-current={current === tab.to ? 'page' : undefined}
+          onClick={(e) => {
+            if (!mayLeave()) e.preventDefault();
+          }}
         >
           <span className={styles.glyph}>
             {TAB_ICON[tab.to]?.({

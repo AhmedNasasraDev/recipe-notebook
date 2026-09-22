@@ -38,6 +38,47 @@ import { clearMirror } from '../data/offlineMirror.js';
 
 export type AuthStatus = 'loading' | 'unconfigured' | 'signed-out' | 'signed-in';
 
+/**
+ * What a confirmation / recovery link that FAILED says in the address.
+ *
+ * GoTrue sends a person back with `#error=access_denied&error_code=otp_expired
+ * &error_description=…` when the link is stale or already used. The client
+ * library reads that fragment, throws inside `getSession()`, and clears the
+ * hash — so by the time a screen renders there is nothing left to explain
+ * why the person is looking at a sign-in form. This is read once, at module
+ * load, before the client exists.
+ */
+export interface RedirectError {
+  code: string;
+  description: string;
+}
+
+function readRedirectError(): RedirectError | null {
+  if (typeof window === 'undefined') return null;
+  const read = (raw: string): RedirectError | null => {
+    const params = new URLSearchParams(raw.replace(/^[#?]/, ''));
+    const code = params.get('error_code') ?? params.get('error') ?? '';
+    const description = params.get('error_description') ?? '';
+    return code || description ? { code, description } : null;
+  };
+  return read(window.location.hash) ?? read(window.location.search);
+}
+
+const REDIRECT_ERROR: RedirectError | null = readRedirectError();
+
+/** The Hebrew for a failed link, or null when the address carried no error. */
+export function redirectErrorText(err: RedirectError | null): string | null {
+  if (!err) return null;
+  const d = err.description.toLowerCase();
+  if (err.code === 'otp_expired' || d.includes('expired') || d.includes('invalid')) {
+    return 'קישור האימות פג או כבר נוצל. אם החשבון עדיין לא אושר, הרשמה חוזרת עם אותו אימייל שולחת קישור חדש; אם הוא כבר אושר, אפשר להתחבר.';
+  }
+  if (err.code === 'access_denied') {
+    return 'הקישור לא התקבל על ידי השרת. אפשר להתחבר, או להירשם שוב עם אותו אימייל כדי לקבל קישור חדש.';
+  }
+  return `הקישור לא עבד (${err.code || 'שגיאה'}): ${err.description || 'ללא פירוט'}.`;
+}
+
 export interface SignUpOutcome {
   /** true when Supabase is configured to require an emailed confirmation first */
   needsEmailConfirmation: boolean;
@@ -51,6 +92,8 @@ export interface Auth {
   client: TypedSupabaseClient | null;
   /** why Supabase is not in use, for the banner */
   unconfiguredReason: 'missing-env' | 'service-role-key-in-browser' | null;
+  /** the error a failed confirmation link arrived with, in Hebrew; null when none */
+  redirectError: string | null;
   signUp(email: string, password: string): Promise<SignUpOutcome>;
   signIn(email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
@@ -243,6 +286,7 @@ export function AuthProvider({
       user: session?.user ?? null,
       client,
       unconfiguredReason: status0.configured ? null : status0.reason,
+      redirectError: redirectErrorText(REDIRECT_ERROR),
       signUp,
       signIn,
       signOut,

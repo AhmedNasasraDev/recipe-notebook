@@ -87,6 +87,7 @@ import {
   viewTimer,
   type TimerState,
 } from '../features/cook/timers.js';
+import { markTitle, ringAlarm, unlockAlarm } from '../features/cook/alarm.js';
 import {
   clearCookProgress,
   readCookProgress,
@@ -260,6 +261,12 @@ export function CookScreen() {
           */
           setStartedSaved(saved.started === true);
           setSavedAtThisScale(saved.miseScale === signature);
+          // Timers come back exactly as they were: a deadline is a deadline.
+          setTimers(
+            new Map(
+              Object.entries(saved.timers ?? {}).map(([k, v]) => [Number(k), v] as const),
+            ),
+          );
         } else {
           setDone(new Set());
           setAt(0);
@@ -300,8 +307,32 @@ export function CookScreen() {
         that really happened.
       */
       started: startedHere || startedSaved,
+      timers: Object.fromEntries(timers),
     });
-  }, [recipeId, restored, done, at, ticks, signature, startedHere, startedSaved]);
+  }, [recipeId, restored, done, at, ticks, signature, startedHere, startedSaved, timers]);
+
+  /*
+    THE ALARM. `now` advances four times a second while a timer runs; the
+    first tick that finds a timer at zero rings once for it (the id is
+    remembered so it does not ring again on the next tick), and the tab title
+    carries a bell until the timer is dismissed.
+  */
+  const rung = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    let anyDone = false;
+    for (const [i, t] of timers) {
+      const v = viewTimer(t, now);
+      if (!v.done) continue;
+      anyDone = true;
+      const key = `${i}:${t.totalMs}:${t.kind === 'running' ? t.endsAt : 'p'}`;
+      if (rung.current.has(key)) continue;
+      rung.current.add(key);
+      ringAlarm();
+    }
+    if (!anyDone) return;
+    const undo = markTitle();
+    return undo;
+  }, [timers, now]);
 
   // One interval for the whole screen, and only while something is running.
   const hasTimers = timers.size > 0;
@@ -750,6 +781,7 @@ export function CookScreen() {
                   // tick, which is earlier — so `endsAt - now` exceeded the
                   // full duration and a fresh 8-minute timer could read 08:01.
                   setNow(t);
+                  unlockAlarm();
                   setTimers((prev) => new Map(prev).set(index, startTimer(minutes, t)));
                 }}
               >
@@ -767,6 +799,7 @@ export function CookScreen() {
                   if (!Number.isFinite(m) || m <= 0) return;
                   const t = Date.now();
                   setNow(t);
+                  unlockAlarm();
                   setTimers((prev) => new Map(prev).set(index, startTimer(m, t)));
                   setOwnMinutes('');
                   setAskOwnTimer(false);

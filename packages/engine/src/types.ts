@@ -310,7 +310,22 @@ export interface Computed {
   prodLoss: number;
   bakeLoss: number;
   scaleWeight: number;
+  /**
+   * The unit count the recipe is taken to yield at this factor.
+   *
+   * A DECLARED yield (`yieldUnits`) is the recipe's own statement of what it
+   * makes, and it is the baseline for "make 6 of these": 6 of a declared 12
+   * is exactly half. The weights are a check on that statement, not a
+   * replacement for it — so `unitsActual` follows the weights only when the
+   * finished batch was actually weighed (`yieldActual`), or when no count was
+   * declared at all.
+   */
   unitsActual: number;
+  /** `yieldUnits × factor`; 0 when the recipe declares no unit count */
+  unitsDeclared: number;
+  /** what the weights say the batch makes (`actualYield / scaleWeight`); 0 without a unit weight */
+  unitsFromWeight: number;
+  /** the declared count and the weighed count disagree by more than 5% */
   unitsWarn: boolean;
   cost: number;
   costPerUnit: number;

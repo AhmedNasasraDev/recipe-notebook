@@ -27,6 +27,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { SavedButNotReloadedError } from '../data/repository.js';
+import { useUnsavedGuard } from '../shell/UnsavedGuard.js';
 import { BackButton, BackControl } from '../components/BackLink.js';
 import { RecipeImages } from '../features/images/RecipeImages.js';
 import { useRecipeImages } from '../features/images/useRecipeImages.js';
@@ -247,16 +249,9 @@ export function RecipeEditScreen() {
     return problemFor(key ? `ingredient-${n}-${key}` : `ingredient-${n}`);
   };
 
-  // Warn before a reload or a tab close drops unsaved work.
-  useEffect(() => {
-    if (!dirty) return;
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
-    window.addEventListener('beforeunload', onBeforeUnload);
-    return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, [dirty]);
+  // Every way out asks first: the tab bar, the back control, a reload, a
+  // closed tab (shell/UnsavedGuard.tsx). ביטול below asks the same question.
+  useUnsavedGuard(dirty);
 
   // The preview. Built from the draft exactly as it will be saved, so what is
   // on screen is what the recipe page will show afterwards.
@@ -426,6 +421,20 @@ export function RecipeEditScreen() {
         state: { saved: isNew ? 'created' : 'updated' },
       });
     } catch (e) {
+      /*
+        The write succeeded and only the read-back failed (data/repository.ts).
+        Staying here with "the save failed" would invite a second press and a
+        second recipe, so this leaves for the recipe's own page, which reads
+        it afresh, and says what happened there.
+      */
+      if (e instanceof SavedButNotReloadedError) {
+        setOriginal(draft);
+        navigate(`/recipe/${e.recipeId}`, {
+          replace: true,
+          state: { saved: isNew ? 'created' : 'updated', reloadFailed: true },
+        });
+        return;
+      }
       setSaveError(e instanceof Error ? e.message : 'השמירה נכשלה.');
       errorRef.current?.focus();
     } finally {
@@ -1011,6 +1020,7 @@ export function RecipeEditScreen() {
                           value={row.priceUnit}
                           onChange={(e) => patchIngredient(i, { priceUnit: e.target.value })}
                           aria-label={`יחידת המחיר של ${label}`}
+                          aria-invalid={rowProblem(i, 'priceUnit') !== null}
                         >
                           <option value="">—</option>
                           {PRICE_UNITS.map((pu) => (
@@ -1019,6 +1029,9 @@ export function RecipeEditScreen() {
                             </option>
                           ))}
                         </select>
+                        {rowProblem(i, 'priceUnit') && (
+                          <p className={styles.fieldError}>{rowProblem(i, 'priceUnit')}</p>
+                        )}
                       </div>
                       <div className={styles.field}>
                         <label className={styles.label} htmlFor={`d-${row.key}`}>

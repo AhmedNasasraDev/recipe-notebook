@@ -133,7 +133,11 @@ describe('requirements 1, 13 — a plan is created, saved and reopened', () => {
     await user.click(await screen.findByRole('button', { name: 'תוכנית ייצור חדשה' }));
 
     await screen.findByRole('heading', { name: 'תוכנית ייצור' });
-    expect(db['production_plans']).toHaveLength(1);
+    // QA 22.09.2026, finding 11: the press opens an unsaved plan; nothing is
+    // written until שמירה, so a person who backs out leaves no empty row.
+    expect(db['production_plans']).toHaveLength(0);
+    await user.click(screen.getByRole('button', { name: 'שמירת התוכנית' }));
+    await waitFor(() => expect(db['production_plans']).toHaveLength(1));
     expect(db['production_plans']![0]!['owner_id']).toBe(USER_A);
   });
 

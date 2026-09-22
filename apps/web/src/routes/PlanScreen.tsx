@@ -22,7 +22,7 @@
 // purchase list and this screen reads the frozen one. The banner says so.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { BackControl } from '../components/BackLink.js';
 import {
   compute,
@@ -79,6 +79,7 @@ const newItem = (): PlanItem => ({
 
 export function PlanScreen() {
   const { planId } = useParams();
+  const navigate = useNavigate();
   const {
     recipes,
     catalog,
@@ -98,8 +99,27 @@ export function PlanScreen() {
 
   const canWrite = capabilities.canWrite && plan !== null && !plan.locked;
 
+  /** `/plan/new`: a plan that exists only on this screen until it is saved. */
+  const isNew = planId === 'new';
+
   const load = useCallback(async () => {
     if (!planId) return;
+    if (planId === 'new') {
+      setPlan({
+        id: '',
+        name: '',
+        planDate: new Date().toISOString().slice(0, 10),
+        note: '',
+        locked: false,
+        lockedAt: null,
+        snapshot: null,
+        updatedAt: '',
+        items: [],
+        onHand: {},
+      });
+      setStock({});
+      return;
+    }
     try {
       const found = await getPlan(planId);
       if (!found) {
@@ -192,6 +212,8 @@ export function PlanScreen() {
       setStock(
         Object.fromEntries(Object.entries(saved.onHand).map(([k, v]) => [k, String(v)])),
       );
+      // The first save gives the plan its address; from here on it edits the row.
+      if (isNew) navigate(`/plan/${saved.id}`, { replace: true });
     } catch (e) {
       setProblem(e instanceof Error ? e.message : 'השמירה נכשלה.');
     } finally {
@@ -502,7 +524,8 @@ export function PlanScreen() {
             type="button"
             className={styles.secondary}
             onClick={() => void onLock(!plan.locked)}
-            disabled={busy || !capabilities.canWrite}
+            disabled={busy || !capabilities.canWrite || plan.id === ''}
+            title={plan.id === '' ? 'קודם שומרים את התוכנית' : undefined}
             aria-label={plan.locked ? 'ביטול סימון הביצוע' : 'סימון התוכנית כבוצעה'}
           >
             {plan.locked ? 'ביטול סימון הביצוע' : 'סימון כבוצעה'}

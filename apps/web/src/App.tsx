@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { UnsavedGuardProvider } from './shell/UnsavedGuard.js';
 import { AuthProvider } from './auth/AuthProvider.js';
 import { AuthGate } from './auth/AuthGate.js';
 import { AppDataProvider } from './app/AppDataProvider.js';
@@ -48,6 +49,7 @@ export function App() {
       <AuthProvider>
         <AuthGate>
           <AppDataProvider>
+            <UnsavedGuardProvider>
             <Routes>
               <Route path="/onboarding" element={<OnboardingScreen />} />
               <Route
@@ -154,6 +156,7 @@ export function App() {
               */}
               <Route path="*" element={<Navigate to="/home" replace />} />
             </Routes>
+            </UnsavedGuardProvider>
           </AppDataProvider>
         </AuthGate>
       </AuthProvider>

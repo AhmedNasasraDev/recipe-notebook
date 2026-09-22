@@ -14,6 +14,7 @@
 // site data blocked, and in some embedded webviews. A cache miss must degrade to
 // "we have nothing local", never to a crash.
 
+import type { TimerState } from '../features/cook/timers.js';
 import { clear, del, get, set } from 'idb-keyval';
 import type { Calibration, MeasurementPrefs, Recipe } from '@recipe-notebook/engine';
 
@@ -129,6 +130,13 @@ export interface CookProgress {
    * inherit them; `restoreMise` is what compares them.
    */
   miseScale?: string;
+  /**
+   * The running and paused timers, by step index. A running timer is a
+   * wall-clock deadline (features/cook/timers.ts), so a reload — or a phone
+   * that was locked for ten minutes — restores it at the right point rather
+   * than restarting it (QA 22.09.2026, finding 8).
+   */
+  timers?: Record<number, TimerState>;
   /** the person pressed "הכול מוכן — מתחילים בהכנה" for this preparation */
   started?: boolean;
 }

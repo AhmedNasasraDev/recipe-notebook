@@ -23,6 +23,7 @@
   would paper over.
 */
 
+import { generateJoinCode } from '../features/groups/joinCode.js';
 import {
   WriteNotAllowedError,
   type ChatEvents,
@@ -187,8 +188,8 @@ export function createFakeGroups(
         name,
         kind,
         note,
-        code: null,
-        joinBy: ['invite'],
+        code: generateJoinCode(),
+        joinBy: ['invite', 'link', 'code', 'request'],
         myRole: 'owner',
         roster: [
           {

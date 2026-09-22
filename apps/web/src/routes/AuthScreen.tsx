@@ -17,7 +17,7 @@ import styles from './AuthScreen.module.css';
 type Mode = 'in' | 'up';
 
 export function AuthScreen() {
-  const { signIn, signUp, unconfiguredReason } = useAuth();
+  const { signIn, signUp, unconfiguredReason, redirectError } = useAuth();
   const [mode, setMode] = useState<Mode>('in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -152,6 +152,11 @@ export function AuthScreen() {
         {notice && (
           <p className={styles.notice} role="status">
             {notice}
+          </p>
+        )}
+        {redirectError && !notice && !error && (
+          <p className={styles.error} role="alert">
+            {redirectError}
           </p>
         )}
         {error && (

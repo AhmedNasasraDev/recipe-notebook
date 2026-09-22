@@ -13,8 +13,6 @@ import type { PlanSummary } from '../data/repository.js';
 import { DeleteIcon } from '../shell/Icons.js';
 import styles from './PlansScreen.module.css';
 
-const today = (): string => new Date().toISOString().slice(0, 10);
-
 const when = (iso: string): string => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!m) return iso;
@@ -22,7 +20,7 @@ const when = (iso: string): string => {
 };
 
 export function PlansScreen() {
-  const { listPlans, savePlan, deletePlan, capabilities } = useAppData();
+  const { listPlans, deletePlan, capabilities } = useAppData();
   const navigate = useNavigate();
 
   const [plans, setPlans] = useState<readonly PlanSummary[] | null>(null);
@@ -45,28 +43,15 @@ export function PlansScreen() {
     void load();
   }, [load]);
 
-  const onNew = async () => {
+  /*
+    QA 22.09.2026, finding 11: this used to save an empty plan on the press
+    and then open it, so every "+" that was not followed by a save left a
+    nameless "תוכנית 22.09.2026" on the server. The row is written by the
+    first שמירה on the plan screen instead (/plan/new).
+  */
+  const onNew = () => {
     setProblem(null);
-    setBusy(true);
-    try {
-      const saved = await savePlan({
-        id: '',
-        name: '',
-        planDate: today(),
-        note: '',
-        locked: false,
-        lockedAt: null,
-        snapshot: null,
-        updatedAt: '',
-        items: [],
-        onHand: {},
-      });
-      navigate(`/plan/${saved.id}`);
-    } catch (e) {
-      setProblem(e instanceof Error ? e.message : 'יצירת התוכנית נכשלה.');
-    } finally {
-      setBusy(false);
-    }
+    navigate('/plan/new');
   };
 
   const onDelete = async (id: string) => {
@@ -111,7 +96,7 @@ export function PlansScreen() {
       <button
         type="button"
         className={styles.addBtn}
-        onClick={() => void onNew()}
+        onClick={onNew}
         disabled={busy || !canWrite}
         aria-label="תוכנית ייצור חדשה"
       >

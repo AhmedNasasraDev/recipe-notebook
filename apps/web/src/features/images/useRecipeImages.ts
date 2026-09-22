@@ -79,6 +79,14 @@ export function useRecipeImages({
 
   useEffect(() => {
     let cancelled = false;
+    // A recipe that has not been saved yet has no id and no pictures to list;
+    // asking the server with an empty id was a 400 in the console on every
+    // visit to /recipe/new (QA 22.09.2026, finding 15).
+    if (!recipeId || recipeId.startsWith('new-')) {
+      setImages([]);
+      setLoad('ready');
+      return;
+    }
     setLoad('loading');
     void list(recipeId)
       .then(async (found) => {

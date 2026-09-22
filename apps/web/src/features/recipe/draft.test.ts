@@ -228,6 +228,37 @@ describe('validation says what is wrong, and nothing more', () => {
     const draft = { ...withIngredients([{ name: 'קמח', qty: '1' }]), targetFC: 'שלושים' };
     expect(validateDraft(draft).some((p) => p.field === 'targetFC')).toBe(true);
   });
+
+  // QA 22.09.2026, finding 4
+  it('refuses a quantity of zero and a negative quantity, naming the ingredient', () => {
+    for (const qty of ['0', '-5']) {
+      const problems = validateDraft(withIngredients([{ name: 'קמח', qty }]));
+      expect(problems).toHaveLength(1);
+      expect(problems[0]!.field).toBe('ingredient-0-qty');
+      expect(problems[0]!.message).toContain('קמח');
+      expect(problems[0]!.message).toContain('גדולה מאפס');
+    }
+  });
+
+  it('refuses a negative recipe-level number', () => {
+    const draft = { ...withIngredients([{ name: 'קמח', qty: '1' }]), yieldUnits: '-12' };
+    expect(validateDraft(draft).some((p) => p.field === 'yieldUnits')).toBe(true);
+  });
+
+  // QA 22.09.2026, finding 5
+  it('a price needs a price unit; a zero price does not', () => {
+    const priced = withIngredients([{ name: 'קמח', qty: '350', price: '4' }]);
+    const problems = validateDraft(priced);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]!.field).toBe('ingredient-0-priceUnit');
+    expect(problems[0]!.message).toContain('יחידת מחיר');
+
+    const free = withIngredients([{ name: 'קמח', qty: '350', price: '0' }]);
+    expect(validateDraft(free)).toEqual([]);
+
+    const withUnit = withIngredients([{ name: 'קמח', qty: '350', price: '4', priceUnit: 'ק"ג' }]);
+    expect(validateDraft(withUnit)).toEqual([]);
+  });
 });
 
 describe('reordering', () => {

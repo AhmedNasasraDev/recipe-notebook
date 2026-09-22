@@ -37,6 +37,8 @@
 // seen working in a browser", and this comment exists so nobody reads one as
 // the other.
 
+import { generateJoinCode, normaliseJoinCode } from '../features/groups/joinCode.js';
+import { describeCause } from '../lib/errorText.js';
 import { REALTIME_SUBSCRIBE_STATES } from '@supabase/supabase-js';
 import type { TypedSupabaseClient } from '../lib/supabase.js';
 import type {
@@ -85,11 +87,10 @@ export class GroupRepositoryError extends Error {
     readonly operation: string,
     cause: unknown,
   ) {
-    const detail =
-      typeof cause === 'object' && cause !== null && 'message' in cause
-        ? String((cause as { message: unknown }).message)
-        : String(cause);
-    super(`${operation}: ${detail}`);
+    // The cause is translated (lib/errorText.ts) so the screen prints Hebrew,
+    // and a cause with nothing to add leaves the operation alone.
+    const detail = describeCause(cause);
+    super(detail ? `${operation}: ${detail}` : operation);
     this.name = 'GroupRepositoryError';
   }
 }
@@ -298,7 +299,20 @@ export function createSupabaseGroups({
         p_note: note,
       });
       if (error) throw new GroupRepositoryError('יצירת הקבוצה נכשלה', error);
-      return data as string;
+      const id = data as string;
+      /*
+        The join code. Written by the owner under the ordinary update policy
+        rather than by the RPC, which does not know about codes (see
+        features/groups/joinCode.ts). A failure here leaves a group without a
+        code — which the group screen repairs on its next visit — and never
+        turns a created group into "creation failed".
+      */
+      await client
+        .from('groups')
+        .update({ code: generateJoinCode() })
+        .eq('id', id)
+        .then(() => undefined, () => undefined);
+      return id;
     },
 
     async getGroup(groupId): Promise<GroupDetail | null> {
@@ -600,7 +614,7 @@ export function createSupabaseGroups({
     async requestJoin(code, note) {
       requireOnline('הבקשה');
       const { data, error } = await client.rpc('request_group_join', {
-        p_code: code,
+        p_code: normaliseJoinCode(code),
         p_note: note,
       });
       if (error) throw new GroupRepositoryError('הבקשה נכשלה', error);

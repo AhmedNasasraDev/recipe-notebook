@@ -158,9 +158,21 @@ export function compute(
           lineCost = (g / per) * p;
           priced = true;
         }
-      } else {
+      } else if (ing.priceUnit === 'ק"ג' || ing.priceUnit === 'kg') {
         lineCost = (g / 1000) * p;
         priced = true;
+      } else if (p === 0) {
+        // Given away: nothing to convert, so no unit is needed to cost it.
+        lineCost = 0;
+        priced = true;
+      } else {
+        // QA 22.09.2026, finding 5: a price with NO unit used to be costed
+        // per kilogram without a word. Whether ₪4 is per kilo, per litre or
+        // per piece changes the answer by orders of magnitude, so the line is
+        // left unpriced and the gap is named — the editor refuses to save it.
+        warnings.push(
+          `${ing.name}: הוזן מחיר בלי יחידת מחיר (ק"ג / ליטר / יח'), ולכן השורה לא תומחרה.`,
+        );
       }
     }
 
@@ -218,9 +230,23 @@ export function compute(
   // come from weights that contradict each other (after ≥ before is a gain, not
   // a loss), and the honest answer to a contradiction is no figure at all.
   const scaleWeight = unitW && bakeLoss < 100 ? unitW / (1 - bakeLoss / 100) : 0;
-  const unitsActual = scaleWeight
-    ? actualYield / scaleWeight
-    : num(recipe.yieldUnits, 0) * f;
+  /*
+    DECLARED UNITS ARE THE BASELINE (QA 22.09.2026, finding 3).
+
+    This used to be `actualYield / scaleWeight` whenever a unit weight was
+    known, so a recipe that SAID "12 units × 85 g" but whose lines added up to
+    1,083 g was taken to make 11.24 units — and "make 6" became ×0.53 rather
+    than half. The count the maker wrote down is the recipe's own statement of
+    its yield; the weights are a check on it (`unitsFromWeight`, surfaced as a
+    warning), and they replace it only when the finished batch was actually
+    weighed (`yieldActual`), or when no count was declared at all.
+  */
+  const unitsDeclared = num(recipe.yieldUnits, 0) * f;
+  const unitsFromWeight = scaleWeight ? actualYield / scaleWeight : 0;
+  const unitsActual =
+    yieldActual !== null && unitsFromWeight
+      ? unitsFromWeight
+      : unitsDeclared || unitsFromWeight;
   const costPerUnit = unitsActual ? cost / unitsActual : 0;
   const costPerKg = actualYield ? (cost / actualYield) * 1000 : 0;
   const fc = num(recipe.targetFC, 0);
@@ -233,8 +259,10 @@ export function compute(
       num(recipe.roomTemp, 0) -
       num(recipe.friction, 0)
     : null;
-  const target = num(recipe.yieldUnits, 0) * f;
-  const unitsWarn = !!target && Math.abs(unitsActual - target) / target > 0.05;
+  const unitsWarn =
+    !!unitsDeclared &&
+    !!unitsFromWeight &&
+    Math.abs(unitsFromWeight - unitsDeclared) / unitsDeclared > 0.05;
 
   /*
     ALLERGENS, AND WHY THIS WALKS `sub.allergens` AND NOT ONLY `sub.rows`
@@ -281,6 +309,8 @@ export function compute(
     bakeLoss,
     scaleWeight,
     unitsActual,
+    unitsDeclared,
+    unitsFromWeight,
     unitsWarn,
     cost,
     costPerUnit,
@@ -309,6 +339,8 @@ function emptyComputed(f: number): Computed {
     bakeLoss: 0,
     scaleWeight: 0,
     unitsActual: 0,
+    unitsDeclared: 0,
+    unitsFromWeight: 0,
     unitsWarn: false,
     cost: 0,
     costPerUnit: 0,
@@ -336,6 +368,9 @@ export function scaleFactor(
 ): number {
   const v = Number(value);
   if (mode === 'recipe' || !v || v <= 0) return 1;
+  // Half of a declared 12 is exactly ×0.5: `unitsActual` is the declared
+  // count unless the batch was weighed (see types.ts), so the baseline is
+  // the recipe's own statement and a measured batch is the measured truth.
   if (mode === 'units') return baseline.unitsActual ? v / baseline.unitsActual : 1;
   if (mode === 'weight') return baseline.actualYield ? v / baseline.actualYield : 1;
   const row =

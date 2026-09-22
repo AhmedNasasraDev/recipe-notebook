@@ -84,23 +84,17 @@ describe('the quantities are the ones for THIS order', () => {
 
   it('scales by units when the link says so, and says by how much', async () => {
     /*
-      The factor comes off the units the batch ACTUALLY produces, not off the
-      `yieldUnits` someone typed: 1720 g of dough at 700 g a loaf is 2.46
-      loaves, so six loaves is ×2.44 and the flour is 2.44 kg. That is the
-      engine's rule (`scaleFactor`) and it is the right one — the declared
-      yield is a target, the computed one is what the ingredients make. This
-      test asserts the engine's answer rather than the target, because a sheet
-      that scaled off the target would under-weigh every order whose declared
-      yield was optimistic.
+      The factor comes off the DECLARED yield (QA 22.09.2026, finding 3): the
+      recipe says it makes 2 loaves, so six loaves is exactly ×3 and the flour
+      is 3 kg. What the weights say the dough makes (1720 g at 700 g a loaf is
+      2.46 loaves) is reported on the recipe page as a warning, and it takes
+      over only when the finished batch was actually weighed (`yieldActual`).
     */
     show({ query: '?mode=units&v=6' });
     const sheet = await screen.findByLabelText('דף ההזמנה');
-    expect(sheet).toHaveTextContent('2.44 ק"ג');
-    // Scoped to the note about the scale: "2.44" also appears as the flour
-    // quantity, which is the number this factor produced rather than the
-    // factor itself.
+    expect(sheet).toHaveTextContent('3 ק"ג');
     expect(screen.getByLabelText('פרטי ההזמנה')).toHaveTextContent(/לפי מספר יחידות/);
-    expect(screen.getByLabelText('פרטי ההזמנה')).toHaveTextContent(/×2\.44/);
+    expect(screen.getByLabelText('פרטי ההזמנה')).toHaveTextContent(/×3/);
   });
 
   it('scales by final weight', async () => {

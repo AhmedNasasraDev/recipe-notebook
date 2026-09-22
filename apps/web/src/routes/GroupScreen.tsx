@@ -29,6 +29,7 @@ import { useAppData } from '../app/AppDataProvider.js';
 import { GroupChat } from '../features/groups/GroupChat.js';
 import type { GroupDetail, GroupMember } from '../features/groups/types.js';
 import { ROLE_LABEL, can } from '../features/groups/roles.js';
+import { generateJoinCode } from '../features/groups/joinCode.js';
 import styles from './GroupScreen.module.css';
 
 const dateLabel = (iso: string | null): string => {
@@ -56,7 +57,20 @@ export function GroupScreen() {
 
   const load = useCallback(async () => {
     try {
-      const detail = await api.getGroup(groupId);
+      let detail = await api.getGroup(groupId);
+      /*
+        A group made before codes were written at creation (QA finding 7) has
+        none. Whoever may manage the group gives it one, once, on the way in;
+        a student sees no code either way.
+      */
+      if (detail && detail.code === null && can(detail.myRole, 'perms') && detail.joinBy.includes('code')) {
+        try {
+          await api.updateGroup(groupId, { code: generateJoinCode() });
+          detail = (await api.getGroup(groupId)) ?? detail;
+        } catch {
+          /* the screen still works without a code */
+        }
+      }
       if (!detail) {
         setGroup('missing');
         return;

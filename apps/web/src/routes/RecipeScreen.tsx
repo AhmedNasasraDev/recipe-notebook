@@ -830,7 +830,19 @@ export function RecipeScreen() {
           )}
         </p>
         {computed.unitsWarn && (
-          <p className={styles.warn}>⚠ היחידות בפועל חורגות ביותר מ-5% מהיעד</p>
+          <p className={styles.warn}>
+            ⚠ לפי המשקלים האצווה מפיקה כ-
+            <span className="ltr">{computed.unitsFromWeight.toFixed(1)}</span> יחידות, לא{' '}
+            <span className="ltr">{Math.round(computed.unitsDeclared)}</span>. החישוב כאן
+            הולך לפי המספר שנרשם במתכון.
+          </p>
+        )}
+        {scaleMode !== 'recipe' && scaleValue.trim() !== '' && !(Number(scaleValue) > 0) && (
+          <p className={styles.warn} role="alert">
+            {Number.isFinite(Number(scaleValue))
+              ? 'הכמות חייבת להיות מספר גדול מאפס. מוצגות הכמויות כמו במתכון.'
+              : 'זה לא מספר. מוצגות הכמויות כמו במתכון.'}
+          </p>
         )}
         {/* §6: the original is never overwritten. Say it, don't imply it. */}
         <p className={styles.calcNote}>

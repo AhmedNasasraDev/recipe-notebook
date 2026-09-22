@@ -514,20 +514,58 @@ export function validateDraft(
         message: `לרכיב ${i + 1} יש כמות אבל אין שם.`,
       });
     }
-    for (const [key, label] of [
-      ['qty', 'הכמות'],
-      ['waterPct', 'אחוז המים'],
-      ['unitWeight', 'המשקל ליחידה'],
-      ['gPer100', 'הצפיפות'],
-      ['price', 'המחיר'],
+    const rowName = row.name.trim() || `רכיב ${i + 1}`;
+    for (const [key, label, rule] of [
+      ['qty', 'הכמות', 'positive'],
+      ['waterPct', 'אחוז המים', 'percent'],
+      ['unitWeight', 'המשקל ליחידה', 'positive'],
+      ['gPer100', 'הצפיפות', 'positive'],
+      ['price', 'המחיר', 'nonNegative'],
     ] as const) {
       const raw = row[key].trim();
-      if (raw && !Number.isFinite(Number(raw))) {
+      if (!raw) continue;
+      const n = Number(raw);
+      if (!Number.isFinite(n)) {
         problems.push({
           field: `ingredient-${i}-${key}`,
-          message: `${label} של "${row.name.trim() || `רכיב ${i + 1}`}" אינה מספר.`,
+          message: `${label} של "${rowName}" אינה מספר.`,
+        });
+        continue;
+      }
+      /*
+        QA 22.09.2026, finding 4: "0" and "-5" passed as quantities, and the
+        recipe then showed "-5 גר' קמח" and priced the line at nothing. A
+        quantity is something on the scale, so it is a positive number; a
+        weight per unit or a density likewise. A price may be zero (given
+        away) but not negative; a water percentage is a share.
+      */
+      if (rule === 'positive' && n <= 0) {
+        problems.push({
+          field: `ingredient-${i}-${key}`,
+          message: `${label} של "${rowName}" חייבת להיות גדולה מאפס.`,
+        });
+      } else if (rule === 'nonNegative' && n < 0) {
+        problems.push({
+          field: `ingredient-${i}-${key}`,
+          message: `${label} של "${rowName}" אינו יכול להיות שלילי.`,
+        });
+      } else if (rule === 'percent' && (n < 0 || n > 100)) {
+        problems.push({
+          field: `ingredient-${i}-${key}`,
+          message: `${label} של "${rowName}" צריך להיות בין 0 ל-100.`,
         });
       }
+    }
+    /*
+      QA 22.09.2026, finding 5: a price without a price unit used to be costed
+      per kilogram without saying so. The unit decides the answer by orders of
+      magnitude, so it is required whenever a price is typed.
+    */
+    if (Number(row.price.trim()) > 0 && !row.priceUnit.trim() && !row.subId) {
+      problems.push({
+        field: `ingredient-${i}-priceUnit`,
+        message: `למחיר של "${rowName}" חסרה יחידת מחיר (ק"ג / ליטר / יח').`,
+      });
     }
   });
 
@@ -543,8 +581,23 @@ export function validateDraft(
     ['targetGM', 'יעד הרווח הגולמי'],
   ] as const) {
     const raw = draft[key].trim();
-    if (raw && !Number.isFinite(Number(raw))) {
+    if (!raw) continue;
+    if (!Number.isFinite(Number(raw))) {
       problems.push({ field: key, message: `${label} אינה מספר.` });
+    } else if (Number(raw) < 0) {
+      problems.push({ field: key, message: `${label} אינה יכולה להיות שלילית.` });
+    }
+  }
+  for (const [key, label] of [
+    ['weightBefore', 'המשקל לפני האפייה'],
+    ['weightAfter', 'המשקל אחרי האפייה'],
+  ] as const) {
+    const raw = (draft[key] ?? '').trim();
+    if (!raw) continue;
+    if (!Number.isFinite(Number(raw))) {
+      problems.push({ field: key, message: `${label} אינו מספר.` });
+    } else if (Number(raw) < 0) {
+      problems.push({ field: key, message: `${label} אינו יכול להיות שלילי.` });
     }
   }
 

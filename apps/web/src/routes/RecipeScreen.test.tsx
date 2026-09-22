@@ -167,9 +167,10 @@ describe('§6 scaling, through the engine', () => {
     await waitFor(() => {
       expect(screen.getByText(/מקדם ×/)).toBeInTheDocument();
     });
-    // 12 units at 85 g with 12% baking loss gives 11.906 actual units, so
-    // targeting 24 is a factor of 2.02 — the engine's number, not a round guess
-    expect(screen.getByText('2.02')).toBeInTheDocument();
+    // The recipe declares 12 units, so targeting 24 is exactly ×2 — the
+    // declared count is the baseline (QA 22.09.2026, finding 3); the weighed
+    // count (11.9) is reported separately as a warning.
+    expect(screen.getByText('2.00')).toBeInTheDocument();
   });
 });
 

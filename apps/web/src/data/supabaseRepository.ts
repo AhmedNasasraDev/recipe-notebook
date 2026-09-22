@@ -20,6 +20,7 @@
 // So a save is ONE call to the `save_recipe` RPC (migration 0007), which does
 // all of it in a single transaction. Reads stay as ordinary selects.
 
+import { describeCause } from '../lib/errorText.js';
 import type { Calibration, MeasurementPrefs, Recipe } from '@recipe-notebook/engine';
 import type { CatalogItem } from '../features/pricing/catalog.js';
 import type {
@@ -39,6 +40,7 @@ import type {
 } from '../lib/database.types.js';
 import {
   RecipeInUseError,
+  SavedButNotReloadedError,
   WriteNotAllowedError,
   type PlanSummary,
   type RecipeImage,
@@ -125,11 +127,10 @@ export class SupabaseRepositoryError extends Error {
     readonly operation: string,
     cause: unknown,
   ) {
-    const detail =
-      typeof cause === 'object' && cause !== null && 'message' in cause
-        ? String((cause as { message: unknown }).message)
-        : String(cause);
-    super(`${operation}: ${detail}`);
+    // The cause is translated (lib/errorText.ts) so the screen prints Hebrew,
+    // and a cause with nothing to add leaves the operation alone.
+    const detail = describeCause(cause);
+    super(detail ? `${operation}: ${detail}` : operation);
     this.name = 'SupabaseRepositoryError';
   }
 }
@@ -321,8 +322,15 @@ export function createSupabaseRepository({
       }
 
       const recipeId = data as unknown as string;
-      const saved = await this.getRecipe(recipeId);
-      if (!saved) throw new SupabaseRepositoryError('שמירה', 'המתכון לא נמצא אחרי השמירה');
+      let saved: Recipe | null;
+      try {
+        saved = await this.getRecipe(recipeId);
+      } catch (e) {
+        throw new SavedButNotReloadedError('המתכון', recipeId, e);
+      }
+      if (!saved) {
+        throw new SavedButNotReloadedError('המתכון', recipeId, 'המתכון לא נמצא אחרי השמירה');
+      }
       return saved;
     },
 

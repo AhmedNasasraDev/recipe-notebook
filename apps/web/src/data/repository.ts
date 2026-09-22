@@ -545,6 +545,25 @@ export interface Repository
   listCategories(): Promise<readonly string[]>;
 }
 
+/**
+ * The write SUCCEEDED and the read-back did not.
+ *
+ * QA 22.09.2026: a save whose follow-up read failed was reported as "the save
+ * failed", and the natural next press created a second recipe. The row exists;
+ * this says so and carries its id, so the screen can go to it (and the
+ * notebook can refetch) instead of inviting a retry.
+ */
+export class SavedButNotReloadedError extends Error {
+  constructor(
+    readonly what: string,
+    readonly recipeId: string,
+    readonly why: unknown,
+  ) {
+    super(`${what} נשמר, אבל לא הצלחנו לטעון אותו מחדש. הוא במחברת — רענון יציג אותו.`);
+    this.name = 'SavedButNotReloadedError';
+  }
+}
+
 export class WriteNotAllowedError extends Error {
   constructor(readonly reason: string) {
     super(reason);

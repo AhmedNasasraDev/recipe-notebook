@@ -8,6 +8,7 @@ import {
   createCalibration,
   formatForUnit,
   parseLocal,
+  scaleFactor,
   type Recipe,
 } from '../src/index.js';
 import { prefsWithCup } from './helpers.js';
@@ -94,14 +95,27 @@ describe('AC #5 — changing the cup from 240 to 250 changes ALL conversions at 
     expect(b.cost / a.cost).toBeCloseTo(250 / 240, 9);
   });
 
-  it('the units actually produced, when units follow the weight', () => {
+  it('the declared unit count stays the baseline; the weighed count follows the cup', () => {
+    // QA 22.09.2026 finding 3: a recipe that SAYS it makes 10 makes 10 — the
+    // weights are a check on that statement (`unitsFromWeight`), not a
+    // replacement for it. A bigger cup means a heavier batch, so the weights
+    // now say "more than 10", and the cost of each of the 10 declared units
+    // rises with the flour in it.
     const a = compute(RECIPE, [RECIPE], { prefs: P240 });
     const b = compute(RECIPE, [RECIPE], { prefs: P250 });
-    expect(b.unitsActual).toBeGreaterThan(a.unitsActual);
-    // cost and units rise together here, so cost PER unit is invariant — that
-    // is the arithmetically correct outcome, not a missed propagation.
-    expect(b.costPerUnit).toBeCloseTo(a.costPerUnit, 9);
+    expect(a.unitsActual).toBe(10);
+    expect(b.unitsActual).toBe(10);
+    expect(b.unitsFromWeight).toBeGreaterThan(a.unitsFromWeight);
+    expect(b.costPerUnit).toBeGreaterThan(a.costPerUnit);
     expect(b.costPerKg).toBeCloseTo(a.costPerKg, 9);
+  });
+
+  it('half of the declared yield is exactly half the batch (QA finding 3)', () => {
+    const base = compute(RECIPE, [RECIPE], { prefs: P240 });
+    expect(scaleFactor('units', 5, base)).toBe(0.5);
+    expect(scaleFactor('units', 20, base)).toBe(2);
+    // The weighed count is still reported, and the disagreement is flagged.
+    expect(base.unitsFromWeight).toBeGreaterThan(0);
   });
 
   it('the cost per unit and sale price, when the unit count is fixed', () => {
