@@ -1,0 +1,15 @@
+recipe.created: "6fd663f1-6d7a-4c4d-a7f1-6c81c484bdc6"
+hero.tall: {"height":220,"width":402,"objectFit":"cover","loaded":true}
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+locator.click: Timeout 15000ms exceeded.
+Call log:
+[2m  - waiting for locator('button').filter({ hasText: 'החלפת התמונה' })[22m
+
+    at /tmp/claude-0/-home-user-recipe-notebook/c3a9fa06-9b8e-56e2-96b0-42c6561963e9/scratchpad/qa/s7c-photo-aspect.mjs:29:59 {
+  name: 'TimeoutError'
+}
+
+Node.js v22.22.2

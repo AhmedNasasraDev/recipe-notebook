@@ -1,0 +1,388 @@
+{
+  "format": "recipe-notebook-backup",
+  "version": 1,
+  "exportedAt": "2026-09-23T04:56:08.013Z",
+  "account": {
+    "email": "nasasraah+qa1@gmail.com"
+  },
+  "prefs": {
+    "profile": "pro",
+    "pro": true,
+    "units": [
+      "g",
+      "kg",
+      "ml",
+      "l",
+      "unit"
+    ],
+    "tools": {
+      "cup": 240,
+      "tsp": 5,
+      "tbsp": 15
+    },
+    "touchedUnits": false,
+    "done": true,
+    "calib": []
+  },
+  "recipes": [
+    {
+      "id": "cd1630f3-4a80-4a74-b4ea-775d29cd64c0",
+      "name": "בדיקה-QA בריוש חמאה קלאסי",
+      "category": "בצקים",
+      "tags": [],
+      "isSub": false,
+      "locked": false,
+      "yieldUnits": 12,
+      "unitWeight": 100,
+      "targetFC": 0,
+      "shelfLife": "",
+      "storage": "",
+      "freezing": "",
+      "thawing": "",
+      "equipment": "",
+      "notes": "",
+      "manualAllergens": [],
+      "versionNote": "",
+      "createdAt": "2026-09-22",
+      "ingredients": [
+        {
+          "id": "49a9aec8-adf7-444d-a2a8-34d12329e743",
+          "name": "קמח לחם",
+          "qty": 500,
+          "unit": "g",
+          "ingredientKey": "קמח לחם",
+          "flour": true
+        },
+        {
+          "id": "19525f3c-fb2a-448f-bb77-440a2012c084",
+          "name": "מלח",
+          "qty": 10,
+          "unit": "g",
+          "ingredientKey": "מלח"
+        },
+        {
+          "id": "a3e58052-c698-422a-9f9d-567f7a20e99a",
+          "name": "סוכר",
+          "qty": 60,
+          "unit": "g",
+          "ingredientKey": "סוכר"
+        },
+        {
+          "id": "5ffb11a8-766b-4ab2-891e-5d8db4442922",
+          "name": "שמרים טריים",
+          "qty": 15,
+          "unit": "g",
+          "ingredientKey": "שמרים טריים"
+        },
+        {
+          "id": "bbe71fd7-ceea-4a97-9760-eacf0bc49b3a",
+          "name": "ביצים",
+          "qty": 4,
+          "unit": "unit",
+          "ingredientKey": "ביצים",
+          "liquid": true
+        },
+        {
+          "id": "2d6acefb-06c6-4119-afa8-3a6e5329d2a5",
+          "name": "חלב",
+          "qty": 100,
+          "unit": "ml",
+          "ingredientKey": "חלב",
+          "liquid": true
+        },
+        {
+          "id": "0eb37124-8c3d-4e59-9a29-21a8bf38b824",
+          "name": "תמצית וניל",
+          "qty": 1,
+          "unit": "tsp",
+          "ingredientKey": "תמצית וניל",
+          "note": "במקור 1 כפית"
+        },
+        {
+          "id": "8eaf404c-a3f5-4152-b97c-e99fc1ea52a8",
+          "name": "חמאה",
+          "qty": 250,
+          "unit": "g",
+          "ingredientKey": "חמאה"
+        }
+      ],
+      "steps": [
+        {
+          "id": "975d89d1-6637-4e59-b7bd-988b8f218c47",
+          "text": "מערבבים את הקמח, המלח, הסוכר והשמרים במערבל.",
+          "tempUnit": "C",
+          "minutes": 9
+        },
+        {
+          "id": "97650b9f-8848-409e-8304-63a251590ed6",
+          "text": "מוסיפים 4 ביצים ו-100 מ\"ל חלב ולשים 8 דקות.",
+          "tempUnit": "C",
+          "minutes": 8
+        },
+        {
+          "id": "8d230a97-b76c-4343-93cb-ec9588c3f60c",
+          "text": "מוסיפים 250 גרם חמאה בהדרגה ולשים עד שהבצק חלק.",
+          "tempUnit": "C"
+        },
+        {
+          "id": "0ab6a52c-85c7-4268-9d30-dcde6f5dee10",
+          "text": "מתפיחים שעה וחצי.",
+          "tempUnit": "C",
+          "minutes": 90
+        },
+        {
+          "id": "4071d071-a096-4007-9e1a-4db3b47aa418",
+          "text": "אופים 25 דקות ב-180 מעלות.",
+          "temp": 180,
+          "tempUnit": "C",
+          "minutes": 25
+        }
+      ],
+      "salePriceBasis": "batch",
+      "weightBefore": 1200,
+      "weightAfter": 1050,
+      "privateNote": "בדיקה-QA הערה אישית"
+    },
+    {
+      "id": "ac0b1c48-b462-4521-8645-bfbf62a8f7d3",
+      "name": "בדיקה-QA בריוש",
+      "category": "בצקים",
+      "tags": [],
+      "isSub": false,
+      "locked": false,
+      "yieldUnits": 0,
+      "unitWeight": 0,
+      "targetFC": 0,
+      "shelfLife": "",
+      "storage": "",
+      "freezing": "",
+      "thawing": "",
+      "equipment": "",
+      "notes": "",
+      "manualAllergens": [],
+      "versionNote": "",
+      "createdAt": "2026-09-22",
+      "ingredients": [
+        {
+          "id": "a10e606f-37d6-42d7-9de4-75f9b3408584",
+          "name": "קמח לחם",
+          "qty": 500,
+          "unit": "g",
+          "ingredientKey": "קמח לחם",
+          "price": 4,
+          "priceUnit": "ק\"ג"
+        },
+        {
+          "id": "207c254d-d825-4a5e-bde9-f625f92e2811",
+          "name": "חמאה",
+          "qty": 250,
+          "unit": "g",
+          "ingredientKey": "חמאה",
+          "price": 40,
+          "priceUnit": "ק\"ג"
+        },
+        {
+          "id": "4cdd0a4e-40b1-452f-b0e8-a2d9b96a3541",
+          "name": "ביצים",
+          "qty": 3,
+          "unit": "egg",
+          "ingredientKey": "ביצים",
+          "price": 1,
+          "priceUnit": "יח'"
+        },
+        {
+          "id": "bbcfefd2-7da9-4a85-8004-f7e25a545939",
+          "name": "חלב",
+          "qty": 100,
+          "unit": "ml",
+          "ingredientKey": "חלב",
+          "price": 6,
+          "priceUnit": "ליטר"
+        },
+        {
+          "id": "c0888a8e-1eac-47aa-a17b-766b62d44228",
+          "name": "סוכר",
+          "qty": 60,
+          "unit": "g",
+          "ingredientKey": "סוכר",
+          "price": 5,
+          "priceUnit": "ק\"ג"
+        },
+        {
+          "id": "7c4f69c5-3821-4543-8431-d8e4b7112929",
+          "name": "מלח",
+          "qty": 10,
+          "unit": "g",
+          "ingredientKey": "מלח"
+        },
+        {
+          "id": "4988c594-a53c-435d-aa55-35340b186d19",
+          "name": "שמרים",
+          "qty": 10,
+          "unit": "g",
+          "ingredientKey": "שמרים",
+          "price": 30,
+          "priceUnit": "ק\"ג"
+        }
+      ],
+      "steps": [
+        {
+          "id": "230799fa-addf-48f4-80a5-65c6da7def7c",
+          "text": "ללוש 12 דקות",
+          "tempUnit": "C",
+          "minutes": 12
+        },
+        {
+          "id": "91eed277-7fa7-4f5e-a57b-9318e7515d9e",
+          "text": "התפחה שעה",
+          "tempUnit": "C",
+          "minutes": 60
+        },
+        {
+          "id": "516a05ce-270f-4bff-b175-e7562fcd7d2f",
+          "text": "אפייה",
+          "temp": 180,
+          "tempUnit": "C",
+          "minutes": 20
+        }
+      ],
+      "salePriceBasis": "batch"
+    },
+    {
+      "id": "b343acb2-8fdc-4044-963d-593cacd49e52",
+      "name": "בדיקה-QA גנאש",
+      "category": "גנאשים ורטבים",
+      "tags": [],
+      "isSub": false,
+      "locked": false,
+      "yieldUnits": 0,
+      "unitWeight": 0,
+      "targetFC": 0,
+      "shelfLife": "",
+      "storage": "",
+      "freezing": "",
+      "thawing": "",
+      "equipment": "",
+      "notes": "",
+      "manualAllergens": [],
+      "versionNote": "",
+      "createdAt": "2026-09-22",
+      "ingredients": [
+        {
+          "id": "0b30dc04-ef13-4311-adc2-6bb78df1c135",
+          "name": "שוקולד מריר",
+          "qty": 200,
+          "unit": "g",
+          "ingredientKey": "שוקולד מריר",
+          "price": 60,
+          "priceUnit": "ק\"ג"
+        },
+        {
+          "id": "d776544a-7ed3-482b-b100-0f6f4149ad37",
+          "name": "שמנת 38%",
+          "qty": 200,
+          "unit": "ml",
+          "ingredientKey": "שמנת 38%",
+          "price": 12,
+          "priceUnit": "ליטר"
+        }
+      ],
+      "steps": [
+        {
+          "id": "9ab1c8a3-2d40-4b98-b933-b3d909379b6f",
+          "text": "לחמם שמנת ולמזוג על השוקולד",
+          "tempUnit": "C",
+          "minutes": 5
+        }
+      ],
+      "salePriceBasis": "batch"
+    }
+  ],
+  "catalog": [
+    {
+      "id": "a128c1e8-9515-4954-8698-86c7f4b227d0",
+      "key": "מלח",
+      "name": "מלח",
+      "purchaseUnit": "kg",
+      "packageQty": 1,
+      "packageCount": 1,
+      "purchaseTotal": 3,
+      "usablePct": null,
+      "supplier": "",
+      "purchasedAt": "2026-09-22",
+      "priceUpdatedAt": "2026-09-22T20:23:29.727186+00:00",
+      "note": "",
+      "purchasePrice": 3,
+      "price": 3,
+      "priceUnit": "ק\"ג",
+      "allergens": []
+    },
+    {
+      "id": "b4569dbe-4752-4ca2-974a-a7572da372c1",
+      "key": "קמח",
+      "name": "קמח",
+      "purchaseUnit": "kg",
+      "packageQty": 25,
+      "packageCount": 1,
+      "purchaseTotal": 150,
+      "usablePct": null,
+      "supplier": "",
+      "purchasedAt": "2026-09-22",
+      "priceUpdatedAt": "2026-09-22T20:23:32.85043+00:00",
+      "note": "",
+      "purchasePrice": 6,
+      "price": 6,
+      "priceUnit": "ק\"ג",
+      "allergens": []
+    },
+    {
+      "id": "311bfb1c-3f2e-4d2e-a7e7-12de4c52e1b0",
+      "key": "קמח לחם",
+      "name": "קמח לחם",
+      "purchaseUnit": "kg",
+      "packageQty": 25,
+      "packageCount": 1,
+      "purchaseTotal": 100,
+      "usablePct": null,
+      "supplier": "",
+      "purchasedAt": "2026-09-22",
+      "priceUpdatedAt": "2026-09-22T20:23:26.744115+00:00",
+      "note": "",
+      "purchasePrice": 4,
+      "price": 4,
+      "priceUnit": "ק\"ג",
+      "allergens": []
+    }
+  ],
+  "plans": [
+    {
+      "id": "f9794bf1-faca-4fa5-b013-523c8bfe434c",
+      "name": "בדיקה-QA תוכנית א",
+      "planDate": "2026-09-22",
+      "note": "",
+      "locked": false,
+      "lockedAt": null,
+      "snapshot": null,
+      "updatedAt": "2026-09-22T20:25:46.768744+00:00",
+      "items": [
+        {
+          "id": "09251b81-0e56-4d8a-a76c-82b177d3916e",
+          "recipeId": "ac0b1c48-b462-4521-8645-bfbf62a8f7d3",
+          "qty": 24,
+          "qtyUnit": "unit",
+          "readyAt": "08:00",
+          "note": ""
+        },
+        {
+          "id": "f5443b72-f25b-42b1-a72c-7ddb4caa682e",
+          "recipeId": "b343acb2-8fdc-4044-963d-593cacd49e52",
+          "qty": 800,
+          "qtyUnit": "g",
+          "readyAt": "10:00",
+          "note": ""
+        }
+      ],
+      "onHand": {}
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+base.created: {"id":"650cfed5-4de2-4476-92d0-717874ba0fb9","url":"http://127.0.0.1:5199/recipe/650cfed5-4de2-4476-92d0-717874ba0fb9"}
+base.foodCostLine: "עלות חומרי הגלם ₪8.00 עלות לק\"ג ₪20.00 עלות ליחידה — מח"
+sub.optionsInclude: ["לא מקושר למתכון אחר","בדיקה-QA בריוש","בדיקה-QA בריוש חמאה קלאסי","בדיקה-QA גנאש","בדיקה-QA רוטב שוקולד בסיס"]
+sub.hintAfterLink: "הכמות נמדדת במשקל והעלות מתגלגלת מהמתכון המקושר."
+parent.created: {"id":"d44e6ade-8658-4963-bc04-4781da0c5776","url":"http://127.0.0.1:5199/recipe/d44e6ade-8658-4963-bc04-4781da0c5776"}
+parent.linkedRowShowsWeight: "רוטב שוקולד המרה אופן ההכנה 1 לערבב הכול תמונות הוספת תמונה מה קורה לתמ"
+file:///tmp/claude-0/-home-user-recipe-notebook/c3a9fa06-9b8e-56e2-96b0-42c6561963e9/scratchpad/qa/s7a-subrecipe.mjs:7
+const R = {}; const say = (k, v) => { R[k] = v; console.log(k + ': ' + JSON.stringify(v).slice(0, 500)); };
+                                                                                        ^
+
+TypeError: Cannot read properties of undefined (reading 'slice')
+    at say (file:///tmp/claude-0/-home-user-recipe-notebook/c3a9fa06-9b8e-56e2-96b0-42c6561963e9/scratchpad/qa/s7a-subrecipe.mjs:7:89)
+    at file:///tmp/claude-0/-home-user-recipe-notebook/c3a9fa06-9b8e-56e2-96b0-42c6561963e9/scratchpad/qa/s7a-subrecipe.mjs:65:1
+
+Node.js v22.22.2
