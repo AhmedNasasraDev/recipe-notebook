@@ -28,6 +28,7 @@ import { NotebookScreen } from '../routes/NotebookScreen.js';
 import { RecipeScreen } from '../routes/RecipeScreen.js';
 import { MoreScreen } from '../routes/MoreScreen.js';
 import { SettingsScreen } from '../routes/SettingsScreen.js';
+import { SettingsProfileScreen } from '../routes/SettingsProfileScreen.js';
 import { ToolsScreen } from '../routes/ToolsScreen.js';
 import type { TypedSupabaseClient } from '../lib/supabase.js';
 import {
@@ -62,6 +63,7 @@ function AppUnderTest({ client, route = '/notebook' }: { client: unknown; route?
                 <Route path="/recipe/:recipeId" element={<RecipeScreen />} />
                 <Route path="/more" element={<MoreScreen />} />
                 <Route path="/settings" element={<SettingsScreen />} />
+                <Route path="/settings/profile" element={<SettingsProfileScreen />} />
                 <Route path="/tools" element={<ToolsScreen />} />
               </Route>
               <Route path="*" element={<Navigate to="/notebook" replace />} />
@@ -252,9 +254,11 @@ describe('requirement 2 — signing out', () => {
     db['profiles']!.push(newProfileRow(USER_A, { onboarding_done: true }));
     const { client, auth } = project(db, USER_A);
 
-    // STAGE-11: the account block moved from "עוד" to הגדרות, which is where
-    // §2 screen 20 puts it. The behaviour under test is unchanged.
-    render(<AppUnderTest client={client} route="/settings" />);
+    // STAGE-11: the account block moved from "עוד" to הגדרות (§2 screen 20),
+    // and Personal Settings' design pass then moved it again, from the
+    // settings hub to its own "פרטים אישיים" category screen. The behaviour
+    // under test is unchanged.
+    render(<AppUnderTest client={client} route="/settings/profile" />);
     expect(await screen.findByText('ahmed@test.invalid')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'התנתקות' }));

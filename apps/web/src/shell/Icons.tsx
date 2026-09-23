@@ -96,18 +96,21 @@ import {
   ArrowRight,
   Beaker,
   Cake,
+  ChefHat,
   ChevronLeft,
   ClipboardList,
   Clock,
   Copy,
   Croissant,
   Dessert,
+  Download,
   Droplet,
   Ellipsis,
   EllipsisVertical,
   GraduationCap,
   House,
   Image,
+  Languages,
   LayoutGrid,
   MessageCircle,
   NotebookText,
@@ -118,6 +121,7 @@ import {
   Send,
   Settings,
   Share2,
+  ShieldCheck,
   SquarePen,
   Star,
   Tag,
@@ -287,6 +291,20 @@ export const SettingsIcon = inlineGlyph(Settings);
 
 /** פרופיל — אדם יחיד, לא Users (שהוא כבר "חברי הקבוצה"). */
 export const ProfileIcon = inlineGlyph(User);
+
+/* ── settings categories (Personal Settings, stage 2 — the /settings hub) ── */
+
+/** שפה. */
+export const LanguageIcon = inlineGlyph(Languages);
+
+/** העדפות מתכונים — כובע שף, כי אלה ההעדפות של איך מתכננים ואופים, לא כלי הגדרות כלליים. */
+export const RecipePrefsIcon = inlineGlyph(ChefHat);
+
+/** פרטיות ואבטחה. */
+export const PrivacyIcon = inlineGlyph(ShieldCheck);
+
+/** גיבוי ונתונים — אותו כיוון כמו כפתור ההורדה בתוך המסך עצמו. */
+export const BackupIcon = inlineGlyph(Download);
 
 /* ── categories, on the home screen and the notebook cards ───────────────
    These label a category whose NAME is already on screen beside them, so the

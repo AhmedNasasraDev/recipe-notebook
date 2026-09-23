@@ -20,6 +20,10 @@ import { PasteScreen } from './routes/PasteScreen.js';
 import { HomeScreen } from './routes/HomeScreen.js';
 import { SettingsScreen } from './routes/SettingsScreen.js';
 import { SettingsProfileScreen } from './routes/SettingsProfileScreen.js';
+import { SettingsLanguageScreen } from './routes/SettingsLanguageScreen.js';
+import { SettingsRecipePreferencesScreen } from './routes/SettingsRecipePreferencesScreen.js';
+import { SettingsPrivacyScreen } from './routes/SettingsPrivacyScreen.js';
+import { SettingsBackupScreen } from './routes/SettingsBackupScreen.js';
 import { ToolsScreen } from './routes/ToolsScreen.js';
 import { GroupsScreen } from './routes/GroupsScreen.js';
 import { GroupScreen } from './routes/GroupScreen.js';
@@ -85,8 +89,15 @@ export function App() {
                     "עוד" since stage 2; until now the paths had no route and
                     fell through the catch-all to the notebook. */}
                 <Route path="/settings" element={<SettingsScreen />} />
-                {/* Personal Settings, stage 1: the first category screen. */}
+                {/* Personal Settings, stage 2: one category screen each. */}
                 <Route path="/settings/profile" element={<SettingsProfileScreen />} />
+                <Route path="/settings/language" element={<SettingsLanguageScreen />} />
+                <Route
+                  path="/settings/recipe-preferences"
+                  element={<SettingsRecipePreferencesScreen />}
+                />
+                <Route path="/settings/privacy" element={<SettingsPrivacyScreen />} />
+                <Route path="/settings/backup" element={<SettingsBackupScreen />} />
                 <Route path="/tools" element={<ToolsScreen />} />
               </Route>
               {/*

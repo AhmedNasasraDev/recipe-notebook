@@ -544,7 +544,9 @@ describe('the palette, measured', () => {
     */
     const ALLOWED = new Set([
       'features/groups/GroupChat.module.css:.avatar',
-      'features/groups/IdentityCard.module.css:.avatar',
+      /* Moved here from the deleted IdentityCard.module.css when the two
+         name-and-picture cards on /settings/profile merged into one. */
+      'routes/SettingsProfileScreen.module.css:.avatar',
       'routes/OnboardingScreen.module.css:.dotOff',
       'routes/CookScreen.module.css:.segNow::after',
       'routes/RecipeEditScreen.module.css:.stageNum',

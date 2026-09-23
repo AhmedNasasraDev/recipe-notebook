@@ -1,0 +1,88 @@
+/* Shared shell for every /settings/* category screen — the header and the
+   card, so five screens don't each redeclare the same rules. Personal
+   Settings, stage 2. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 20px;
+  border-block-end: 1px solid var(--c-line);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  color: var(--c-ink);
+}
+
+.card {
+  padding: 16px 20px;
+  border-block-end: 1px solid var(--c-line);
+}
+
+.cardTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.note {
+  margin-block-start: 8px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+.rules {
+  margin-block-start: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-ink);
+  line-height: 1.6;
+  list-style: none;
+}
+.rules li::before {
+  content: '· ';
+}
+
+.secondary {
+  margin-block-start: 12px;
+  min-height: var(--hit-min);
+  padding: 9px 18px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-green);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  cursor: pointer;
+}
+
+.ok {
+  margin-block-start: 10px;
+  padding: 8px 10px;
+  border-radius: var(--r-card);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-meta-lg);
+}
+
+.error {
+  margin-block-start: 10px;
+  padding: 8px 10px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}

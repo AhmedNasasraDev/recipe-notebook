@@ -1,0 +1,133 @@
+/* /settings/recipe-preferences — the level, unit and text-size pickers. Moved
+   verbatim out of the old one-page הגדרות. Same tokens and the same pill/card
+   language as onboarding and "כלי המדידה שלי", so the doors onto the same
+   preferences look like the same thing. */
+
+.options {
+  margin-block-start: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.option,
+.optionOn {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: var(--hit-min);
+  padding: 10px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  font-family: var(--font-body);
+  text-align: start;
+  cursor: pointer;
+}
+
+.optionOn {
+  border-color: var(--c-green);
+  background: var(--c-green-bg);
+}
+
+.optionName {
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+.optionOn .optionName {
+  color: var(--c-green-ink);
+}
+
+.optionDesc {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.5;
+}
+.optionOn .optionDesc {
+  color: var(--c-green-ink);
+}
+
+.unitGroup {
+  margin-block-start: 12px;
+}
+
+.groupTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+  color: var(--c-muted);
+}
+
+.pills {
+  margin-block-start: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill,
+.pillOn {
+  min-height: var(--hit-compact);
+  padding: 6px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  cursor: pointer;
+}
+
+.pillOn {
+  border-color: var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-weight: 600;
+}
+
+.warn {
+  margin-block-start: 10px;
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-ink);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+
+.linkBtn {
+  margin-block-start: 14px;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  padding-inline: 16px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  color: var(--c-green);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+}
+
+/* §10's live preview of the Cook Mode text size. */
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+  border-radius: var(--r-card);
+  background: var(--c-app-bg);
+}
+
+.previewLabel {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.previewText {
+  font-family: var(--font-display);
+  font-size: var(--fs-cook-body);
+  line-height: 1.25;
+  color: var(--c-ink);
+}
