@@ -2,7 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { defaultPrefs, type Recipe } from '@recipe-notebook/engine';
+import { render } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { AppDataProvider } from '../app/AppDataProvider.js';
 import { RecipeEditScreen } from './RecipeEditScreen.js';
+import { PASTE_VERSION_NOTE, type PastedDraftState } from './pastedDraft.js';
 import { fakeRepository, renderRoute } from '../test/render.js';
 
 const prefs = { ...defaultPrefs('pro'), done: true, tools: { cup: 240, tbsp: 15, tsp: 5 } };
@@ -779,5 +783,79 @@ describe('the four stages', () => {
       'aria-current',
       'step',
     );
+  });
+});
+
+describe('a recipe pasted as text opens here as an unsaved draft (spec 5.1, A-4)', () => {
+  const PASTED: Recipe = {
+    name: 'בריוש מהדבקה',
+    category: 'לחמים',
+    ingredients: [
+      { id: 'p1', name: 'קמח לחם', qty: 500, unit: 'g' },
+      { id: 'p2', name: 'חלב', qty: 60, unit: 'ml' },
+    ],
+    steps: [{ id: 'ps1', text: 'ללוש 12 דקות', minutes: 12 }],
+  } as unknown as Recipe;
+
+  function renderPasted(opts: { onSaveRecipe?(r: Recipe): void } = {}) {
+    const state: PastedDraftState = { draft: PASTED, versionNote: PASTE_VERSION_NOTE };
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/recipe/new', state }]}>
+        <AppDataProvider
+          repository={fakeRepository({
+            prefs,
+            recipes: [],
+            canWrite: true,
+            ...(opts.onSaveRecipe ? { onSaveRecipe: opts.onSaveRecipe } : {}),
+          })}
+          userId="me"
+        >
+          <Routes>
+            <Route path="/recipe/new" element={<RecipeEditScreen />} />
+            <Route path="/recipe/:recipeId" element={<p>recipe page</p>} />
+            <Route path="/notebook" element={<p>notebook page</p>} />
+          </Routes>
+        </AppDataProvider>
+      </MemoryRouter>,
+    );
+  }
+
+  it('opens as a NEW recipe with the pasted name, rows and steps filled in', async () => {
+    const user = userEvent.setup();
+    renderPasted();
+    expect(await screen.findByRole('heading', { name: 'מתכון חדש' })).toBeInTheDocument();
+    expect(screen.getByLabelText('שם המתכון')).toHaveValue('בריוש מהדבקה');
+    await toStage(user, 2);
+    expect(screen.getByLabelText('שם הרכיב בשורה 1')).toHaveValue('קמח לחם');
+    expect(screen.getByLabelText('כמות של קמח לחם')).toHaveValue('500');
+    expect(screen.getByLabelText('שם הרכיב בשורה 2')).toHaveValue('חלב');
+    expect(screen.getByLabelText('יחידת המדידה של חלב')).toHaveValue('ml');
+    await toStage(user, 3);
+    expect(screen.getByDisplayValue('ללוש 12 דקות')).toBeInTheDocument();
+  });
+
+  it('writes nothing until "שמירת המתכון", and then saves exactly what was pasted', async () => {
+    const user = userEvent.setup();
+    const saved: Recipe[] = [];
+    renderPasted({ onSaveRecipe: (r) => saved.push(r) });
+    await screen.findByRole('heading', { name: 'מתכון חדש' });
+    // Nothing was saved by merely arriving with a draft.
+    expect(saved).toHaveLength(0);
+
+    await toStage(user, 4);
+    await user.click(screen.getByRole('button', { name: 'שמירת המתכון' }));
+
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]!.name).toBe('בריוש מהדבקה');
+    expect(saved[0]!.ingredients!.map((i) => i.name)).toEqual(['קמח לחם', 'חלב']);
+    expect(saved[0]!.steps).toHaveLength(1);
+    // A created id, not one carried in from the paste.
+    expect(saved[0]!.id).toMatch(/^saved-/);
+  });
+
+  it('a plain /recipe/new (no state) still opens empty', async () => {
+    renderNew();
+    expect(await screen.findByRole('heading', { name: 'מתכון חדש' })).toBeInTheDocument();
+    expect(screen.getByLabelText('שם המתכון')).toHaveValue('');
   });
 });

@@ -448,7 +448,27 @@ export function createSupabaseRepository({
 
       if (paths.length > 0) {
         try {
-          await client.storage.from(RECIPE_IMAGE_BUCKET).remove(paths);
+          /*
+            Storage's `remove()` first SELECTS the objects under the read
+            policy and deletes only what it found — so a file it could not
+            see is silently left behind and the call still returns 200. QA
+            22.09.2026 (status check, S1) caught exactly that: `[]` back for
+            two real files. Migration 0040 lets the uploader see its own
+            files after the row is gone; this check is what makes a repeat of
+            that leak VISIBLE instead of silent. The recipe is deleted either
+            way, so this is a warning, not an error.
+          */
+          const { data: removed } = await client.storage
+            .from(RECIPE_IMAGE_BUCKET)
+            .remove(paths);
+          const gone = new Set((removed ?? []).map((o) => o.name));
+          const left = paths.filter((path) => !gone.has(path));
+          if (left.length > 0) {
+            console.warn(
+              `deleteRecipe: ${left.length} of ${paths.length} image file(s) were not removed from storage`,
+              left,
+            );
+          }
         } catch {
           /* the recipe is gone; a leftover file is invisible to everyone */
         }

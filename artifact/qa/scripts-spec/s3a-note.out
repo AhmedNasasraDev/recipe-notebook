@@ -1,0 +1,19 @@
+{
+ "recipe": "b4f90a36-80ad-4cc9-90ee-331456f74bc3",
+ "savePayloads": [
+  {
+   "p_version_note": "יובא מהדבקת טקסט",
+   "id": null,
+   "keys": [
+    "p_recipe",
+    "p_ingredients",
+    "p_steps",
+    "p_issues",
+    "p_recipe_id",
+    "p_expected_updated_at",
+    "p_version_note"
+   ]
+  }
+ ]
+}
+cleanup url: http://127.0.0.1:5199/notebook

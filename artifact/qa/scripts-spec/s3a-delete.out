@@ -1,0 +1,19 @@
+{
+ "recipe": "18efbbe3-56e4-45c3-a80d-81163cd3babd",
+ "uploads": [
+  {
+   "url": "/storage/v1/object/recipe-images/18efbbe3-56e4-45c3-a80d-81163cd3babd/95ec10f1-f95a-4622-a0be-b6e2178c6997.webp",
+   "status": 200
+  }
+ ],
+ "storageDeleteCalls": [
+  {
+   "url": "/storage/v1/object/recipe-images",
+   "status": 200,
+   "body": "[{\"name\":\"18efbbe3-56e4-45c3-a80d-81163cd3babd/95ec10f1-f95a-4622-a0be-b6e2178c6997.webp\",\"bucket_id\":\"recipe-images\",\"owner\":\"3052437b-109e-4c8a-aca4-2e36a063838f\",\"owner_id\":\"3052437b-109e-4c8a-aca4-2e36a063838f\",\"version\":\"b84a8b98-33bf-4081-95a2-f0ac6fe1f32f\",\"id\":\"9103162e-848a-4bcd-aa06-5915dd",
+   "sent": "{\"prefixes\":[\"18efbbe3-56e4-45c3-a80d-81163cd3babd/95ec10f1-f95a-4622-a0be-b6e2178c6997.webp\"]}"
+  }
+ ],
+ "consoleWarnings": [],
+ "urlAfter": "http://127.0.0.1:5199/notebook"
+}

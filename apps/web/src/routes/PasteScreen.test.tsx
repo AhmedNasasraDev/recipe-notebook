@@ -8,10 +8,13 @@
 // importer that quietly invents a weight is worse than no importer.
 
 import { describe, expect, it } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { defaultPrefs, type Recipe } from '@recipe-notebook/engine';
+import { AppDataProvider } from '../app/AppDataProvider.js';
 import { PasteScreen } from './PasteScreen.js';
+import { pastedDraftFrom } from './pastedDraft.js';
 import { fakeRepository, renderRoute } from '../test/render.js';
 
 const BRIOCHE_TEXT = [
@@ -24,17 +27,65 @@ const BRIOCHE_TEXT = [
   'לאפות 20 דקות ב-180 מעלות',
 ].join('\n');
 
+const PREFS = { ...defaultPrefs('pro'), done: true, tools: { cup: 240, tbsp: 15, tsp: 5 } };
+
 function show(opts: { onSaveRecipe?(r: Recipe): void; canWrite?: boolean } = {}) {
   renderRoute(<PasteScreen />, {
     path: '/paste',
     route: '/paste',
     repository: fakeRepository({
-      prefs: { ...defaultPrefs('pro'), done: true, tools: { cup: 240, tbsp: 15, tsp: 5 } },
+      prefs: PREFS,
       recipes: [],
       canWrite: opts.canWrite ?? true,
       ...(opts.onSaveRecipe ? { onSaveRecipe: opts.onSaveRecipe } : {}),
     }),
   });
+}
+
+/*
+  Stands in for the recipe editor at /recipe/new: prints the draft it was
+  handed through `location.state`, so a test can read what the paste screen
+  sent without rendering the whole editor.
+*/
+function EditorProbe() {
+  const pasted = pastedDraftFrom(useLocation().state);
+  if (!pasted) return <p>editor: no draft</p>;
+  return (
+    <div>
+      <h1>editor</h1>
+      <p data-testid="draft-name">{pasted.draft.name}</p>
+      <p data-testid="draft-category">{pasted.draft.category}</p>
+      <p data-testid="draft-id">{String(pasted.draft.id)}</p>
+      <p data-testid="draft-note">{pasted.versionNote}</p>
+      <ul>
+        {(pasted.draft.ingredients ?? []).map((i) => (
+          <li key={i.name}>{`${i.name}|${i.qty}|${i.unit}`}</li>
+        ))}
+      </ul>
+      <p data-testid="draft-steps">{String((pasted.draft.steps ?? []).length)}</p>
+    </div>
+  );
+}
+
+function showWithEditor(opts: { onSaveRecipe?(r: Recipe): void } = {}) {
+  render(
+    <MemoryRouter initialEntries={['/paste']}>
+      <AppDataProvider
+        repository={fakeRepository({
+          prefs: PREFS,
+          recipes: [],
+          canWrite: true,
+          ...(opts.onSaveRecipe ? { onSaveRecipe: opts.onSaveRecipe } : {}),
+        })}
+        userId="me"
+      >
+        <Routes>
+          <Route path="/paste" element={<PasteScreen />} />
+          <Route path="/recipe/new" element={<EditorProbe />} />
+        </Routes>
+      </AppDataProvider>
+    </MemoryRouter>,
+  );
 }
 
 describe('§2 screen 6 — pasting a recipe', () => {
@@ -80,22 +131,36 @@ describe('§2 screen 6 — pasting a recipe', () => {
     expect(screen.getByLabelText('שם המתכון')).toHaveValue('בריוש של אחמד');
   });
 
-  it('saves what was parsed, as a real recipe', async () => {
+  it('hands what was parsed to the editor as a draft, and saves NOTHING itself (spec 5.1, A-4)', async () => {
     const user = userEvent.setup();
     const saved: Recipe[] = [];
-    show({ onSaveRecipe: (r) => saved.push(r) });
+    showWithEditor({ onSaveRecipe: (r) => saved.push(r) });
     await user.type(screen.getByLabelText('הטקסט של המתכון'), BRIOCHE_TEXT);
     await user.click(screen.getByRole('button', { name: 'פענוח' }));
-    await user.click(screen.getByRole('button', { name: 'שמירה למחברת' }));
+    await user.click(screen.getByRole('button', { name: 'המשך לעריכה ואישור' }));
 
-    await waitFor(() => expect(saved).toHaveLength(1));
-    expect(saved[0]!.name).toBe('בריוש נאנטר');
-    expect(saved[0]!.ingredients).toHaveLength(3);
-    expect(saved[0]!.steps).toHaveLength(2);
+    // The editor opened with the parsed recipe…
+    expect(await screen.findByRole('heading', { name: 'editor' })).toBeInTheDocument();
+    expect(screen.getByTestId('draft-name')).toHaveTextContent('בריוש נאנטר');
+    expect(screen.getByTestId('draft-steps')).toHaveTextContent('2');
     // 500 g of flour arrived as grams, not as the string "500 גרם".
-    const flour = saved[0]!.ingredients!.find((i) => i.name === 'קמח לחם')!;
-    expect(Number(flour.qty)).toBe(500);
-    expect(flour.unit).toBe('g');
+    expect(screen.getByText('קמח לחם|500|g')).toBeInTheDocument();
+    expect(screen.getByText('חלב|60|ml')).toBeInTheDocument();
+    // …with no id (the server assigns one on the first real save) and the
+    // note the editor will record for that save.
+    expect(screen.getByTestId('draft-id')).toHaveTextContent('undefined');
+    expect(screen.getByTestId('draft-note')).toHaveTextContent('יובא מהדבקת טקסט');
+    // …and the notebook was not written to.
+    expect(saved).toHaveLength(0);
+  });
+
+  it('says on the screen that nothing is saved until the editor saves', async () => {
+    const user = userEvent.setup();
+    show();
+    await user.type(screen.getByLabelText('הטקסט של המתכון'), BRIOCHE_TEXT);
+    await user.click(screen.getByRole('button', { name: 'פענוח' }));
+    expect(screen.getByText(/שום דבר לא נשמר במחברת עד שלוחצים/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'שמירה למחברת' })).not.toBeInTheDocument();
   });
 });
 
@@ -143,30 +208,30 @@ describe('§17 the screen does not pretend', () => {
     await user.click(screen.getByRole('button', { name: 'פענוח' }));
 
     expect(await screen.findByRole('status')).toHaveTextContent(/לא זוהו רכיבים ולא שלבים/);
-    expect(screen.queryByRole('button', { name: 'שמירה למחברת' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'המשך לעריכה ואישור' })).not.toBeInTheDocument();
   });
 
-  it('refuses to save without a name, and says which field', async () => {
+  it('refuses to continue without a name, and says which field', async () => {
     const user = userEvent.setup();
     const saved: Recipe[] = [];
     show({ onSaveRecipe: (r) => saved.push(r) });
     await user.type(screen.getByLabelText('הטקסט של המתכון'), '500 גרם קמח לחם');
     await user.click(screen.getByRole('button', { name: 'פענוח' }));
     await user.clear(screen.getByLabelText('שם המתכון'));
-    await user.click(screen.getByRole('button', { name: 'שמירה למחברת' }));
+    await user.click(screen.getByRole('button', { name: 'המשך לעריכה ואישור' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('למתכון חייב להיות שם.');
     expect(saved).toHaveLength(0);
   });
 
-  it('parses but cannot save with no server, and says which of the two', async () => {
+  it('parses but cannot continue with no server, and says which of the two', async () => {
     const user = userEvent.setup();
     show({ canWrite: false });
     await user.type(screen.getByLabelText('הטקסט של המתכון'), BRIOCHE_TEXT);
     await user.click(screen.getByRole('button', { name: 'פענוח' }));
 
     expect(screen.getByText('3 רכיבים זוהו')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'שמירה למחברת' })).toBeDisabled();
-    expect(screen.getByRole('status')).toHaveTextContent(/לא לשמור אותה/);
+    expect(screen.getByRole('button', { name: 'המשך לעריכה ואישור' })).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent(/לא להמשיך לעריכה ולשמירה/);
   });
 });

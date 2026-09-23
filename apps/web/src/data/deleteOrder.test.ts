@@ -23,13 +23,15 @@ const USER = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 interface Script {
   rpcError?: { message: string; code?: string } | null;
   rowDeleteError?: { message: string } | null;
+  /** What storage reports as removed; defaults to every path asked for. */
+  removed?: string[];
 }
 
 function clientWith(script: Script) {
   const calls: string[] = [];
   const remove = vi.fn(async (paths: string[]) => {
     calls.push(`storage.remove:${paths.join(',')}`);
-    return { data: paths.map((name) => ({ name })), error: null };
+    return { data: (script.removed ?? paths).map((name) => ({ name })), error: null };
   });
   const rpc = vi.fn(async (name: string) => {
     calls.push(`rpc:${name}`);
@@ -71,6 +73,37 @@ describe('deleting a recipe', () => {
     const repo = createSupabaseRepository({ client, userId: USER });
     await repo.deleteRecipe('r1');
     expect(calls).toEqual(['rpc:delete_recipe', 'storage.remove:r1/a.webp,r1/b.webp']);
+  });
+
+  /*
+    Spec stage 3 A-11 (QA 22.09.2026, S1): storage's `remove()` deletes only
+    what the read policy lets it see and answers 200 either way. Before
+    migration 0040 that was `[]` for every file of a deleted recipe, and the
+    leak was silent. It is now reported — the recipe is gone regardless.
+  */
+  it('warns, and still succeeds, when storage removed fewer files than it was asked to', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const { client } = clientWith({ removed: ['r1/a.webp'] });
+      const repo = createSupabaseRepository({ client, userId: USER });
+      await expect(repo.deleteRecipe('r1')).resolves.toBeUndefined();
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]![0]).toMatch(/1 of 2 image file\(s\) were not removed/);
+      expect(warn.mock.calls[0]![1]).toEqual(['r1/b.webp']);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('is silent when every file was removed', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const { client } = clientWith({});
+      await createSupabaseRepository({ client, userId: USER }).deleteRecipe('r1');
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
   });
 
   it('leaves every photograph in place when the delete is refused', async () => {

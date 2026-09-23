@@ -27,6 +27,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { pastedDraftFrom } from './pastedDraft.js';
 import { SavedButNotReloadedError } from '../data/repository.js';
 import { useUnsavedGuard } from '../shell/UnsavedGuard.js';
 import { BackButton, BackControl } from '../components/BackLink.js';
@@ -188,7 +189,17 @@ export function RecipeEditScreen() {
     [recipeId, recipes],
   );
 
-  const [draft, setDraft] = useState<RecipeDraft>(() => emptyDraft());
+  /*
+    A recipe pasted as text arrives here as a draft in `location.state`
+    (PasteScreen → pastedDraft.ts) and is NOT saved yet: the form opens
+    filled in, `original` stays empty so leaving without saving asks first,
+    and cancelling leaves nothing behind. Read once, at mount — a reload of
+    /recipe/new has no state and starts empty, which is right.
+  */
+  const pasted = useMemo(() => (isNew ? pastedDraftFrom(location.state) : null), [isNew, location.state]);
+  const [draft, setDraft] = useState<RecipeDraft>(() =>
+    pasted ? { ...draftFromRecipe(pasted.draft), id: '' } : emptyDraft(),
+  );
   const [original, setOriginal] = useState<RecipeDraft>(() => emptyDraft());
   const [loaded, setLoaded] = useState(isNew);
   /*
@@ -344,7 +355,7 @@ export function RecipeEditScreen() {
       const next = draftToRecipe(draft);
       const note = existing
         ? versionDiff({ before: existing, after: next, recipes, prefs })
-        : '';
+        : (pasted?.versionNote ?? '');
 
       const saved = await saveRecipe(next, {
         versionNote: note,

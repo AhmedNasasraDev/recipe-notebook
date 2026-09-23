@@ -18,6 +18,16 @@
 // screen, by name, before anything is saved. The user then decides: leave it
 // in cups, weigh it and type grams, or calibrate it later from the recipe page.
 //
+// NOTHING IS SAVED FROM THIS SCREEN
+//
+// Spec 5.1 / stage 3 (A-4, 23.09.2026): the parsed result is handed to the
+// recipe editor as a draft, and the recipe exists only once "שמירת המתכון" is
+// pressed THERE. Before this the screen saved straight to the notebook and
+// sent the user to the recipe page to fix it afterwards — which meant a
+// half-parsed recipe was already on the server, in the version history and
+// in the offline mirror, before anybody had looked at it. Now cancelling in
+// the editor leaves no trace.
+//
 // SMART PASTE IS NOT HERE, AND THAT IS DELIBERATE
 //
 // §17 lists it as `REQUIRES BACKEND IMPLEMENTATION` and §6 says the API key
@@ -27,6 +37,7 @@
 
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PASTE_VERSION_NOTE, type PastedDraftState } from './pastedDraft.js';
 import { BackControl } from '../components/BackLink.js';
 import {
   formatGrams,
@@ -40,14 +51,13 @@ import { useAppData } from '../app/AppDataProvider.js';
 import styles from './PasteScreen.module.css';
 
 export function PasteScreen() {
-  const { prefs, categories, capabilities, saveRecipe } = useAppData();
+  const { prefs, categories, capabilities } = useAppData();
   const navigate = useNavigate();
 
   const [text, setText] = useState('');
   const [parsed, setParsed] = useState(false);
   const [name, setName] = useState('');
   const [category, setCategory] = useState(categories[0] ?? 'אחר');
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Parsing is pure and cheap, so it runs on the text rather than on a button
@@ -74,57 +84,51 @@ export function PasteScreen() {
     }
   };
 
-  const onSave = async () => {
+  const onContinue = () => {
     setError(null);
     if (!name.trim()) {
       setError('למתכון חייב להיות שם.');
       return;
     }
     if (result.ingredients.length === 0) {
-      setError('לא זוהה אף רכיב, ולכן אין מה לשמור. אפשר לתקן את הטקסט ולפענח שוב.');
+      setError('לא זוהה אף רכיב, ולכן אין מה להמשיך איתו. אפשר לתקן את הטקסט ולפענח שוב.');
       return;
     }
-    setBusy(true);
-    try {
-      const recipe: Recipe = {
-        id: `new-${Date.now().toString(36)}`,
-        name: name.trim(),
-        category,
-        /*
-          The unit is normalised HERE, at the boundary where imported data
-          enters the notebook. `parseLocal` is a port of the prototype's parser
-          and writes the Hebrew names ("גרם"); everything the app creates itself
-          stores the engine's canonical ids ("g"). Both are understood by the
-          engine — `unitId` is what understands them — but a recipe that arrives
-          spelled differently from every other one is the shape of the defect
-          the editor's unit dropdown had. An unrecognised unit is KEPT rather
-          than replaced, for the same reason the parser kept it.
-        */
-        ingredients: result.ingredients.map((ing) => ({
-          ...ing,
-          unit: unitId(ing.unit) ?? ing.unit,
-        })),
-        steps: result.steps.map((s) => ({
-          id: s.id,
-          text: s.text,
-          ...(s.temp ? { temp: s.temp } : {}),
-          ...(s.minutes === '' ? {} : { minutes: s.minutes }),
-        })),
-        /* The batch facts the text stated — weights before and after the
-           oven, the count — go into the recipe's own fields, never into the
-           ingredient list (see `parseLocal`). */
-        ...(result.meta.weightBefore ? { weightBefore: result.meta.weightBefore } : {}),
-        ...(result.meta.weightAfter ? { weightAfter: result.meta.weightAfter } : {}),
-        ...(result.meta.unitWeight ? { unitWeight: result.meta.unitWeight } : {}),
-        ...(result.meta.yieldUnits ? { yieldUnits: result.meta.yieldUnits } : {}),
-      } as unknown as Recipe;
-      const saved = await saveRecipe(recipe, { versionNote: 'יובא מהדבקת טקסט' });
-      navigate(`/recipe/${saved.id}`, { replace: true });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'שמירת המתכון נכשלה.');
-    } finally {
-      setBusy(false);
-    }
+    const recipe: Recipe = {
+      name: name.trim(),
+      category,
+      /*
+        The unit is normalised HERE, at the boundary where imported data
+        enters the notebook. `parseLocal` is a port of the prototype's parser
+        and writes the Hebrew names ("גרם"); everything the app creates itself
+        stores the engine's canonical ids ("g"). Both are understood by the
+        engine — `unitId` is what understands them — but a recipe that arrives
+        spelled differently from every other one is the shape of the defect
+        the editor's unit dropdown had. An unrecognised unit is KEPT rather
+        than replaced, for the same reason the parser kept it.
+      */
+      ingredients: result.ingredients.map((ing) => ({
+        ...ing,
+        unit: unitId(ing.unit) ?? ing.unit,
+      })),
+      steps: result.steps.map((s) => ({
+        id: s.id,
+        text: s.text,
+        ...(s.temp ? { temp: s.temp } : {}),
+        ...(s.minutes === '' ? {} : { minutes: s.minutes }),
+      })),
+      /* The batch facts the text stated — weights before and after the
+         oven, the count — go into the recipe's own fields, never into the
+         ingredient list (see `parseLocal`). */
+      ...(result.meta.weightBefore ? { weightBefore: result.meta.weightBefore } : {}),
+      ...(result.meta.weightAfter ? { weightAfter: result.meta.weightAfter } : {}),
+      ...(result.meta.unitWeight ? { unitWeight: result.meta.unitWeight } : {}),
+      ...(result.meta.yieldUnits ? { yieldUnits: result.meta.yieldUnits } : {}),
+    } as unknown as Recipe;
+    // No id on purpose: the editor treats it as a recipe that does not exist
+    // yet, and the server assigns one on the first real save.
+    const state: PastedDraftState = { draft: recipe, versionNote: PASTE_VERSION_NOTE };
+    navigate('/recipe/new', { state });
   };
 
   const nothingFound =
@@ -144,7 +148,7 @@ export function PasteScreen() {
       {!capabilities.canWrite && (
         <p className={styles.notice} role="status">
           בהתקנה הזאת אין חיבור לשרת, ולכן אפשר לפענח ולראות את התוצאה אבל לא
-          לשמור אותה.
+          להמשיך לעריכה ולשמירה.
         </p>
       )}
 
@@ -201,7 +205,7 @@ export function PasteScreen() {
                 ))}
               </ul>
               <p className={styles.warnNote}>
-                המערכת לא המציאה להם משקל. אפשר להשאיר כך, להזין גרמים במקום, או
+                המערכת לא המציאה להם משקל. אפשר להשאיר כך, להזין גרמים בעורך, או
                 לכייל את הרכיב מדף המתכון אחרי השמירה.
               </p>
             </section>
@@ -246,7 +250,7 @@ export function PasteScreen() {
           )}
 
           <section className={styles.card}>
-            <h2 className={styles.cardTitle}>שמירה למחברת</h2>
+            <h2 className={styles.cardTitle}>המשך לעריכה</h2>
             <div className={styles.field}>
               <label className={styles.label} htmlFor="paste-name">
                 שם המתכון
@@ -285,14 +289,15 @@ export function PasteScreen() {
             <button
               type="button"
               className={styles.saveBtn}
-              onClick={() => void onSave()}
-              disabled={busy || !capabilities.canWrite}
+              onClick={onContinue}
+              disabled={!capabilities.canWrite}
             >
-              {busy ? 'שומר…' : 'שמירה למחברת'}
+              המשך לעריכה ואישור
             </button>
             <p className={styles.hint}>
-              אחרי השמירה אפשר לתקן הכול בעריכת המתכון — הפענוח הוא נקודת התחלה,
-              לא תוצאה סופית.
+              המתכון ייפתח בעורך עם כל מה שזוהה, ושם אפשר לתקן הכול לפני השמירה —
+              הפענוח הוא נקודת התחלה, לא תוצאה סופית. שום דבר לא נשמר במחברת עד
+              שלוחצים &quot;שמירת המתכון&quot; בעורך.
             </p>
           </section>
         </>
