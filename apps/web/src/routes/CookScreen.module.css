@@ -768,9 +768,32 @@
 }
 
 /* ── the footer ───────────────────────────────────────────────────────── */
+/*
+  BUG FIX (23.09.2026, real-device report on the redeployed Preview): a short
+  step left "הקודם" / "סיימתי" stranded mid-screen, with a large empty band
+  of `.wrap`'s own background below them — `.wrap` is `min-block-size:
+  100dvh` (deliberately, so cook mode's own colour fills a short screen
+  instead of the app showing through under it — see `.wrap`'s comment), but
+  nothing pushed THIS bar down to the true bottom edge, so it just sat where
+  the content happened to end.
+
+  `.gateBar` (mise en place's own bottom bar) already solves exactly this
+  with `position: sticky` + `inset-block-end: 0` + `margin-block-start:
+  auto`: pinned to the viewport's bottom when content is short, scrolls with
+  the page and never overlaps it when content is tall. This bar gets the
+  same treatment, so a cook's thumb finds the primary action in the same
+  place regardless of how long the step's text is.
+*/
 .foot {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 1;
+  margin-block-start: auto;
   display: flex;
   gap: var(--gap-in-group);
+  padding-block: 12px;
+  background: var(--c-cook-bg);
+  border-block-start: 1px solid var(--c-cook-line);
 }
 
 .navBtn {
