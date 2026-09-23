@@ -1,0 +1,26 @@
+bar.controls: ["המחברת","פעולות למתכון"]
+bar.printButtonGone: 0
+bar.bottomPanelGone: 0
+menuBtn: {"box":{"x":16,"y":8,"w":44,"h":44},"haspopup":"menu","expanded":"false"}
+menu.open: {"count":1,"scrolledPx":0,"expanded":"true","items":["עריכה","שכפול","שיתוף","תמונה","הוספה למועדפים","הדפסה / שמירה כ-PDF","תווית מוצר","דף הזמנה","מחיקה"]}
+menu.box: {"x":16,"y":58,"w":248,"h":423,"insideViewport":true}
+menu.itemSizes: ["עריכה 234×44","שכפול 234×44","שיתוף 234×44","תמונה 234×44","הוספה למועדפים 234×44","הדפסה / שמירה כ-PDF 234×44","תווית מוצר 234×44","דף הזמנה 234×44","מחיקה 234×44"]
+menu.deleteStyle: {"text":"מחיקה","color":"rgb(158, 54, 44)","isLast":true,"separatorBefore":true}
+menu.bg: {"bg":"rgb(251, 251, 249)","z":"20"}
+menu.focusOnOpen: "עריכה"
+menu.afterTwoArrowDown: "שיתוף"
+menu.afterEnd: "מחיקה"
+menu.escape: {"menuCount":0,"focusOnButton":"פעולות למתכון"}
+menu.outsideClickCloses: true
+menu.openByArrow: 1
+delete.confirm: {"count":1,"box":{"x":16,"y":76,"w":370,"h":150},"text":"למחוק את \"בדיקה-QA בריוש חמאה קלאסי\"? יימחקו גם הרכיבים, השלבים, התקלות, יומן הנ"}
+delete.cancelled: true
+share: {"status":"המתכון הועתק כטקסט — אפשר להדביק בהודעה","clipboardStart":"בדיקה-QA בריוש חמאה קלאסי\n12 יחידות · 100 גר' ליחידה\n\nרכיבים"}
+photo.scrolls: {"before":0,"after":2115,"galleryInView":true}
+menu.links: ["עריכה → /recipe/cd1630f3-4a80-4a74-b4ea-775d29cd64c0/edit","תווית מוצר → /recipe/cd1630f3-4a80-4a74-b4ea-775d29cd64c0/label","דף הזמנה → /recipe/cd1630f3-4a80-4a74-b4ea-775d29cd64c0/order"]
+hero.phone: {"height":220,"width":402,"mainWidth":402,"objectFit":"cover","titleBelow":true}
+hero.noImage: {"height":220,"width":402,"bg":"rgb(253, 251, 246)","borderBottom":"rgb(205, 212, 206)","text":"אין תמונה למתכון","hasSvg":true}
+hero.brokenLink: {"fallback":true,"photo":false,"text":"אין תמונה למתכון"}
+hero.desk: {"height":320,"width":640,"mainWidth":760}
+menu.deskBox: {"x":416,"y":58,"w":248,"h":423,"insideViewport":true}
+hero.deskNoImage: 320

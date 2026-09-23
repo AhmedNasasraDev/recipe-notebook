@@ -99,6 +99,7 @@ import {
   ChevronLeft,
   ClipboardList,
   Clock,
+  Copy,
   Croissant,
   Dessert,
   Droplet,
@@ -106,6 +107,7 @@ import {
   EllipsisVertical,
   GraduationCap,
   House,
+  Image,
   LayoutGrid,
   MessageCircle,
   NotebookText,
@@ -115,7 +117,10 @@ import {
   Search,
   Send,
   Settings,
+  Share2,
   SquarePen,
+  Star,
+  Tag,
   Thermometer,
   Trash2,
   Users,
@@ -264,6 +269,14 @@ export const EditIcon = inlineGlyph(SquarePen);
 
 /** מחיקה. */
 export const DeleteIcon = inlineGlyph(Trash2);
+
+/* The recipe's ⋮ menu (spec §8.1, stage 5): one glyph beside each word. */
+export const CopyIcon = inlineGlyph(Copy);
+export const ShareIcon = inlineGlyph(Share2);
+export const ImageIcon = inlineGlyph(Image);
+export const LabelIcon = inlineGlyph(Tag);
+export const OrderIcon = inlineGlyph(ClipboardList);
+export const StarIcon = inlineGlyph(Star);
 
 /** חיפוש. */
 export const SearchIcon = inlineGlyph(Search);

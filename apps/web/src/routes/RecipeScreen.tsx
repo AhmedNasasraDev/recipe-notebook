@@ -30,7 +30,19 @@ import { PrivateNote } from '../features/recipe/PrivateNote.js';
 import { TrialLog } from '../features/recipe/TrialLog.js';
 import { RecipeImages } from '../features/images/RecipeImages.js';
 import { useRecipeImages } from '../features/images/useRecipeImages.js';
-import { DeleteIcon, EditIcon, MenuDotsIcon, PrintIcon } from '../shell/Icons.js';
+import {
+  CopyIcon,
+  DeleteIcon,
+  EditIcon,
+  ImageIcon,
+  LabelIcon,
+  OrderIcon,
+  PrintIcon,
+  ShareIcon,
+  StarIcon,
+} from '../shell/Icons.js';
+import { RecipeMenu, type MenuAction } from '../features/recipe/RecipeMenu.js';
+import { shareRecipe } from '../features/recipe/shareRecipe.js';
 import { RecipePrintSheet } from '../features/print/RecipePrintSheet.js';
 import { SCALE_MODE_TEXT } from '../features/recipe/scaleLink.js';
 import { BackControl } from '../components/BackLink.js';
@@ -152,14 +164,11 @@ export function RecipeScreen() {
     panel most openings never look at.
   */
   const [showPro, setShowPro] = useState(false);
-  /* Same for "עוד פעולות": what is closed is not built, and a delete button
-     that is not on the page cannot be reached by accident. */
-  const [showMore, setShowMore] = useState(false);
+  /* "שיתוף" from the ⋮ menu: what happened, said under the button. */
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
 
   /* Where "התאמה" in the pan card sends the screen: the card it changes. */
   const scaleRef = useRef<HTMLElement | null>(null);
-  /* Where the hero's menu button sends it: the actions it opens. */
-  const moreRef = useRef<HTMLDetailsElement | null>(null);
 
   /*
     §5's photographs, fetched ONCE for the whole page: the hero at the top
@@ -201,7 +210,7 @@ export function RecipeScreen() {
     // previous one's opened drawers. (This screen stays MOUNTED across
     // recipes — same route pattern — so nothing else would close them.)
     setShowPro(false);
-    setShowMore(false);
+    setShareStatus(null);
   }
   /*
     UX PASS: the favourite is device-local (see `offlineMirror.ts`). `null`
@@ -562,6 +571,66 @@ export function RecipeScreen() {
   */
   const canEditPhoto = capabilities.canWrite && !recipe.group_id;
 
+  /*
+    ── THE ⋮ MENU (spec §8.1) ─────────────────────────────────────────────
+    Every action on the recipe, in one place, in the spec's order: edit,
+    duplicate, share, photo, then the favourite and the three paper outputs
+    (print/PDF as a small item, U-2), and delete last in red behind a line.
+    "מצב הכנה" is not here: it is the page's one primary button.
+  */
+  const onShare = async () => {
+    const outcome = await shareRecipe(recipe);
+    setShareStatus(
+      outcome === 'shared'
+        ? 'המתכון שותף'
+        : outcome === 'copied'
+          ? 'המתכון הועתק כטקסט — אפשר להדביק בהודעה'
+          : outcome === 'cancelled'
+            ? null
+            : 'השיתוף לא הצליח בדפדפן הזה',
+    );
+  };
+  const onPhoto = () => {
+    const target = document.getElementById('recipe-images');
+    target?.scrollIntoView?.({ block: 'start', behavior: 'smooth' });
+    target?.querySelector<HTMLElement>('button, input, a')?.focus?.({ preventScroll: true });
+  };
+  const menuActions: MenuAction[] = [
+    { id: 'edit', label: 'עריכה', icon: <EditIcon />, to: `/recipe/${recipe.id}/edit` },
+    {
+      id: 'copy',
+      label: actionBusy === 'copy' ? 'משכפל…' : 'שכפול',
+      icon: <CopyIcon />,
+      onSelect: () => void onDuplicate(),
+      disabled: actionBusy !== null || !capabilities.canWrite,
+    },
+    { id: 'share', label: 'שיתוף', icon: <ShareIcon />, onSelect: () => void onShare() },
+    { id: 'photo', label: 'תמונה', icon: <ImageIcon />, onSelect: onPhoto },
+    {
+      id: 'favorite',
+      label: favorite ? 'הסרה מהמועדפים' : 'הוספה למועדפים',
+      icon: <StarIcon />,
+      onSelect: () => void onToggleFavorite(),
+      pressed: favorite,
+    },
+    { id: 'print', label: 'הדפסה / שמירה כ-PDF', icon: <PrintIcon />, onSelect: () => window.print() },
+    { id: 'label', label: 'תווית מוצר', icon: <LabelIcon />, to: `/recipe/${recipe.id}/label` },
+    {
+      id: 'order',
+      label: 'דף הזמנה',
+      icon: <OrderIcon />,
+      to: `/recipe/${recipe.id}/order${scaleSearch}`,
+    },
+    {
+      id: 'delete',
+      label: 'מחיקה',
+      icon: <DeleteIcon />,
+      onSelect: () => setConfirmDelete(true),
+      disabled: actionBusy !== null || !capabilities.canWrite,
+      danger: true,
+    },
+  ];
+
   return (
     <div className={styles.page}>
       {/*
@@ -592,40 +661,98 @@ export function RecipeScreen() {
       */}
       <div className={styles.topBar}>
         {/* RTL: back is on the RIGHT — first in the source — and its chevron
-            points the way back, which in Hebrew is rightwards. */}
+            points the way back, which in Hebrew is rightwards. The ⋮ is the
+            ONE other control in the bar (spec §8.1): every action, print and
+            PDF included, is inside it. */}
         <BackControl>המחברת</BackControl>
-        <button
-          type="button"
-          className={styles.printTop}
-          onClick={() => window.print()}
-          aria-label="הדפסה או שמירה כ-PDF של המתכון"
-        >
-          <PrintIcon />
-          <span className={styles.printTopText}>הדפסה / שמירה כ-PDF</span>
-        </button>
-        <button
-          type="button"
-          className={styles.menuBtn}
-          aria-expanded={showMore}
-          aria-controls="recipe-more"
-          aria-label="עוד פעולות על המתכון"
-          onClick={() => {
-            const next = !showMore;
-            setShowMore(next);
-            if (next) {
-              // After the panel has opened, so the scroll lands on the
-              // panel and not on where it used to end.
-              requestAnimationFrame(() =>
-                // Optional call: `scrollIntoView` does not exist in jsdom,
-                // and a button that opens a panel must not throw in a test.
-                moreRef.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' }),
-              );
-            }
-          }}
-        >
-          <MenuDotsIcon />
-        </button>
+        <RecipeMenu actions={menuActions} status={shareStatus} />
       </div>
+
+      {actionError && (
+        <p className={styles.confirmBox} role="alert">
+          {actionError}
+        </p>
+      )}
+
+
+      {confirmDelete && (
+        <div
+          className={styles.confirmBox}
+          role="alertdialog"
+          aria-modal="false"
+          aria-label="אישור מחיקת מתכון"
+        >
+          {/*
+            Stage 6: a recipe in use as somebody's base CANNOT be deleted. The
+            enforcement is the foreign key in migration 0008 and this cannot
+            weaken it — what this branch adds is the one thing the database
+            cannot say, which is WHICH recipes are holding it and therefore what
+            the user has to do next.
+          */}
+          {blocked ? (
+            <>
+              <p className={styles.confirmTitle}>
+                אי אפשר למחוק את &quot;{recipe.name}&quot;
+              </p>
+              <p className={styles.confirmBody}>
+                {usedBy.length === 1
+                  ? 'מתכון אחד משתמש בו כמתכון בסיס'
+                  : `${usedBy.length} מתכונים משתמשים בו כמתכון בסיס`}
+                , ומחיקה הייתה משאירה אצלם שורה בלי משקל ובלי עלות. כדי למחוק את
+                המתכון הזה, יש להסיר קודם את הקישור בכל אחד מהם:
+              </p>
+              <ul className={styles.confirmDeps} aria-label="מתכונים שמשתמשים במתכון הזה">
+                {usedBy.map((r) => (
+                  <li key={r.id}>
+                    <Link to={`/recipe/${r.id}/edit`}>{r.name}</Link>
+                  </li>
+                ))}
+              </ul>
+              <div className={styles.confirmActions}>
+                <button
+                  type="button"
+                  className={styles.actionBtn}
+                  onClick={() => setConfirmDelete(false)}
+                  aria-label="סגירת ההודעה"
+                >
+                  הבנתי
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className={styles.confirmTitle}>למחוק את &quot;{recipe.name}&quot;?</p>
+              {/* §7 asks for a confirmation. A confirmation that does not say
+                  what goes with it is not really one — the child rows are
+                  ON DELETE CASCADE, so this is the only place the user learns
+                  that. */}
+              <p className={styles.confirmBody}>
+                יימחקו גם הרכיבים, השלבים, התקלות, יומן הניסיונות, האצוות
+                וההיסטוריה של המתכון. אי אפשר לשחזר.
+              </p>
+              <div className={styles.confirmActions}>
+                <button
+                  type="button"
+                  className={styles.actionBtnDanger}
+                  onClick={() => void onDelete()}
+                  disabled={actionBusy === 'delete'}
+                  aria-label={`אישור מחיקת ${recipe.name}`}
+                >
+                  {actionBusy === 'delete' ? 'מוחק…' : 'כן, למחוק'}
+                </button>
+                <button
+                  type="button"
+                  className={styles.actionBtn}
+                  onClick={() => setConfirmDelete(false)}
+                  aria-label="ביטול המחיקה"
+                >
+                  ביטול
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* What the printer gets: the recipe as a document, outside the app
           frame. Nothing of it shows on screen. */}
@@ -654,7 +781,17 @@ export function RecipeScreen() {
         photograph, which is most of them. The cost is one reflow on the
         recipes that do have one — see `useRecipeImages`.
       */}
-      {heroUrl && (
+      {/*
+        ── THE HERO BAND (spec §8.3, stage 5) ─────────────────────────────
+
+        Full content width, a FIXED height (220px on a phone, 320px on a wide
+        frame — proposed values, in recipe.module.css), the photograph cropped
+        with `cover` from its focal point. With no photograph — or a link that
+        no longer resolves (`imageState.broken` clears the URL) — the same band
+        is the notebook's paper with a rule under it and a quiet glyph: the
+        page keeps its shape whether or not it has a picture.
+      */}
+      {heroUrl ? (
         <div className={styles.hero}>
           {/*
             DECORATIVE, DELIBERATELY. This is the SAME photograph the gallery
@@ -714,6 +851,13 @@ export function RecipeScreen() {
               />
             </button>
           )}
+        </div>
+      ) : (
+        <div className={styles.heroFallback} aria-hidden="true">
+          <ImageIcon width={1.5} />
+          <span className={styles.heroFallbackText}>
+            {imageState.load === 'ready' ? 'אין תמונה למתכון' : ''}
+          </span>
         </div>
       )}
 
@@ -1057,11 +1201,13 @@ export function RecipeScreen() {
         recipe may see its photos and may not add to them, which is what
         migration 0029's storage policies enforce anyway.
       */}
-      <RecipeImages
-        state={imageState}
-        canWrite={capabilities.canWrite}
-        canEdit={!recipe.group_id}
-      />
+      <div id="recipe-images">
+        <RecipeImages
+          state={imageState}
+          canWrite={capabilities.canWrite}
+          canEdit={!recipe.group_id}
+        />
+      </div>
 
       {recipe.notes && <p className={styles.recipeNote}>{recipe.notes}</p>}
 
@@ -1091,94 +1237,6 @@ export function RecipeScreen() {
         often, and everything else is one tap away under "עוד פעולות" —
         present, labelled, and not competing.
       */}
-      <div className={styles.actionRow} role="group" aria-label="פעולות על המתכון">
-        <Link
-          to={`/recipe/${recipe.id}/edit`}
-          className={styles.actionBtn}
-          aria-label={`עריכת ${recipe.name}`}
-        >
-          {/* The glyph beside the word, not instead of it: Ahmed asked for a
-              clear edit icon, and a kitchen control keeps its label. */}
-          <EditIcon />
-          עריכה
-        </Link>
-        <button
-          type="button"
-          className={favorite ? styles.actionBtnOn : styles.actionBtn}
-          onClick={() => void onToggleFavorite()}
-          aria-pressed={favorite}
-        >
-          {favorite ? '★ במועדפים' : '☆ הוספה למועדפים'}
-        </button>
-      </div>
-
-      <details
-        id="recipe-more"
-        ref={moreRef}
-        className={styles.more}
-        open={showMore}
-        onToggle={(e) => setShowMore(e.currentTarget.open)}
-      >
-        <summary className={styles.moreSummary}>עוד פעולות</summary>
-        {showMore && (
-        <div className={styles.moreBody}>
-
-        {/*
-          ── §2 screens 8 and 9: the two things this recipe can become on paper ──
-
-          The order link carries the CURRENT "כמה להכין" setting in its query
-          string, because that is the whole point of an order sheet: the
-          quantities for this order, not the quantities as written. It is in the
-          URL rather than in router state so that reloading or re-printing the
-          sheet gives the same page, and so the link can be sent to whoever is
-          doing the weighing. OrderScreen rebuilds the factor with the same
-          `scaleFactor()` used here.
-
-          Neither is gated by profile. §3 is explicit: "הפרופיל קובע ברירות מחדל
-          ורמת חשיפה ראשונית בלבד. הוא אינו נועל שום פיצ'ר." What `pro` does
-          control — the cost line and the baker's percentages — is gated inside
-          the sheet itself.
-        */}
-        <div className={styles.printRow} role="group" aria-label="פלטים להדפסה">
-          <button type="button" className={styles.printLink} onClick={() => window.print()}>
-            הדפסת המתכון
-          </button>
-          <Link to={`/recipe/${recipe.id}/label`} className={styles.printLink}>
-            תווית מוצר
-          </Link>
-          <Link
-            to={`/recipe/${recipe.id}/order${scaleSearch}`}
-            className={styles.printLink}
-          >
-            דף הזמנה
-          </Link>
-        </div>
-
-          <div className={styles.actionRow} role="group" aria-label="פעולות נוספות">
-            <button
-              type="button"
-              className={styles.actionBtn}
-              onClick={() => void onDuplicate()}
-              disabled={actionBusy !== null || !capabilities.canWrite}
-              aria-label={`שכפול ${recipe.name}`}
-            >
-              {actionBusy === 'copy' ? 'משכפל…' : 'שכפול'}
-            </button>
-            <button
-              type="button"
-              className={styles.actionBtnDanger}
-              onClick={() => setConfirmDelete(true)}
-              disabled={actionBusy !== null || !capabilities.canWrite}
-              aria-label={`מחיקת ${recipe.name}`}
-            >
-              <DeleteIcon />
-              מחיקה
-            </button>
-          </div>
-        </div>
-        )}
-      </details>
-
       {/*
         ── "פרטים מקצועיים" ───────────────────────────────────────────────
 
@@ -1442,91 +1500,6 @@ export function RecipeScreen() {
         )}
       </details>
 
-      {actionError && (
-        <p className={styles.confirmBox} role="alert">
-          {actionError}
-        </p>
-      )}
-
-
-      {confirmDelete && (
-        <div
-          className={styles.confirmBox}
-          role="alertdialog"
-          aria-modal="false"
-          aria-label="אישור מחיקת מתכון"
-        >
-          {/*
-            Stage 6: a recipe in use as somebody's base CANNOT be deleted. The
-            enforcement is the foreign key in migration 0008 and this cannot
-            weaken it — what this branch adds is the one thing the database
-            cannot say, which is WHICH recipes are holding it and therefore what
-            the user has to do next.
-          */}
-          {blocked ? (
-            <>
-              <p className={styles.confirmTitle}>
-                אי אפשר למחוק את &quot;{recipe.name}&quot;
-              </p>
-              <p className={styles.confirmBody}>
-                {usedBy.length === 1
-                  ? 'מתכון אחד משתמש בו כמתכון בסיס'
-                  : `${usedBy.length} מתכונים משתמשים בו כמתכון בסיס`}
-                , ומחיקה הייתה משאירה אצלם שורה בלי משקל ובלי עלות. כדי למחוק את
-                המתכון הזה, יש להסיר קודם את הקישור בכל אחד מהם:
-              </p>
-              <ul className={styles.confirmDeps} aria-label="מתכונים שמשתמשים במתכון הזה">
-                {usedBy.map((r) => (
-                  <li key={r.id}>
-                    <Link to={`/recipe/${r.id}/edit`}>{r.name}</Link>
-                  </li>
-                ))}
-              </ul>
-              <div className={styles.confirmActions}>
-                <button
-                  type="button"
-                  className={styles.actionBtn}
-                  onClick={() => setConfirmDelete(false)}
-                  aria-label="סגירת ההודעה"
-                >
-                  הבנתי
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p className={styles.confirmTitle}>למחוק את &quot;{recipe.name}&quot;?</p>
-              {/* §7 asks for a confirmation. A confirmation that does not say
-                  what goes with it is not really one — the child rows are
-                  ON DELETE CASCADE, so this is the only place the user learns
-                  that. */}
-              <p className={styles.confirmBody}>
-                יימחקו גם הרכיבים, השלבים, התקלות, יומן הניסיונות, האצוות
-                וההיסטוריה של המתכון. אי אפשר לשחזר.
-              </p>
-              <div className={styles.confirmActions}>
-                <button
-                  type="button"
-                  className={styles.actionBtnDanger}
-                  onClick={() => void onDelete()}
-                  disabled={actionBusy === 'delete'}
-                  aria-label={`אישור מחיקת ${recipe.name}`}
-                >
-                  {actionBusy === 'delete' ? 'מוחק…' : 'כן, למחוק'}
-                </button>
-                <button
-                  type="button"
-                  className={styles.actionBtn}
-                  onClick={() => setConfirmDelete(false)}
-                  aria-label="ביטול המחיקה"
-                >
-                  ביטול
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
       {convertIngredient && (
         <ConvertSheet

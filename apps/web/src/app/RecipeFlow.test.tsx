@@ -55,12 +55,11 @@ beforeEach(() => {
 
 // ───────────────────────────────────────────────────────────────────────────
 /*
-  UX PASS: "שכפול" and "מחיקה" moved under the recipe page's "עוד פעולות"
-  panel — occasional actions, off the first screenful, one tap away. Opening
-  it is what a user now does, so the flows do it too.
+  Spec §8.1 (stage 5): "שכפול" and "מחיקה" are items of the recipe page's ⋮
+  menu. Opening it is what a user now does, so the flows do it too.
 */
 async function openMore(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(await screen.findByText('עוד פעולות'));
+  await user.click(await screen.findByRole('button', { name: 'פעולות למתכון' }));
 }
 
 describe('the whole route, end to end', () => {
@@ -137,7 +136,8 @@ describe('the whole route, end to end', () => {
     expect(await screen.findByRole('heading', { name: 'לחם כוסמין' })).toBeInTheDocument();
 
     // ── 9. edit
-    await user.click(screen.getByRole('link', { name: 'עריכת לחם כוסמין' }));
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
+    await user.click(screen.getByRole('menuitem', { name: 'עריכה' }));
     expect(await screen.findByRole('heading', { name: 'עריכת מתכון' })).toBeInTheDocument();
     await toStage(user, 2);
     expect(screen.getByLabelText('כמות של קמח מלא')).toHaveValue('600');
@@ -170,7 +170,7 @@ describe('the whole route, end to end', () => {
 
     // ── 11. duplicate
     await openMore(user);
-    await user.click(screen.getByRole('button', { name: 'שכפול לחם כוסמין' }));
+    await user.click(screen.getByRole('menuitem', { name: 'שכפול' }));
     expect(
       await screen.findByRole('heading', { name: 'לחם כוסמין (עותק)' }),
     ).toBeInTheDocument();
@@ -186,7 +186,7 @@ describe('the whole route, end to end', () => {
 
     // ── 12. delete the copy, with the confirmation
     await openMore(user);
-    await user.click(screen.getByRole('button', { name: 'מחיקת לחם כוסמין (עותק)' }));
+    await user.click(screen.getByRole('menuitem', { name: 'מחיקה' }));
     const confirm = await screen.findByRole('alertdialog', { name: 'אישור מחיקת מתכון' });
     expect(confirm).toHaveTextContent('יימחקו גם הרכיבים');
     await user.click(
@@ -222,7 +222,7 @@ describe('the delete confirmation (requirement 7)', () => {
     await screen.findByRole('heading', { name: 'חלה של אחמד' });
 
     await openMore(user);
-    await user.click(screen.getByRole('button', { name: 'מחיקת חלה של אחמד' }));
+    await user.click(screen.getByRole('menuitem', { name: 'מחיקה' }));
     expect(await screen.findByRole('alertdialog')).toBeInTheDocument();
     expect(db['recipes']).toHaveLength(1);
 
@@ -238,7 +238,7 @@ describe('the delete confirmation (requirement 7)', () => {
     await screen.findByRole('heading', { name: 'חלה של אחמד' });
 
     await openMore(user);
-    await user.click(screen.getByRole('button', { name: 'מחיקת חלה של אחמד' }));
+    await user.click(screen.getByRole('menuitem', { name: 'מחיקה' }));
     const dialog = await screen.findByRole('alertdialog');
     expect(dialog).toHaveTextContent('חלה של אחמד');
     expect(dialog).toHaveTextContent(/יומן הניסיונות/);

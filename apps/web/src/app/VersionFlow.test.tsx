@@ -140,7 +140,8 @@ describe('requirements 1 and 2 — a version is taken before an update', () => {
 
     // Second save: if the snapshot contained the versions, V2 would carry V1,
     // V3 would carry both, and the rows would grow without bound.
-    await user.click(screen.getByRole('link', { name: 'עריכת לחם כוסמין' }));
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
+    await user.click(screen.getByRole('menuitem', { name: 'עריכה' }));
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
     await toStage(user, 2);
     await user.clear(screen.getByLabelText('כמות של מים'));
@@ -268,7 +269,8 @@ describe('requirements 3-7 — the history, viewing, and restoring', () => {
     const { db } = await withOneVersion(user); // V1 = 420
 
     // a second edit: V2 = 450
-    await user.click(screen.getByRole('link', { name: 'עריכת לחם כוסמין' }));
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
+    await user.click(screen.getByRole('menuitem', { name: 'עריכה' }));
     await screen.findByRole('heading', { name: 'עריכת מתכון' });
     await toStage(user, 2);
     await user.clear(screen.getByLabelText('כמות של מים'));

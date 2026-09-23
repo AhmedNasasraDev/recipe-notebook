@@ -656,9 +656,10 @@ describe('stage-11: the page follows a price change without being remounted', ()
   CARRIES (the scale, or deliberately nothing) is still pinned exactly as it
   was, because that is the part that is easy to break.
 */
+/* Spec §8.1 (stage 5): the two sheets are items of the ⋮ menu now. */
 async function openMore(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(await screen.findByText('עוד פעולות'));
-  return screen.getByRole('group', { name: 'פלטים להדפסה' });
+  await user.click(await screen.findByRole('button', { name: 'פעולות למתכון' }));
+  return screen.getByRole('menu', { name: 'פעולות למתכון' });
 }
 
 describe('§2 the way to the label and the order sheet', () => {
@@ -667,11 +668,11 @@ describe('§2 the way to the label and the order sheet', () => {
     renderRecipe('brioche');
     await screen.findByRole('heading', { name: 'בריוש נאנטר' });
     const group = await openMore(user);
-    expect(within(group).getByRole('link', { name: 'תווית מוצר' })).toHaveAttribute(
+    expect(within(group).getByRole('menuitem', { name: 'תווית מוצר' })).toHaveAttribute(
       'href',
       '/recipe/brioche/label',
     );
-    expect(within(group).getByRole('link', { name: 'דף הזמנה' })).toBeInTheDocument();
+    expect(within(group).getByRole('menuitem', { name: 'דף הזמנה' })).toBeInTheDocument();
   });
 
   it('links to the order sheet with no scale while nothing is scaled', async () => {
@@ -680,7 +681,7 @@ describe('§2 the way to the label and the order sheet', () => {
     await screen.findByRole('heading', { name: 'בריוש נאנטר' });
     const group = await openMore(user);
     // A bare URL means "as written", which is clearer than "?mode=recipe".
-    expect(within(group).getByRole('link', { name: 'דף הזמנה' })).toHaveAttribute(
+    expect(within(group).getByRole('menuitem', { name: 'דף הזמנה' })).toHaveAttribute(
       'href',
       '/recipe/brioche/order',
     );
@@ -696,7 +697,7 @@ describe('§2 the way to the label and the order sheet', () => {
 
     const group = await openMore(user);
     await waitFor(() =>
-      expect(within(group).getByRole('link', { name: 'דף הזמנה' })).toHaveAttribute(
+      expect(within(group).getByRole('menuitem', { name: 'דף הזמנה' })).toHaveAttribute(
         'href',
         '/recipe/brioche/order?mode=units&v=36',
       ),
@@ -712,7 +713,7 @@ describe('§2 the way to the label and the order sheet', () => {
     // saying ?mode=units&v= would be a promise about nothing.
     await user.click(screen.getByRole('button', { name: 'יחידות' }));
     const group = await openMore(user);
-    expect(within(group).getByRole('link', { name: 'דף הזמנה' })).toHaveAttribute(
+    expect(within(group).getByRole('menuitem', { name: 'דף הזמנה' })).toHaveAttribute(
       'href',
       '/recipe/brioche/order',
     );
@@ -751,10 +752,10 @@ describe('§2 the way to the label and the order sheet', () => {
       ),
     );
 
-    // "שכפול" now lives under "עוד פעולות" (UX pass); the defect it exercises
+    // "שכפול" is an item of the ⋮ menu (spec §8.1); the defect it exercises
     // — a scale surviving into a different recipe — is unchanged.
-    await user.click(screen.getByText('עוד פעולות'));
-    await user.click(screen.getByRole('button', { name: /^שכפול/ }));
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
+    await user.click(screen.getByRole('menuitem', { name: 'שכפול' }));
     await screen.findByRole('heading', { name: /עותק/ });
 
     // The copy is the recipe as written: no factor, and nothing in the link.
@@ -865,14 +866,67 @@ describe('the recipe opens with its photograph, or with nothing at all', () => {
     expect(back.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
   });
 
-  it('opens the actions from the menu button on the hero', async () => {
+  it('opens every action from the one ⋮ button in the bar, delete last (spec §8.1)', async () => {
     const user = userEvent.setup();
     heroOf('brioche');
-    const menu = await screen.findByRole('button', { name: 'עוד פעולות על המתכון' });
+    const menu = await screen.findByRole('button', { name: 'פעולות למתכון' });
+    expect(menu).toHaveAttribute('aria-haspopup', 'menu');
     expect(menu).toHaveAttribute('aria-expanded', 'false');
+    // No print button in the bar any more (U-2), and no bottom panel (U-1).
+    expect(screen.queryByRole('button', { name: /הדפסה/ })).not.toBeInTheDocument();
+    expect(screen.queryByText('עוד פעולות')).not.toBeInTheDocument();
     await user.click(menu);
     expect(menu).toHaveAttribute('aria-expanded', 'true');
-    expect(await screen.findByRole('button', { name: /מחיקת/ })).toBeInTheDocument();
+    const items = screen.getAllByRole('menuitem').map((i) => i.textContent?.trim());
+    expect(items).toEqual([
+      'עריכה',
+      'שכפול',
+      'שיתוף',
+      'תמונה',
+      'הוספה למועדפים',
+      'הדפסה / שמירה כ-PDF',
+      'תווית מוצר',
+      'דף הזמנה',
+      'מחיקה',
+    ]);
+    // `heroOf` renders a read-only repository: the writes are disabled, the
+    // rest is live.
+    expect(screen.getByRole('menuitem', { name: 'מחיקה' })).toBeDisabled();
+    expect(screen.getByRole('menuitem', { name: 'שכפול' })).toBeDisabled();
+    expect(screen.getByRole('menuitem', { name: 'עריכה' })).toHaveAttribute('href', '/recipe/brioche/edit');
+  });
+
+  it('delete from the menu opens the confirmation and deletes nothing by itself', async () => {
+    const user = userEvent.setup();
+    const deleted: string[] = [];
+    renderRoute(<RecipeScreen />, {
+      path: '/recipe/:recipeId',
+      route: '/recipe/brioche',
+      repository: fakeRepository({
+        prefs: prefsAt(240),
+        recipes: [...DEMO_RECIPES],
+        canWrite: true,
+        onDeleteRecipe: (id) => deleted.push(id),
+      }),
+    });
+    await screen.findByRole('heading', { name: 'בריוש נאנטר' });
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
+    await user.click(screen.getByRole('menuitem', { name: 'מחיקה' }));
+    expect(await screen.findByRole('alertdialog', { name: 'אישור מחיקת מתכון' })).toBeInTheDocument();
+    expect(deleted).toEqual([]);
+    // The confirmation sits at the top, under the bar — not 2,500px down.
+    const dialog = screen.getByRole('alertdialog', { name: 'אישור מחיקת מתכון' });
+    const title = screen.getByRole('heading', { name: 'בריוש נאנטר' });
+    expect(dialog.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'ביטול המחיקה' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  });
+
+  it('draws the same band with a glyph when there is no photograph (spec §8.3)', async () => {
+    heroOf('pastrycream');
+    await screen.findByRole('heading', { name: 'קרם פטיסייר וניל' });
+    await waitFor(() => expect(document.querySelector('[class*="heroFallback"]')).not.toBeNull());
+    expect(document.querySelector('[class*="heroPhoto"]')).toBeNull();
   });
 });
 

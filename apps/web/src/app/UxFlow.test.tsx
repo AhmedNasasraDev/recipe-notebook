@@ -101,26 +101,30 @@ describe('the recipe page is ordered the way the work happens', () => {
     expect(order).toEqual(['כמה להכין?', 'רכיבים', 'אופן ההכנה']);
   });
 
-  it('keeps delete and the print sheets out of the first screenful', async () => {
+  it('keeps delete and the print sheets inside the ⋮ menu, not on the page (spec §8.1)', async () => {
     const user = userEvent.setup();
     app('/recipe/bread');
     await screen.findByRole('heading', { name: 'לחם כפרי' });
 
-    // Not on the page at all until "עוד פעולות" is opened…
-    expect(screen.queryByRole('button', { name: 'מחיקת לחם כפרי' })).not.toBeInTheDocument();
+    // Not on the page at all until the menu is opened…
+    expect(screen.queryByRole('menuitem')).not.toBeInTheDocument();
     expect(screen.queryByText('דף הזמנה')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /הדפסה/ })).not.toBeInTheDocument();
     // …and one tap away, not gone.
-    await user.click(screen.getByText('עוד פעולות'));
-    expect(screen.getByRole('button', { name: 'מחיקת לחם כפרי' })).toBeInTheDocument();
-    expect(screen.getByText('דף הזמנה')).toBeInTheDocument();
-    expect(screen.getByText('תווית מוצר')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
+    expect(screen.getByRole('menuitem', { name: 'מחיקה' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'דף הזמנה' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'תווית מוצר' })).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'הדפסה / שמירה כ-PDF' })).toBeInTheDocument();
   });
 
-  it('leaves עריכה and מצב הכנה in the open, where a kitchen reaches for them', async () => {
+  it('leaves מצב הכנה in the open, and עריכה first in the menu', async () => {
+    const user = userEvent.setup();
     app('/recipe/bread');
     await screen.findByRole('heading', { name: 'לחם כפרי' });
-    expect(screen.getByRole('link', { name: 'עריכת לחם כפרי' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'מצב הכנה' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
+    expect(screen.getAllByRole('menuitem')[0]).toHaveTextContent('עריכה');
   });
 });
 
@@ -131,11 +135,14 @@ describe('favourites and recents, on this device', () => {
     const view = app('/recipe/bread');
     await screen.findByRole('heading', { name: 'לחם כפרי' });
 
-    const star = screen.getByRole('button', { name: /הוספה למועדפים/ });
+    // The star is an item of the ⋮ menu (spec §8.1).
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
+    const star = screen.getByRole('menuitem', { name: 'הוספה למועדפים' });
     expect(star).toHaveAttribute('aria-pressed', 'false');
     await user.click(star);
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /במועדפים/ })).toHaveAttribute(
+      expect(screen.getByRole('menuitem', { name: 'הסרה מהמועדפים' })).toHaveAttribute(
         'aria-pressed',
         'true',
       ),
@@ -151,10 +158,13 @@ describe('favourites and recents, on this device', () => {
     const user = userEvent.setup();
     let view = app('/recipe/bread');
     await screen.findByRole('heading', { name: 'לחם כפרי' });
-    await user.click(screen.getByRole('button', { name: /הוספה למועדפים/ }));
-    await screen.findByRole('button', { name: /במועדפים/ });
-    await user.click(screen.getByRole('button', { name: /במועדפים/ }));
-    await screen.findByRole('button', { name: /הוספה למועדפים/ });
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
+    await user.click(screen.getByRole('menuitem', { name: 'הוספה למועדפים' }));
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'הסרה מהמועדפים' }));
+    await user.click(screen.getByRole('button', { name: 'פעולות למתכון' }));
+    await screen.findByRole('menuitem', { name: 'הוספה למועדפים' });
+    await user.keyboard('{Escape}');
     view.unmount();
 
     view = app('/home');

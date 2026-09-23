@@ -52,18 +52,52 @@
 .heroPhoto {
   display: block;
   inline-size: 100%;
-  /* About a third of a phone screen, and never more than a third of a tall
-     one: the quantities have to start above the fold. */
-  block-size: clamp(170px, 30vh, 300px);
+  /* Spec §8.3: a FIXED height, so every recipe page has the same shape.
+     220px on a phone, 320px on the wide frame — proposed values (stage 5). */
+  block-size: 220px;
   object-fit: cover;
 }
 
 /*
+  The same band with no photograph, or with one whose link no longer
+  resolves (§8.3): the notebook's paper, a rule under it, a quiet glyph. Not
+  an empty rectangle — a page with no picture pasted in yet.
+*/
+.heroFallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  block-size: 220px;
+  margin-inline: calc(var(--pad-card) * -1);
+  background: var(--c-recipe-paper);
+  border-block-end: 1px solid var(--c-line);
+  color: var(--c-muted);
+}
+.heroFallback svg {
+  width: 40px;
+  height: 40px;
+}
+.heroFallbackText {
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  min-height: 1.4em;
+}
+@media (min-width: 760px) {
+  .heroPhoto,
+  .heroFallback {
+    block-size: 320px;
+  }
+}
+
+/*
   The bar: back on the RIGHT (first in the source, which in RTL is the
-  right-hand end), the print action in the middle, the menu on the left.
-  Sticky at the top of the scroller, on the page's own background, so the
-  print action never scrolls away (QA 22.09.2026, §2). The negative margins
-  and matching padding make it span the frame edge to edge like the hero.
+  right-hand end) and the ⋮ menu on the left — nothing else (spec §8.1; the
+  print button that stood between them is a menu item now, U-2). Sticky at
+  the top of the scroller, on the page's own paper, so the way back and the
+  actions never scroll away and are never drawn over the photograph. The
+  negative margins and matching padding make it span edge to edge.
 */
 .topBar {
   position: sticky;
@@ -76,43 +110,7 @@
   margin-inline: calc(var(--pad-card) * -1);
   margin-block-start: -12px;
   padding: 8px var(--pad-card);
-  background: var(--c-app-bg);
-}
-
-/* "הדפסה / שמירה כ-PDF": the one primary control in the bar. Filled, tall
-   enough for a thumb, a glyph beside its word. */
-.printTop {
-  flex: 1 1 auto;
-  min-height: var(--hit-min);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 12px;
-  border: 1px solid var(--c-green);
-  border-radius: var(--r-control);
-  background: var(--c-green);
-  color: var(--c-surface);
-  font-family: var(--font-body);
-  font-size: var(--fs-secondary);
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.printTop:hover {
-  background: var(--c-green-ink);
-}
-
-.printTop:focus-visible {
-  outline: 2px solid var(--c-ink);
-  outline-offset: 2px;
-}
-
-.printTopText {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  background: var(--c-recipe-paper);
 }
 
 /*
@@ -137,6 +135,87 @@
 .menuBtn:focus-visible {
   outline: 2px solid var(--c-green);
   outline-offset: 2px;
+}
+
+/* ── the ⋮ menu (spec §8.1–8.2; features/recipe/RecipeMenu.tsx) ──────────── */
+.menuWrap {
+  position: relative;
+  flex: none;
+}
+.menuPop {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  /* Hangs from the button's outer edge — the left in RTL — and opens inwards. */
+  inset-inline-end: 0;
+  z-index: 20;
+  min-inline-size: 248px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--c-paper);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--c-ink) 14%, transparent);
+}
+.menuItem,
+.menuItemDanger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  inline-size: 100%;
+  min-height: var(--hit-min);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-mid);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+.menuItemDanger {
+  color: var(--c-red);
+}
+.menuItem:hover,
+.menuItem:focus-visible {
+  background: var(--c-green-bg);
+  outline: 0;
+}
+.menuItemDanger:hover,
+.menuItemDanger:focus-visible {
+  background: var(--c-red-bg);
+  outline: 0;
+}
+.menuItem:disabled,
+.menuItemDanger:disabled {
+  background: transparent;
+  color: var(--c-muted);
+  cursor: default;
+}
+.menuIcon {
+  display: inline-flex;
+  flex: none;
+}
+.menuSep {
+  block-size: 1px;
+  margin: 6px 4px;
+  background: var(--c-line);
+}
+.menuStatus {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline-end: 0;
+  z-index: 19;
+  margin: 0;
+  padding: 8px 12px;
+  white-space: nowrap;
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  border-radius: var(--r-control);
+  font-size: var(--fs-secondary);
 }
 
 .missing {
