@@ -24,11 +24,23 @@
   --c-surface: #fbfbf9; /* נייר ממשק */
   --c-recipe-paper: #fdfbf6; /* נייר מתכון — the recipe page and its print */
   --c-text: #171a18; /* דיו */
-  --c-muted-ink: #6e7a73; /* אפור */
+  /*
+    Ahmed's decision (23.09.2026, following "תאשר"): darkened from the spec's
+    own grey (hex 6e7a73), which measured 3.76:1 on the workspace and 4.32:1 on paper —
+    AA for large text, short of it for body text. This is that grey at 88%
+    black, same hue, no new colour: 4.64:1 on the workspace, 5.33:1 on paper,
+    the floor everywhere it is used as text (asserted in tokens.test.ts).
+  */
+  --c-muted-ink: #616b65; /* אפור, מוחשך לנגישות */
   --c-border: #cdd4ce; /* קווים */
   --c-accent: #1e6b4c; /* ירוק — פעולות, אייקונים, בחירה */
   --c-select: #e2efe8; /* ירוק רך — רקע לבחירה ולאייקונים */
-  --c-amber: #a56a0e; /* ענבר — אזהרה, "נתון מערכת" */
+  /*
+    Same decision as the grey, same reason: the spec's amber (hex a56a0e) measured
+    3.66:1 on its own banner. This is that amber at 85% black: 4.92:1 on the
+    workspace, 5.66:1 on paper, 4.64:1 on its own banner fill below.
+  */
+  --c-amber: #8c5a0c; /* ענבר — אזהרה, "נתון מערכת" (מוחשך לנגישות) */
   --c-red: #9e362c; /* אדום — שגיאה, מחיקה, "הערכה גסה" */
   --c-warm: #c4a99b; /* שוליים חמים — the notebook's margin rule, decoration only */
 
@@ -68,7 +80,7 @@
   --c-ok: var(--c-accent);
   --c-ok-bg: var(--c-select);
 
-  --c-amber-bg: #efe7d8;
+  --c-amber-bg: #ebe4d8; /* the new amber at 14% over the paper */
   --c-red-bg: #f0e3e0;
 
   --c-ink: var(--c-text);

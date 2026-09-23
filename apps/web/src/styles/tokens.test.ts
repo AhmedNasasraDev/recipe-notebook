@@ -56,24 +56,15 @@ const contrast = (a: string, b: string): number => {
  */
 const SPEC_PAIRS: ReadonlySet<string> = new Set([
   /*
-    Spec §3.1 (23.09.2026) names the grey (#6e7a73) and the amber (#a56a0e)
-    and allows no new colours. As small text on the spec's own paper they
-    measure 4.32:1 and 4.34:1 — AA for large text, a hair under AA for body
-    text. Reported in SPEC-STAGE-4 as a decision for Ahmed; not this test's
-    to override.
+    Ahmed darkened the spec's own grey and amber for accessibility
+    (23.09.2026, "תאשר" following SPEC-STAGE-4's flagged gap) — see
+    tokens.css. Every pairing below now measures 4.5:1 or better, so the
+    only entry left here is the one this test's own arithmetic cannot
+    verify: it reads a `background` and a `color` declared on the SAME
+    rule, and the step numerals are a `--c-sand` FILL with no text colour
+    declared beside it — carried from the prototype, unrelated to §3.1.
   */
-  '--c-amber-bg/--c-amber', // 3.66:1 — the warning banner, spec colours
-  '--c-paper/--c-muted', // 4.32:1 — secondary text on paper
-  '--c-app-bg/--c-muted', // 3.76:1 — secondary text on the workspace
-  '--c-neutral-bg/--c-muted', // 3.78:1
-  '--c-white/--c-muted', // 4.32:1 — the active tab label
   '--c-paper/--c-sand', // step numerals, from the prototype
-  '--c-outer-bg/--c-muted', // label and order sheets
-  '--c-recipe-paper/--c-muted', // 4.33:1 — secondary text on the recipe page
-  '--c-off-bg/--c-muted', // 3.76:1 — a hint beside a shut control
-  '--c-select/--c-muted', // 3.78:1
-  '--c-green-bg/--c-muted', // 3.78:1
-  '--c-ok-bg/--c-muted', // 3.78:1
 ]);
 
 
@@ -94,11 +85,17 @@ const PALETTE: readonly [string, string][] = [
   ['נייר ממשק', '#fbfbf9'],
   ['נייר מתכון', '#fdfbf6'],
   ['דיו', '#171a18'],
-  ['אפור', '#6e7a73'],
+  /*
+    Ahmed darkened these two from the spec's own #6e7a73 and #a56a0e
+    (23.09.2026, "תאשר"), which fell under 4.5:1 AA on the workspace and on
+    the amber's own banner (SPEC-STAGE-4 flagged it; see tokens.css for the
+    measured floors). Same hues, darker — not a twelfth colour.
+  */
+  ['אפור (מוחשך)', '#616b65'],
   ['קווים', '#cdd4ce'],
   ['ירוק', '#1e6b4c'],
   ['ירוק רך', '#e2efe8'],
-  ['ענבר', '#a56a0e'],
+  ['ענבר (מוחשך)', '#8c5a0c'],
   ['אדום', '#9e362c'],
   ['שוליים חמים', '#c4a99b'],
 ];
@@ -119,7 +116,7 @@ describe('the design system is one palette, in one place', () => {
         .map((n) => n.toString(16).padStart(2, '0'))
         .join('');
     // The two banner fills: amber at 14% and red at 12% over the paper.
-    named.add(mix('#a56a0e', '#fbfbf9', 0.14));
+    named.add(mix('#8c5a0c', '#fbfbf9', 0.14));
     named.add(mix('#9e362c', '#fbfbf9', 0.12));
     const strangers = [...tokens.toLowerCase().matchAll(/#[0-9a-f]{6}\b/g)]
       .map((m) => m[0])
@@ -414,18 +411,18 @@ describe('the palette, measured', () => {
     expect(contrast(surface(), text())).toBeGreaterThanOrEqual(7);
   });
 
-  it('the secondary ink is the spec grey, measured — 4.3 on paper, 3.8 on the workspace', () => {
+  it('the secondary ink reaches AA everywhere, darkened from the spec (23.09.2026, "תאשר")', () => {
     /*
-      Spec §3.1's grey on the spec's paper is 4.32:1: AA for large text, just
-      under the 4.5 body-text line. The floor here is the measured value, so
-      the number cannot drift DOWN unnoticed; raising it is a palette decision
-      recorded as open in SPEC-STAGE-4.
+      Spec §3.1's own grey (#6e7a73) measured 4.32:1 on paper and 3.76:1 on
+      the workspace — AA for large text, short of it for body text.
+      SPEC-STAGE-4 flagged this; Ahmed approved darkening it. The new value
+      (#616b65) clears 4.5:1 on every surface it is used on.
     */
-    expect(contrast(surface(), soft())).toBeGreaterThanOrEqual(4.3);
-    expect(contrast(pastry('--c-recipe-paper'), soft())).toBeGreaterThanOrEqual(4.3);
-    expect(contrast(base(), soft())).toBeGreaterThanOrEqual(3.7);
-    expect(contrast(select(), soft())).toBeGreaterThanOrEqual(3.7);
-    expect(contrast(pastry('--c-outer-bg'), soft())).toBeGreaterThanOrEqual(3.7);
+    expect(contrast(surface(), soft())).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(pastry('--c-recipe-paper'), soft())).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(base(), soft())).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(select(), soft())).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(pastry('--c-outer-bg'), soft())).toBeGreaterThanOrEqual(4.5);
   });
 
   it('the selection fill carries the text and the green', () => {
@@ -451,12 +448,12 @@ describe('the palette, measured', () => {
         `${ink} on the app background`,
       ).toBeGreaterThanOrEqual(4.5);
     }
-    // Spec §3.1's amber: 4.34 on paper, 3.66 on its own banner, 3.78 on the
-    // workspace — large-text AA everywhere, body-text AA nowhere. Held at the
-    // measured values (see SPEC_PAIRS) until the palette decision.
-    expect(contrast(surface(), pastry('--c-amber'))).toBeGreaterThanOrEqual(4.3);
-    expect(contrast(pastry('--c-amber-bg'), pastry('--c-amber'))).toBeGreaterThanOrEqual(3.6);
-    expect(contrast(base(), pastry('--c-amber'))).toBeGreaterThanOrEqual(3.7);
+    // The darkened amber (23.09.2026, "תאשר"): 5.66 on paper, 4.64 on its
+    // own banner, 4.92 on the workspace — AA everywhere now, body text
+    // included.
+    expect(contrast(surface(), pastry('--c-amber'))).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(pastry('--c-amber-bg'), pastry('--c-amber'))).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(base(), pastry('--c-amber'))).toBeGreaterThanOrEqual(4.5);
   });
 
   it('Cook Mode is light now, and every pairing on it measures', () => {
@@ -468,8 +465,7 @@ describe('the palette, measured', () => {
     */
     const bg = pastry('--c-cook-bg');
     expect(contrast(bg, pastry('--c-cook-text'))).toBeGreaterThanOrEqual(7);
-    // The spec grey on the workspace, 3.76 — the open palette decision again.
-    expect(contrast(bg, pastry('--c-cook-muted'))).toBeGreaterThanOrEqual(3.7);
+    expect(contrast(bg, pastry('--c-cook-muted'))).toBeGreaterThanOrEqual(4.5);
     // A filled control there: the action green with the surface on it.
     expect(contrast(bg, pastry('--c-cook-accent'))).toBeGreaterThanOrEqual(4.5);
     expect(
