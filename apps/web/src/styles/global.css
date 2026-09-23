@@ -10,10 +10,19 @@
   box-sizing: border-box;
 }
 
+/* Ahmed reported real-device screenshots (23.09.2026, cook mode): a
+   mid-load frame with the print button and the progress bar cut off at the
+   screen's edge and the page scrolled sideways, self-correcting once the
+   next frame painted. Every screen here is built not to need horizontal
+   scroll at all (§14 says so explicitly for cook mode); a page that never
+   has content wider than the viewport shows nothing to scroll to, even
+   during a transient early paint before wrapping CSS has applied. This is
+   the guard for that, not a fix for a specific screen. */
 html,
 body {
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
   background: var(--c-outer-bg);
 }
 
