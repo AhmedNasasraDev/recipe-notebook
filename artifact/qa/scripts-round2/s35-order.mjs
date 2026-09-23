@@ -1,0 +1,44 @@
+// The order sheet: no quantity → message; 20 units; half batch; PDF; phone + desktop.
+import { launch, BASE, text, sleep, shot, check, results, DESK } from './drv.mjs';
+import fs from 'node:fs';
+const id = fs.readFileSync('brioche-id.txt', 'utf8').trim();
+const parse = (await import('pdf-parse/lib/pdf-parse.js')).default;
+const { browser, page, errors } = await launch({ storageState: 'state-qa1.json' });
+await page.goto(BASE + `/recipe/${id}/order`); await page.waitForSelector('#order-qty', { timeout: 20000 }); await sleep(300);
+let t = await text(page);
+check('O01', 'no quantity: the message is shown', /לא הוגדרה כמות לייצור\. יש לבחור כמה יחידות או אצוות להכין כדי לחשב את ההזמנה/.test(t), '');
+check('O02', 'no quantity: base block shown, no "יחידות להזמנה"', /המתכון הבסיסי — אצווה אחת/.test(t) && !/יחידות להזמנה/.test(t), '');
+await shot(page, 'W19-order-noqty-phone');
+await page.fill('#order-qty', '20'); await sleep(600);
+t = await text(page);
+check('O03', '20 units: order block with 20 יחידות, batches ×1.67, total weight', /יחידות להזמנה/.test(t) && /20 יחידות/.test(t) && /1\.67 אצוות/.test(t) && /משקל כולל לייצור/.test(t), (t.match(/ההזמנה.{0,120}/) || [''])[0]);
+check('O04', 'URL carries the order', /mode=units&v=20/.test(page.url()), page.url());
+await page.fill('#order-client', 'בדיקה-QA לקוח'); await page.fill('#order-no', '7'); await sleep(800);
+await page.reload(); await page.waitForSelector('#order-qty', { timeout: 20000 }); await sleep(1000);
+t = await text(page);
+check('O05', 'after reload: quantity (from URL) and details (from device) are back', /20 יחידות/.test(t) && /בדיקה-QA לקוח/.test(t), '');
+await shot(page, 'W20-order-20units-phone');
+await page.getByRole('button', { name: 'אצוות' }).click(); await page.fill('#order-qty', '0.5'); await sleep(600);
+t = await text(page);
+check('O06', 'half a batch: 0.5 אצוות, flour 250 g, 6 units', /0\.5 אצוות/.test(t) && /250 גר/.test(t) && /6 יחידות/.test(t), '');
+await page.fill('#order-qty', '2'); await sleep(600);
+t = await text(page);
+check('O07', 'double batch: 2 אצוות, flour 1 kg, 24 units', /2 אצוות/.test(t) && /1 ק"ג/.test(t) && /24 יחידות/.test(t), '');
+// PDF of the order sheet (its own print rules; no sheet component needed)
+await page.emulateMedia({ media: 'print' });
+const pdf = await page.pdf({ format: 'A4', printBackground: true, path: '/home/user/recipe-notebook/artifact/qa/shots-real/W21-order.pdf' });
+const info = await parse(pdf); const pt = info.text.replace(/\s+/g, ' ');
+const has = (...w) => w.every((x) => pt.includes(x));
+const need = ['בריוש', '7', 'לקוח', 'אצוות', '24', 'קמח', 'מערבבים'];
+const kg = pt.includes('ק"ג') || pt.includes('ג"ק'); // the extractor reverses Hebrew glyph runs
+check('O08', 'order PDF: name, order no., client, 2 batches, 24 units, ingredients (kg), steps', has(...need) && kg, 'missing: ' + need.filter((w) => !pt.includes(w)).join(',') + ' | ' + pt.slice(0, 120));
+check('O09', 'order PDF: no controls, no § markers', !/§|הדפסה \/ שמירה|כמות לייצור/.test(pt), '');
+check('O10', 'order PDF pages 1–2', info.numpages <= 2, String(info.numpages));
+await page.emulateMedia({ media: 'screen' });
+await page.setViewportSize(DESK); await sleep(500);
+await shot(page, 'W22-order-desktop');
+const tb = await page.locator('button[aria-label="הדפסה או שמירה כ-PDF של דף ההזמנה"]').boundingBox();
+check('O11', 'desktop: primary print button at the top', tb && tb.y < 80 && tb.height >= 44, JSON.stringify(tb));
+console.log('errors:', errors.slice(0, 5));
+console.log(JSON.stringify(results.filter(r => r.pass === false)));
+await browser.close();

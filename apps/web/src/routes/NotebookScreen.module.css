@@ -1,0 +1,324 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding: 20px 0 24px;
+}
+
+.head {
+  padding-inline: var(--pad-card);
+}
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  font-weight: var(--fw-title);
+  line-height: 1.2;
+  color: var(--c-ink);
+}
+.count {
+  margin-top: 4px;
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+}
+
+.searchRow {
+  padding-inline: var(--pad-card);
+}
+
+/* A visible label for the search field (UX pass): a placeholder is not a
+   label — it is gone exactly when the box has content in it. */
+.searchLabel {
+  /* The magnifier sits on the label's baseline row, not above the words. */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-block-end: 4px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+.search {
+  width: 100%;
+  min-height: var(--hit-min);
+  padding-inline: 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  font-size: var(--fs-body);
+  outline: 0;
+}
+.search:focus-visible {
+  border-color: var(--c-green);
+  box-shadow: 0 0 0 2px var(--c-green-bg);
+}
+
+/*
+  DESIGN PASS: THE ROW SCROLLS, AND IT SHOULD LOOK LIKE IT.
+
+  The category chips overflow on a phone — that is correct, there are seven of
+  them — but the last chip was clipped flush against the viewport edge, which
+  reads as a broken layout rather than as "there is more this way". Scroll
+  padding keeps a chip's full pill inside the gutter at both ends, and snapping
+  means a flick lands on a chip instead of halfway through one. The scrollbar
+  is hidden because on a touch screen it covers the chips it describes.
+*/
+.chips {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding-inline: var(--pad-card);
+  padding-block: 2px;
+  scroll-padding-inline: var(--pad-card);
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  overscroll-behavior-inline: contain;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip,
+.chipOn {
+  scroll-snap-align: end;
+}
+.chip,
+.chipOn {
+  flex: none;
+  min-height: var(--hit-min);
+  padding-inline: var(--pad-card);
+  border-radius: var(--r-control);
+  font-size: var(--fs-secondary);
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-muted);
+  white-space: nowrap;
+}
+.chipOn {
+  border-color: var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  /* One notch more air between cards than inside them, so a card reads as one
+     object rather than as a stripe in a list. */
+  gap: 12px;
+  padding-inline: var(--pad-card);
+}
+
+/*
+  DESIGN HANDOFF: THE ROW IS A PICTURE, A NAME AND A WAY IN.
+
+  Right to left: the category thumbnail, the recipe's name with its own line of
+  facts under it, and a chevron that points the way Hebrew reads. The card
+  itself is the link — there is no second target inside it.
+*/
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-in-group);
+  padding: 10px 12px;
+  background: var(--c-paper);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  text-decoration: none;
+  color: var(--c-ink);
+  min-height: var(--hit-min);
+}
+
+.card:hover {
+  border-color: var(--c-sand);
+}
+
+.thumb {
+  flex: none;
+  inline-size: 72px;
+  block-size: 72px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: var(--r-check);
+  background: var(--c-neutral-bg);
+}
+
+.thumbPhoto {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbGlyph {
+  display: grid;
+  place-items: center;
+  color: var(--c-muted);
+}
+
+.cardBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardChevron {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--c-muted);
+}
+
+.cardName {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+.cardMeta {
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+}
+.cardWarn {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-amber);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+.badgeSub,
+.badgeLocked,
+.badgeVersion,
+.badgeTag {
+  font-size: var(--fs-meta);
+  padding: 3px 8px;
+  border-radius: var(--r-control);
+}
+.badgeSub {
+  background: var(--c-green-bg);
+  color: var(--c-green);
+}
+.badgeLocked {
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+}
+.badgeVersion {
+  background: var(--c-neutral-bg);
+  color: var(--c-muted);
+}
+.badgeTag {
+  background: transparent;
+  color: var(--c-muted);
+  border: 1px solid var(--c-line);
+}
+
+.empty {
+  padding: 24px var(--pad-card);
+  font-size: var(--fs-body);
+  color: var(--c-muted);
+}
+
+/* ── stage 4: the entry point into the editor ─────────────────────────── */
+.headRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+}
+
+.newBtn {
+  flex: none;
+  min-height: var(--hit-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 15px;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.newBtn:hover {
+  background: var(--c-green-ink);
+  color: var(--c-white);
+}
+
+/* The first-run empty state. */
+.emptyState {
+  margin: 8px var(--pad-card) 0;
+  padding: 26px 20px;
+  border-radius: var(--r-card-lg);
+  border: 1px dashed var(--c-line);
+  background: var(--c-paper);
+  text-align: center;
+}
+.emptyTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  color: var(--c-ink);
+}
+.emptyBody {
+  margin-block-start: 6px;
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+  line-height: 1.65;
+}
+.emptyCta {
+  margin-block-start: 16px;
+  min-height: var(--hit-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 20px;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-decoration: none;
+}
+.emptyCta:hover {
+  background: var(--c-green-ink);
+  color: var(--c-white);
+}
+
+/* ── §2 screen 6: the way into pasting ──────────────────────────────────── */
+.newGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-tight);
+  flex: none;
+}
+
+.pasteBtn {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-compact);
+  padding-inline: 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-green);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.emptyAlt {
+  margin-block-start: 10px;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  color: var(--c-green);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

@@ -1,0 +1,40 @@
+{
+  "name": "recipe-notebook",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "build": "npm run build --workspace @recipe-notebook/engine && npm run build --workspace @recipe-notebook/web",
+    "dev": "npm run dev --workspace @recipe-notebook/web",
+    "seed:check": "node supabase/scripts/generate-density-seed.mjs --check",
+    "schema:check": "node supabase/scripts/check-types-against-schema.mjs",
+    "e2e:build": "cd apps/web && VITE_SUPABASE_URL= VITE_SUPABASE_ANON_KEY= vite build --outDir dist-demo --emptyOutDir",
+    "demo": "vite build --config artifact/vite.demo.config.ts && node artifact/scripts/standalone.mjs",
+    "demo:check": "node artifact/scripts/demo-check.mjs",
+    "figma:build": "node figma/build.mjs",
+    "figma:check": "node figma/build.mjs && node figma/tools/check.mjs",
+    "e2e": "npm run e2e:build && node apps/web/e2e/stage4.mjs && node apps/web/e2e/stage5.mjs && node apps/web/e2e/stage12.mjs && node apps/web/e2e/stage14.mjs",
+    "e2e:stage5": "npm run e2e:build && node apps/web/e2e/stage5.mjs",
+    "roundtrip:emit": "vite-node supabase/scripts/mapper-roundtrip.mts -- --emit",
+    "roundtrip:verify": "vite-node supabase/scripts/mapper-roundtrip.mts -- --verify supabase/tests/mapper-roundtrip.rows.json",
+    "roundtrip:versions:emit": "vite-node supabase/scripts/version-roundtrip.mts -- --emit",
+    "roundtrip:versions:verify": "vite-node supabase/scripts/version-roundtrip.mts -- --verify supabase/tests/version-roundtrip.rows.json",
+    "e2e:stage12": "npm run e2e:build && node apps/web/e2e/stage12.mjs",
+    "e2e:stage14": "npm run e2e:build && node apps/web/e2e/stage14.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "globals": "^17.12.0",
+    "typescript-eslint": "^8.70.0"
+  }
+}

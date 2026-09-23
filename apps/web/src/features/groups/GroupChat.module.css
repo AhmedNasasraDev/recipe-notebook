@@ -1,0 +1,482 @@
+/*
+  A column, and NOT a scroller of its own: the screen around it is the one
+  scroller (see GroupScreen's `.page`), the history flows at its natural
+  height, and the composer below it sticks to the bottom of the view.
+*/
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/*
+  The history. It does NOT scroll on its own.
+
+  Two earlier versions are worth remembering. It was bounded by
+  `max-height: 58dvh` — a fraction of the VIEWPORT, which knows nothing about
+  the header above it, so the sum overflowed the frame and the composer went
+  below the fold. Then it was `flex: 1` inside a column exactly as tall as the
+  frame: the composer was safe, and a 184px group header ate a third of the
+  conversation. Now the screen scrolls as one document with the tabs and the
+  composer stuck to its two edges, so the list needs no height rule at all —
+  it is as tall as the messages in it.
+*/
+.scroll {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 4px;
+}
+
+/*
+  The anchor the auto-scroll aims at, and the only reason it has a class.
+
+  The composer is sticky at the bottom, so aligning the anchor with the bottom
+  EDGE of the scroller leaves the newest message behind the bar — measured: the
+  last bubble ended at 818 with the composer starting at 709. A scroll margin
+  is the right tool because it changes only where a scroll comes to rest, not
+  the layout: no empty band at the end of the conversation, which is what
+  bottom padding on the list would have left. Generous on purpose — the
+  composer grows by a line when a reply is being quoted.
+*/
+.bottomAnchor {
+  scroll-margin-block-end: 150px;
+}
+
+.state,
+.dayLabel,
+.time,
+.replying,
+.divider {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.day {
+  display: grid;
+  gap: 8px;
+}
+
+.dayLabel {
+  text-align: center;
+}
+
+.divider {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+  color: var(--c-green);
+  border-top: 1px solid var(--c-green);
+  padding-top: 4px;
+  margin-top: 4px;
+}
+
+/*
+  SIDES, THE WAY §4 CORRECTS THE MOCKUP.
+
+  The handoff's chat picture puts the reader's own messages on the LEFT and
+  everyone else's on the right, and says in the same breath that it has them
+  backwards: in Hebrew, mine belong on the RIGHT — the side reading starts
+  from — and other people's on the left.
+
+  In an RTL layout `inline-start` IS the right, so a message of mine is pushed
+  to the start with an auto margin at its end, and everybody else's the other
+  way round. Nothing here is a hard-coded `left` or `right`: the same rules
+  would mirror correctly if the application were ever read the other way.
+
+  The tint stays — the side alone is not enough to tell two people apart when
+  one of them writes two messages in a row — and only somebody else's message
+  carries an avatar, because a reader knows what they look like.
+*/
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  /* Never the full width: a bubble that reaches both edges has no side. */
+  max-inline-size: 86%;
+  margin-inline-start: auto;
+}
+
+.mine {
+  margin-inline-start: 0;
+  margin-inline-end: auto;
+}
+
+.mine .avatar {
+  display: none;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-pill);
+  background: var(--c-neutral-bg);
+  color: var(--c-muted);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-title);
+  overflow: hidden;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bubble {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-white);
+}
+
+/* The reader's own messages, tinted rather than moved: a right-aligned column
+   in an RTL layout is the same side as everything else. */
+.mine .bubble {
+  background: var(--c-green-bg);
+  border-color: var(--c-green-bg);
+}
+
+.announcement .bubble {
+  background: var(--c-amber-bg);
+  border-color: var(--c-amber);
+}
+
+.gone .bubble {
+  background: var(--c-neutral-bg);
+  border-style: dashed;
+}
+
+.gone .body {
+  color: var(--c-muted);
+  font-style: italic;
+}
+
+.who {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+}
+
+.name {
+  font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-title);
+  color: var(--c-ink);
+}
+
+/*
+  The announcement tag. White on `--c-amber` measures exactly 4.50:1, which the
+  stage-10 contrast audit refuses for 10px text — and rightly: it is the
+  threshold, not a margin. The palette is §16's and stays untouched, so the
+  pill is white with ink text and an amber border, which reads on the amber
+  bubble behind it and measures far above the line.
+*/
+.tag {
+  padding: 0 6px;
+  border: 1px solid var(--c-amber);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-size: var(--fs-label);
+}
+
+.body {
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The message a reply points at. Bordered on the inline-start edge, which in
+   RTL is the right — `border-inline-start` rather than `border-right`. */
+.quote {
+  display: grid;
+  gap: 2px;
+  padding: 4px 8px;
+  border-inline-start: 3px solid var(--c-sand);
+  background: var(--c-app-bg);
+  border-radius: var(--r-check);
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.quoteName {
+  font-weight: var(--fw-title);
+  color: var(--c-ink);
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/*
+  "תשובה", "עריכה", "מחיקה" under each message.
+
+  They were 16px high. §15's floor is 44 and the compact token is 40, and three
+  of those on every bubble is roughly 24px of extra height per message — on a
+  402px phone that is a message and a half less conversation on screen, which
+  is its own kind of unusable in a kitchen. So these take 32px: comfortably
+  over WCAG 2.5.8's 24px minimum, a real thumb target, and the bubble grows by
+  16px rather than 24. It is a deliberate exception to the 40/44 tokens for
+  three secondary actions INSIDE a message, and it is written here so the next
+  person sees the trade rather than the number.
+*/
+.link {
+  border: 0;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 2px 6px;
+  color: var(--c-green);
+  font: inherit;
+  font-size: var(--fs-meta);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.small {
+  padding: 6px 12px;
+  min-height: 32px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-meta-lg);
+  cursor: pointer;
+}
+
+.confirm {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border-radius: var(--r-check);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-meta);
+}
+
+.editor {
+  display: grid;
+  gap: 6px;
+}
+
+/*
+  Never out of reach: this is the control the screen exists for, so it sticks
+  to the bottom of the scroller and the history passes behind it.
+
+  `--c-paper` was already its background, which is what makes that work — a
+  transparent bar would show the messages through it. The bottom margin is the
+  gap the sticky edge would otherwise eat.
+*/
+/*
+  ── THE COMPOSER, AS ONE CAPSULE ─────────────────────────────────────────
+
+  §9: a narrow capsule with fully rounded ends, the text on the right and the
+  send control inside the same frame, on one line. No separate send button
+  below the box, and no two-row textarea sitting open on a phone before
+  anybody has typed a word.
+
+  It was a `rows={2}` textarea with a "שליחה" button under it — about 110px of
+  a 402px screen permanently spent on an empty form. The field now opens at
+  one line and grows with the text up to `--chat-input-max`, after which it
+  scrolls inside itself, so a long message is still readable and the
+  conversation above it is not pushed off the screen.
+
+  The paperclip in the handoff's picture is NOT here, and that is deliberate:
+  this application's chat has no attachments — `sendMessage` takes a body and
+  a kind, the table stores text, and there is no bucket behind it. A button
+  that opens a file picker and then cannot send the file is worse than no
+  button. It is written up in the report instead.
+*/
+.composer {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  padding-block: 8px;
+  /* The capsule is the surface now, so the composer itself is just the band
+     of page it sits in. */
+  background: var(--c-app-bg);
+}
+
+.capsule {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 4px 6px 4px 4px;
+  border: 1px solid var(--c-line);
+  /* Fully round, at any height it grows to. */
+  border-radius: var(--r-control);
+  background: var(--c-white);
+}
+
+/* Once the field has grown past one line the ends stop being half-circles —
+   a 999px radius on a 90px-tall box is a lozenge, not a capsule. */
+.capsuleTall {
+  border-radius: var(--r-card-lg);
+}
+
+.replying {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  /* One line to start with; `GroupChat.tsx` measures the text and grows it. */
+  min-height: 36px;
+  max-height: var(--chat-input-max);
+  padding: 7px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-body);
+  line-height: 1.4;
+  /* The author never drags this: the height follows the text. */
+  resize: none;
+  overflow-y: auto;
+}
+
+.input:focus-visible {
+  outline: none;
+}
+
+/* The focus ring belongs to the capsule, since that is what looks like the
+   field — :focus-within, so it appears wherever the caret actually is. */
+.capsule:focus-within {
+  outline: 2px solid var(--c-green);
+  outline-offset: 1px;
+  border-color: var(--c-green);
+}
+
+/* The one control inside the capsule. A circle, at the 44px floor, with the
+   paper-plane glyph from the application's own icon set. */
+.sendBtn {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  inline-size: var(--hit-min);
+  block-size: var(--hit-min);
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  cursor: pointer;
+}
+
+.sendBtn:disabled {
+  /* Not 0.5: §16 keeps a disabled control legible. It reads as off because it
+     is grey, not because it has faded out. */
+  background: var(--c-neutral-bg);
+  color: var(--c-muted);
+  cursor: default;
+}
+
+.sendBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.composerRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* The הכרזה switch. The label is the target, so it gets the compact height,
+   and the box inside it is 24px rather than the browser's 13px default. */
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: var(--hit-compact);
+  font-size: var(--fs-meta);
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.check input[type='checkbox'] {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  accent-color: var(--c-green);
+  cursor: pointer;
+}
+
+.send {
+  min-height: var(--hit-min);
+  padding: 8px 18px;
+  border: 1px solid var(--c-green);
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font: inherit;
+  font-size: var(--fs-body);
+  cursor: pointer;
+}
+
+.send:disabled,
+.small:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+.older {
+  justify-self: center;
+  padding: 6px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-meta-lg);
+  cursor: pointer;
+}
+
+.offline,
+.problem {
+  padding: 10px 12px;
+  border-radius: var(--r-card);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+
+.offline {
+  background: var(--c-amber-bg);
+  color: var(--c-ink);
+}
+
+.problem {
+  background: var(--c-red-bg);
+  color: var(--c-red);
+}
+
+/* A label that exists for a screen reader and not for the eye. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

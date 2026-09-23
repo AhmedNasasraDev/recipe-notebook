@@ -1,0 +1,26 @@
+{
+  "//": "Typecheck for the AUDIT VIEWER only. The product's own tsconfig does not include this directory, and this one is never part of the product build — `npx tsc -p artifact` is the check, with the same strictness the product is held to (strict + noUncheckedIndexedAccess).",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "types": ["vite/client", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@recipe-notebook/engine": ["../packages/engine/src/index.ts"],
+      "@/*": ["../apps/web/src/*"]
+    }
+  },
+  "include": ["viewer/**/*.ts", "viewer/**/*.tsx", "vite.config.ts"]
+}

@@ -1,0 +1,186 @@
+/* §15: mobile-first. The prototype was laid out at 402×874, so a phone gets
+ * exactly that and a desktop gets that frame centred rather than a phone layout
+ * stretched across a monitor.
+ *
+ * Stage-4 requirement 14 added the middle case, which was genuinely missing: on
+ * a tablet the 402px frame left most of the screen empty and squeezed the
+ * recipe editor into one narrow column. From 700px of viewport the frame grows
+ * to --frame-w-wide, which is enough for a label and a field side by side and
+ * still a comfortable measure for reading a recipe. Nothing else changes — same
+ * tokens, same components, same single-column app. */
+
+.outer {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-outer-bg);
+}
+
+.frame {
+  /*
+    ── THE DOCUMENT MUST NEVER BECOME SCROLLABLE ──────────────────────────
+
+    QA 22.09.2026, §7: on a phone the tab bar sometimes sat in the middle of
+    the screen, and opening "עוד פעולות" or coming back from the order sheet
+    jumped the page. Measured: `document.scrollingElement.scrollHeight` was
+    2735px in an 874px viewport while nothing visible extended past it. The
+    cause was `.visuallyHidden` — `position: absolute` — on the file inputs
+    and labels deep inside the recipe page. With no positioned ancestor their
+    containing block was the initial containing block, so they ESCAPED the
+    scroller's clipping and their static position 2,700px down the page gave
+    the document itself 1,860px of scrollable overflow. Anything that scrolls
+    the document — `scrollIntoView` on the actions panel, the browser
+    restoring scroll on Back, a focused field — then pushed the whole frame
+    up, tab bar and all.
+
+    `position: relative` here and on `.content` makes the scroller the
+    containing block for every absolutely positioned descendant, so they are
+    clipped and scrolled with the page, and the document has nothing to
+    scroll. The nav script (artifact/qa) measures it.
+  */
+  position: relative;
+  width: 100%;
+  max-width: var(--frame-w);
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--c-app-bg);
+
+  /* Screens inside the frame size themselves against the FRAME, not the
+     viewport, because those are different widths on a desktop. */
+  container-type: inline-size;
+  container-name: app;
+}
+
+/*
+  ── THE PALE STRIP UNDER THE TAB BAR, AND WHERE IT CAME FROM ──────────────
+
+  Ahmed: "בחלק מהמסכים נשארת רצועה ריקה ובהירה מתחתיו… אני רוצה שהפס יהיה
+  צמוד לתחתית שטח האפליקציה, בלי רווח חיצוני מתחתיו."
+
+  It was `max-height: var(--frame-h)` — 874px — declared on `.frame` for every
+  viewport. `.outer` centres the frame and paints `--c-outer-bg`, which is
+  four shades lighter than the app. So on any phone TALLER than 874px the
+  frame was 874 tall inside a 915 viewport and the light background showed
+  through as a ~20px band above it and another below it, under the bar.
+  Measured at 412×915: the frame ran 20 → 894 and the bar's bottom edge was
+  at 895 in a 915px viewport.
+
+  It appeared "on some screens" because it depends on the DEVICE, not the
+  screen: 874 is the prototype's own height, so a 402×874 phone showed
+  nothing and a taller one showed the band on every screen at once.
+
+  The cap is what gives a desktop a phone-shaped window instead of an app
+  stretched across a monitor, so it is kept — for a window. 560px is the
+  threshold because it clears every phone: the widest in current use is
+  440 CSS px (iPhone 16 Pro Max), then 430, 412, 402, 393, 390, 375, 360.
+  Anything 560 and wider is a tablet or a browser window, which is where a
+  centred frame is the intent rather than a defect.
+*/
+@media (min-width: 560px) {
+  .frame {
+    max-height: var(--frame-h);
+  }
+}
+
+/* Tablet and up: a wider frame and a taller one, so a tablet is not a large
+   phone. Below this the phone layout is untouched. */
+@media (min-width: 700px) {
+  .frame {
+    max-width: var(--frame-w-wide);
+    max-height: var(--frame-h-wide);
+  }
+}
+
+/* The windowed frame gets its rounding and its shadow. 560 for the same
+   reason as above — at the old 440 an iPhone 16 Pro Max (440×956) was handed
+   a rounded, shadowed window instead of its own screen. */
+@media (min-width: 560px) and (min-height: 900px) {
+  .frame {
+    border-radius: 28px;
+    box-shadow: 0 24px 60px rgba(23, 26, 24, 0.18);
+  }
+}
+
+.content {
+  /* See `.frame`: the scroller is the containing block for its own
+     absolutely positioned descendants. */
+  position: relative;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* See AppShell.tsx. 640 is the widest a single column of cards reads as one
+   thing rather than as two edges; below that the column is simply the frame. */
+.column {
+  inline-size: 100%;
+  max-inline-size: 640px;
+  margin-inline: auto;
+  /*
+    THE COLUMN FILLS THE SCROLLER EVEN WHEN THE SCREEN IS SHORT.
+
+    `.content` is `flex: 1` inside a frame with a definite height, so it has a
+    resolved height and this 100% resolves against it.
+
+    The flex column below is what lets a SCREEN fill it in turn. A percentage
+    `min-height` on the screen would not: it resolves against the parent's
+    `height`, which is `auto` here, so it computes to nothing — measured, and
+    it is why the first attempt at this changed nothing on screen.
+
+    `:only-child` is the guard. Growing the one root a screen renders is
+    always safe; a screen that renders several roots would have the slack
+    divided between them, which is a layout nobody asked for. Every screen in
+    the shell renders one root today, and if one ever renders two it keeps the
+    old behaviour instead of quietly rearranging.
+
+    What this is for: a footer that belongs at the bottom of the screen — the
+    editor's save bar is the one Ahmed can see — used to end wherever the form
+    ended, with the page's own background below the buttons.
+  */
+  min-block-size: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.column > :only-child {
+  flex: 1 0 auto;
+}
+
+.banner {
+  flex: none;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap-in-group);
+  padding: 10px var(--pad-card);
+  font-size: var(--fs-secondary);
+  line-height: 1.5;
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  border-bottom: 1px solid var(--c-line);
+}
+
+.bannerError {
+  background: var(--c-red-bg);
+  color: var(--c-red);
+}
+
+.bannerText {
+  flex: 1;
+}
+
+.bannerClose {
+  flex: none;
+  min-width: var(--hit-min);
+  min-height: var(--hit-compact);
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+  color: inherit;
+}

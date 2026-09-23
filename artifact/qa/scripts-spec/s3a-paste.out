@@ -1,0 +1,21 @@
+countBefore: "3"
+pasteButtons: ["פענוח","המשך לעריכה ואישור","המחברת"]
+pasteHint: "שום דבר לא נשמר במחברת עד שלוחצים \"שמירת המתכון\" בעורך."
+editorUrl: "http://127.0.0.1:5199/recipe/new"
+editorHeading: "מתכון חדש"
+editorName: "בדיקה-QA בריוש מהדבקה"
+editorRows: ["קמח לחם|500|g","חלב|60|ml","מלח|11|g"]
+editorSteps: ["ללוש 12 דקות במהירות בינונית","לאפות 20 דקות ב-180 מעלות"]
+saveCallsSoFar: 0
+cancelDialog: "יש שינויים שלא נשמרו. לצאת בלי לשמור?"
+afterCancelUrl: "http://127.0.0.1:5199/paste"
+countAfterCancel: "3"
+saveCallsAfterCancel: 0
+afterSaveUrl: "http://127.0.0.1:5199/recipe/9b95207c-7f9f-4fd6-b8e5-2554a3d0ec04"
+saveCallsAfterSave: 1
+recipeAfterReload: {"title":"בדיקה-QA בריוש מהדבקה","hasFlour":true}
+versionHistory: "not on screen"
+countAfterSave: "4"
+countAfterCleanup: "3"
+plainNewIsEmpty: true
+deskEditor: {"url":"http://127.0.0.1:5199/recipe/new","name":"בדיקה-QA בריוש מהדבקה"}

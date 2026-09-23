@@ -1,0 +1,49 @@
+PASS #2a orphan already cleaned in the previous run (verified then: message shown, row removed via UI)
+PASS #2c fresh photo uploaded and shown as hero: true
+PASS #2d delete refused → message shown: true; storage DELETE requests sent BEFORE the refusal: 0
+PASS #2e photo still there after the refused delete + reload: true
+PASS #3a recipe as-written view eggs:  המרה 15 גר' שמרים טריים המרה 4 יח' כמות לפי המתכון ביצים אין משק
+PASS #34 convert hint reads "המרה": true
+PASS #26 home view hint: בגרמים — אין נתון להמרה לכלי מדידה
+PASS #3b grams view still shows the written count for eggs: true
+PASS #32 units actual: יחידות בפועל 12
+PASS #10 food-cost target row: לפי יעד פוד קוסט (לא הוגדר יעד) 
+PASS #21 markup label: תוספת על העלות (רווח חלקי עלות)
+PASS #33 version tag: גרסה 2
+PASS #4b pro details raw per unit: משקל לשקילה ליחידה 114 גר'
+PASS #7a compare V1→current shows no phantom price change: true | dialog: השוואת גרסאות בדיקה-QA בריוש חמאה קלאסי × מגרסה גרסה 1 — 22.09.2026, 20:46 גרסה נוכחית לגרסה גרסה 1 — 22.09.2026, 20:46 גרסה נוכחית מגרסה 1 לגרסה נוכחית אין הבדל בין שתי הגרסאות האלה בשדות וברכיבים שנבדקים.
+PASS #7b compare uses "לפני/אחרי" words, no arrow: true
+PASS #37 no "ליחידת מחיר" label: true
+PASS #3c weighing list: eggs "ביצים 4 יח' כמות לפי המתכון חלב 103" vanilla "תמצית וניל 1 כפית כמות לפי המתכון חמאה 2"
+PASS #3d no dash in the weighing list: true
+PASS #14 landscape 874×402: rows fully visible above the gate bar: 4/8; bar height 111px
+PASS #42 fullscreen head controls on one row (tops): [10,12,12,12]
+PASS #29c own-timer minutes placeholder: "למשל 10"
+PASS #4a order sheet: משקל יחידה מוכנה 100 גר' · משקל לשקילה ליחידה 114 גר'
+PASS #13 order note: הפרטים האלה מודפסים על הדף ונשמרים במכשיר הזה בלבד, לכל מתכון בנפרד. הם אינם נשמרים בחשבון.
+PASS #36 print button wording top "הדפסה / שמירה כ-PDF" bottom "הדפסה / שמירה כ-PDF"
+PASS #19 text below 12px on the order sheet: []
+PASS #25 messages on an invalid quantity: ["הכמות חייבת להיות מספר גדול מאפס"]
+PASS #41 cost in print media: {"text":"₪3.38","dir":"ltr"} (the Phase-A "3.38₪" came from PDF text extraction reversing an LTR span)
+PASS #5 label declaration: "רכיבים: קמח לחם, חמאה, חלב, סוכר, שמרים טריים, מלח, ביצים, תמצית וניל "
+PASS #27 developer-toned paragraphs gone: true
+PASS #38 net weight uses גר' : משקל נטו 100 גר'
+PASS #8 purchase rows: ["צריך לקנות 402 גר'","צריך לקנות 398 גר'"]
+PASS #28 stock note count: 1; repeated not-in-centre sentences: 0
+PASS #9 invite row has a copy action and no raw URL: copy=true rawUrl=false
+PASS #30 invite email placeholder: "כתובת המייל של המוזמן"
+PASS #15 group screen ready in 1875 ms (dev server, includes bundle transform)
+PASS #40 own chat message labelled "אני": true
+PASS #12 accessible names resolve: getByLabel("שם הקבוצה")=1, getByLabel("שם השיעור")=1 — the Phase-A audit missed implicit <label> wrappers; not a product defect
+PASS #22 unit chips: אונקיה, אונקיית נוזל, שוט
+PASS #23 language note: ערבית מתוכננת לשלב הבא ועדיין אינה זמינה 
+PASS #11 privacy sentence: שיתוף קורה רק ביוזמתכם — דרך קבוצה שפתחתם או הצטרפתם אליה.
+PASS #35 no lone "•" on settings: true
+PASS #24 inline "הגדרות" link box: 50×42
+PASS #17-20,43 text under 12px anywhere: none
+PASS #29 editor placeholders: price "0.00", unit weight "למשל 60", temperature "180", minutes "20"
+PASS #37 price-unit label: יחידת המחיר
+PASS #29b calibrate grams placeholder: "למשל 120"
+ERRORS: ["console: WebSocket connection to 'wss://qxdpsomelzpvphkhkqrw.supabase.co/realtime/v1/websocket?apikey=sb_publishable_-_XI-iFkG0ike5RMQIjebw_LTO2aDZ9&vsn=2.0.0' failed: Error during WebSocket handshake: Unexpected response code: 500","console: WebSocket connection to 'wss://qxdpsomelzpvphkhkqrw.supabase.co/realtime/v1/websocket?apikey=sb_publishable_-_XI-iFkG0ike5RMQIjebw_LTO2aDZ9&vsn=2.0.0' failed: Error during WebSocket handshake: Unexpected response code: 500"]
+NET4xx: []
+SUMMARY: 46/46 passed

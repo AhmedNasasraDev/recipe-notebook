@@ -1,0 +1,268 @@
+.page {
+  display: grid;
+  gap: 14px;
+}
+
+.head {
+  display: grid;
+  gap: 6px;
+}
+
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  font-weight: var(--fw-title);
+}
+
+.lede,
+.hint,
+.meta,
+.state {
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+  color: var(--c-muted);
+}
+
+.notice,
+.problem,
+.ok {
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+
+.notice {
+  background: var(--c-neutral-bg);
+  color: var(--c-ink);
+}
+
+.problem {
+  background: var(--c-red-bg);
+  color: var(--c-red);
+}
+
+.ok {
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+}
+
+.card {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-paper);
+}
+
+.h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-title);
+}
+
+.list,
+.toggles,
+.roleNotes {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--r-check);
+  background: var(--c-white);
+}
+
+.who {
+  display: grid;
+  gap: 2px;
+}
+
+.name {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.itemBlock {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: var(--r-check);
+  background: var(--c-white);
+}
+
+.toggles {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+/* The five per-recipe permissions. The box was the browser's unstyled 13px,
+   which is under WCAG 2.5.8's 24px floor; the LABEL wraps the box and the
+   word, so the target is this whole row — and it is now at least 40px tall,
+   with a 24px box inside it in the app's own green. */
+.inline {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-height: var(--hit-compact);
+  font-size: var(--fs-meta-lg);
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.inline input[type='checkbox'] {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  accent-color: var(--c-green);
+  cursor: pointer;
+}
+
+.form {
+  display: grid;
+  gap: 8px;
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.input,
+.select {
+  min-height: var(--hit-min);
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-body);
+}
+
+.select {
+  width: auto;
+  min-height: var(--hit-min);
+  padding: 6px 8px;
+}
+
+.primary,
+.small {
+  justify-self: start;
+  border-radius: var(--r-control);
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary {
+  min-height: var(--hit-min);
+  padding: 8px 16px;
+  border: 1px solid var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-size: var(--fs-body);
+}
+
+.small {
+  min-height: var(--hit-min);
+  padding: 6px 12px;
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-size: var(--fs-meta-lg);
+}
+
+/* "הסרה", "דחייה", "אישור" and "שליחה מחדש" sit in rows beside a 40px select, so they take the compact 40px target the design system already has
+   for a control of this weight. They were 16px — a real action at a size the
+   project's own tokens do not allow. */
+.link {
+  border: 0;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-compact);
+  padding: 2px 6px;
+  color: var(--c-green);
+  font: inherit;
+  font-size: var(--fs-meta);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.primary:disabled,
+.small:disabled,
+.link:disabled,
+.select:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+.linkBox {
+  padding: 8px 10px;
+  border-radius: var(--r-check);
+  background: var(--c-green-bg);
+}
+
+.copyWrap {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+/*
+  The link, selectable and wrapping. `dir=ltr` via the `unicode-bidi` pair,
+  because a URL inside an RTL paragraph otherwise has its slashes and query
+  reordered on screen — it still copies correctly, but it reads as a different
+  address, and an instructor comparing it to what a student pasted would have
+  no idea why.
+*/
+.code,
+.codeSmall {
+  direction: ltr;
+  unicode-bidi: isolate;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, 'SFMono-Regular', monospace;
+  user-select: all;
+}
+
+.code {
+  font-size: var(--fs-meta-lg);
+}
+
+.codeSmall {
+  font-size: var(--fs-label);
+  color: var(--c-muted);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,149 @@
+/*
+  Sign in / sign up.
+
+  Uses only §16 tokens — no new colour, radius or type size is introduced for
+  this screen. Layout is logical-property only (inline-start / inline-end), so
+  the RTL direction comes from <html dir> and nothing here has to be mirrored
+  when Arabic is added (§15).
+*/
+
+.page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: var(--c-outer-bg);
+}
+
+.card {
+  width: 100%;
+  max-width: 360px;
+  padding: 28px 22px 22px;
+  border-radius: var(--r-card-lg);
+  background: var(--c-paper);
+  box-shadow: 0 18px 48px rgba(23, 26, 24, 0.12);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-recipe-title);
+  color: var(--c-ink);
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin-block-start: 6px;
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+  line-height: 1.5;
+}
+
+/* ── mode switch ──────────────────────────────────────────────────────── */
+.modes {
+  display: flex;
+  gap: 4px;
+  margin-block-start: 18px;
+  padding: 3px;
+  border-radius: var(--r-control);
+  background: var(--c-neutral-bg);
+}
+.mode,
+.modeOn {
+  flex: 1;
+  padding: 7px 0;
+  border: 0;
+  border-radius: var(--r-control);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  cursor: pointer;
+}
+.mode {
+  background: transparent;
+  color: var(--c-muted);
+}
+.modeOn {
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-weight: 600;
+}
+
+/* ── form ─────────────────────────────────────────────────────────────── */
+.form {
+  margin-block-start: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  margin-block-end: 4px;
+}
+
+.input {
+  padding: 10px 11px;
+  margin-block-end: 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--c-ink);
+}
+.input:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 1px;
+  border-color: var(--c-green);
+}
+
+.hint {
+  margin-block-start: -6px;
+  margin-block-end: 12px;
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.submit {
+  padding: 12px 0;
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-family: var(--font-body);
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+.submit:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+/* ── messages ─────────────────────────────────────────────────────────── */
+.notice,
+.error {
+  margin-block-start: 12px;
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.55;
+}
+.notice {
+  color: var(--c-green-ink);
+  background: var(--c-green-bg);
+}
+.error {
+  color: var(--c-red);
+  background: var(--c-red-bg);
+}
+
+.privacy {
+  margin-block-start: 18px;
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+  line-height: 1.6;
+}

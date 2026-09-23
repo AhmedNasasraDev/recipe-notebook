@@ -1,0 +1,13 @@
+.loading {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-app-bg);
+}
+
+.loadingText {
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+}

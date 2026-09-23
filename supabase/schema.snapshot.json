@@ -1,0 +1,873 @@
+{
+  "_comment": [
+    "The applied schema of project qxdpsomelzpvphkhkqrw, read back from",
+    "information_schema and pg_proc after migrations 0001-0037. Not used at runtime.",
+    "",
+    "Its job is to keep apps/web/src/lib/database.types.ts honest. Those types",
+    "are hand-written on purpose: `supabase gen types` widens every CHECK",
+    "constraint to `string` and every jsonb column to `Json`, which throws away",
+    "exactly the distinctions this app depends on - ToolId, PriceUnit,",
+    "temp_unit 'C' | 'F', and the four density resolution states. So the narrow",
+    "types stay, and this snapshot plus scripts/check-types-against-schema.mjs",
+    "prove they still describe the real tables.",
+    "",
+    "Refresh after a migration, then run: npm run schema:check",
+    "",
+    "REFRESH IT WITH THE TWO QUERIES IN `_generated_by`, not by hand. The 0030",
+    "refresh found that `guard_locked_plan` and `guard_locked_plan_child` (both",
+    "from migration 0021) had never been in `_functions` at all - an earlier",
+    "refresh had listed the functions by hand and missed two. Nothing was hidden",
+    "by it (neither is callable by a client role), but a function missing from",
+    "here is a function whose grants nothing checks, which is the opposite of",
+    "what this file is for."
+  ],
+  "_generated_by": {
+    "tables": [
+      "select jsonb_object_agg(t, cols order by t) from (",
+      "  select c.table_name as t, jsonb_object_agg(c.column_name,",
+      "           case when c.is_nullable = 'YES' then 'nullable' else 'required' end",
+      "           order by c.column_name) as cols",
+      "    from information_schema.columns c",
+      "    join information_schema.tables tb on tb.table_schema = c.table_schema",
+      "     and tb.table_name = c.table_name",
+      "   where c.table_schema = 'public' and tb.table_type in ('BASE TABLE','VIEW')",
+      "   group by c.table_name) s;"
+    ],
+    "functions": [
+      "select jsonb_object_agg(name, info order by name) from (",
+      "  select p.proname as name, jsonb_build_object(",
+      "           'args', coalesce((select jsonb_agg(a.nm order by a.ord)",
+      "                               from unnest(p.proargnames, p.proargmodes)",
+      "                                      with ordinality as a(nm, md, ord)",
+      "                              where a.md is null or a.md in ('i','b')), '[]'::jsonb),",
+      "           'security_definer', p.prosecdef,",
+      "           'anon_execute', has_function_privilege('anon', p.oid, 'execute'),",
+      "           'authenticated_execute', has_function_privilege('authenticated', p.oid, 'execute')",
+      "         ) as info",
+      "    from pg_proc p join pg_namespace n on n.oid = p.pronamespace",
+      "   where n.nspname = 'public' and p.prokind = 'f') s;"
+    ]
+  },
+  "batches": {
+    "ccp": "required",
+    "chill_temp": "nullable",
+    "code": "required",
+    "core_temp": "nullable",
+    "created_at": "required",
+    "date": "nullable",
+    "id": "required",
+    "note": "required",
+    "owner": "required",
+    "photo_path": "nullable",
+    "recipe_id": "required",
+    "taken_at": "nullable",
+    "weight": "nullable"
+  },
+  "calibrations": {
+    "created_at": "required",
+    "grams": "required",
+    "id": "required",
+    "ingredient_key": "required",
+    "ingredient_name": "required",
+    "tool": "required",
+    "tool_ml": "required",
+    "tool_ml_assumed": "required",
+    "user_id": "required"
+  },
+  "courses": {
+    "group_id": "required",
+    "id": "required",
+    "name": "required",
+    "ord": "required"
+  },
+  "density_data_gaps": {
+    "name": "required"
+  },
+  "density_table": {
+    "confidence": "required",
+    "exclude_terms": "required",
+    "forms": "required",
+    "g_per_100": "nullable",
+    "key": "required",
+    "match_terms": "required",
+    "needs_review": "required",
+    "note": "required",
+    "ord": "required",
+    "resolution": "required",
+    "review_note": "required",
+    "sources": "required",
+    "updated_at": "required",
+    "word_match": "required"
+  },
+  "group_invites": {
+    "created_at": "required",
+    "created_by": "required",
+    "email": "nullable",
+    "expires_at": "required",
+    "group_id": "required",
+    "id": "required",
+    "label": "required",
+    "replaces_id": "nullable",
+    "revoked_at": "nullable",
+    "revoked_by": "nullable",
+    "status": "required",
+    "token": "required",
+    "used_at": "nullable",
+    "used_by": "nullable"
+  },
+  "group_join_requests": {
+    "created_at": "required",
+    "decided_at": "nullable",
+    "decided_by": "nullable",
+    "group_id": "required",
+    "id": "required",
+    "note": "required",
+    "status": "required",
+    "user_id": "required"
+  },
+  "group_members": {
+    "group_id": "required",
+    "joined_at": "required",
+    "role": "required",
+    "user_id": "required"
+  },
+  "group_message_reads": {
+    "group_id": "required",
+    "last_read_seq": "required",
+    "updated_at": "required",
+    "user_id": "required"
+  },
+  "group_message_removals": {
+    "body": "required",
+    "group_id": "required",
+    "message_id": "required",
+    "removed_at": "required",
+    "removed_by": "nullable"
+  },
+  "group_messages": {
+    "author_id": "required",
+    "body": "required",
+    "channel_id": "nullable",
+    "created_at": "required",
+    "deleted_at": "nullable",
+    "deleted_by": "nullable",
+    "edited_at": "nullable",
+    "group_id": "required",
+    "id": "required",
+    "kind": "required",
+    "reply_to_id": "nullable",
+    "seq": "required"
+  },
+  "group_recipe_items": {
+    "created_at": "required",
+    "id": "required",
+    "lesson_id": "required",
+    "name": "required",
+    "ord": "required",
+    "perm_download": "required",
+    "perm_print": "required",
+    "perm_save": "required",
+    "perm_share_out": "required",
+    "perm_view": "required",
+    "recipe_id": "required"
+  },
+  "groups": {
+    "code": "nullable",
+    "created_at": "required",
+    "id": "required",
+    "join_by": "required",
+    "kind": "required",
+    "name": "required",
+    "note": "required",
+    "owner_id": "required",
+    "privacy": "required",
+    "updated_at": "required"
+  },
+  "ingredient_catalog": {
+    "allergens": "required",
+    "created_at": "required",
+    "g_per_100": "nullable",
+    "group_id": "nullable",
+    "id": "required",
+    "key": "required",
+    "name": "required",
+    "note": "required",
+    "owner_id": "nullable",
+    "package_count": "required",
+    "package_qty": "nullable",
+    "price": "nullable",
+    "price_unit": "nullable",
+    "price_updated_at": "nullable",
+    "purchase_price": "nullable",
+    "purchase_total": "nullable",
+    "purchase_unit": "required",
+    "purchased_at": "nullable",
+    "supplier": "required",
+    "updated_at": "required",
+    "usable_pct": "nullable",
+    "water_pct": "nullable"
+  },
+  "ingredient_purchases": {
+    "created_at": "required",
+    "id": "required",
+    "key": "required",
+    "note": "required",
+    "owner_id": "required",
+    "package_count": "required",
+    "package_qty": "nullable",
+    "price": "nullable",
+    "purchase_price": "nullable",
+    "purchase_total": "nullable",
+    "purchase_unit": "required",
+    "purchased_at": "required",
+    "supplier": "required",
+    "usable_pct": "nullable"
+  },
+  "ingredients": {
+    "flour": "required",
+    "g_per_100": "nullable",
+    "id": "required",
+    "ingredient_key": "nullable",
+    "liquid": "required",
+    "name": "required",
+    "note": "required",
+    "ord": "required",
+    "price": "nullable",
+    "price_unit": "nullable",
+    "qty": "required",
+    "recipe_id": "required",
+    "sub_recipe_id": "nullable",
+    "unit": "required",
+    "unit_weight": "nullable",
+    "water_pct": "nullable"
+  },
+  "issues": {
+    "id": "required",
+    "ord": "required",
+    "problem": "required",
+    "recipe_id": "required",
+    "solution": "required"
+  },
+  "lessons": {
+    "course_id": "required",
+    "date": "nullable",
+    "done": "required",
+    "id": "required",
+    "name": "required",
+    "ord": "required",
+    "summary": "required"
+  },
+  "private_notes": {
+    "body": "required",
+    "group_item_id": "nullable",
+    "id": "required",
+    "recipe_id": "nullable",
+    "updated_at": "required",
+    "user_id": "required"
+  },
+  "production_plan_items": {
+    "id": "required",
+    "note": "required",
+    "ord": "required",
+    "plan_id": "required",
+    "qty": "required",
+    "qty_unit": "required",
+    "ready_at": "nullable",
+    "recipe_id": "required"
+  },
+  "production_plan_stock": {
+    "id": "required",
+    "key": "required",
+    "on_hand": "nullable",
+    "plan_id": "required"
+  },
+  "production_plans": {
+    "created_at": "required",
+    "id": "required",
+    "locked": "required",
+    "locked_at": "nullable",
+    "name": "required",
+    "note": "required",
+    "owner_id": "required",
+    "plan_date": "required",
+    "snapshot": "nullable",
+    "updated_at": "required"
+  },
+  "profiles": {
+    "avatar_path": "nullable",
+    "created_at": "required",
+    "display_name": "required",
+    "locale": "required",
+    "onboarding_done": "required",
+    "pro": "required",
+    "profile": "required",
+    "tools": "required",
+    "touched_units": "required",
+    "units": "required",
+    "updated_at": "required",
+    "user_id": "required"
+  },
+  "recipe_images": {
+    "bytes": "nullable",
+    "caption": "required",
+    "created_at": "required",
+    "created_by": "nullable",
+    "height": "nullable",
+    "id": "required",
+    "ord": "required",
+    "recipe_id": "required",
+    "storage_path": "required",
+    "width": "nullable"
+  },
+  "recipe_versions": {
+    "created_at": "required",
+    "created_by": "nullable",
+    "id": "required",
+    "recipe_id": "required",
+    "snapshot": "required",
+    "tag": "required",
+    "what": "required"
+  },
+  "recipes": {
+    "category": "required",
+    "created_at": "required",
+    "ddt": "nullable",
+    "dough_mode": "required",
+    "equipment": "required",
+    "flour_temp": "nullable",
+    "freezing": "required",
+    "friction": "nullable",
+    "group_id": "nullable",
+    "id": "required",
+    "is_sub": "required",
+    "labor_cost": "nullable",
+    "locked": "required",
+    "manual_allergens": "required",
+    "name": "required",
+    "notes": "required",
+    "other_cost": "nullable",
+    "owner_id": "required",
+    "packaging_cost": "nullable",
+    "pan": "nullable",
+    "room_temp": "nullable",
+    "sale_price": "nullable",
+    "sale_price_basis": "required",
+    "saved_from_item_id": "nullable",
+    "shelf_life": "required",
+    "storage": "required",
+    "tags": "required",
+    "target_fc": "required",
+    "target_gm": "nullable",
+    "thawing": "required",
+    "unit_weight": "required",
+    "updated_at": "required",
+    "version_note": "required",
+    "version_of": "nullable",
+    "weight_after": "nullable",
+    "weight_before": "nullable",
+    "yield_actual": "nullable",
+    "yield_units": "required"
+  },
+  "steps": {
+    "id": "required",
+    "kind": "nullable",
+    "minutes": "nullable",
+    "ord": "required",
+    "recipe_id": "required",
+    "temp": "nullable",
+    "temp_unit": "required",
+    "text": "required"
+  },
+  "trials": {
+    "date": "nullable",
+    "id": "required",
+    "note": "required",
+    "recipe_id": "required"
+  },
+  "_functions_comment": "Captured from the applied schema. `args` is the INPUT argument names in order: PostgREST passes RPC arguments BY NAME, so a drifted name is not a type error but a runtime 'function not found'. `security_definer` and the two execute flags are here so that a grant loosening is a failing check rather than something noticed months later — see migrations 0006 and 0010.",
+  "_functions": {
+    "apply_recipe_costing": {
+      "args": [
+        "p_id",
+        "p_recipe"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "approve_group_join": {
+      "args": [
+        "p_group_id",
+        "p_user_id"
+      ],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "broadcast_group_message": {
+      "args": [],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "can_read_recipe": {
+      "args": [
+        "p_recipe_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "check_plan_item_owner": {
+      "args": [],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "check_sub_recipe_link": {
+      "args": [],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "course_rank": {
+      "args": [
+        "p_course_id"
+      ],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "create_group": {
+      "args": [
+        "p_name",
+        "p_kind",
+        "p_note"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "create_group_invite": {
+      "args": [
+        "p_group_id",
+        "p_email",
+        "p_label"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "delete_production_plan": {
+      "args": [
+        "p_plan_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "delete_recipe": {
+      "args": [
+        "p_recipe_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "group_rank": {
+      "args": [
+        "p_group_id"
+      ],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "group_roster": {
+      "args": [
+        "p_group_id"
+      ],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "group_unread_counts": {
+      "args": [],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "guard_group_item_recipe": {
+      "args": [],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "guard_locked_plan": {
+      "args": [],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "guard_locked_plan_child": {
+      "args": [],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "guard_message_insert": {
+      "args": [],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "guard_message_update": {
+      "args": [],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "guard_owner_membership": {
+      "args": [],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "guard_recipe_group_move": {
+      "args": [],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "handle_new_user": {
+      "args": [],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "invite_state": {
+      "args": [
+        "p_invite"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "lesson_rank": {
+      "args": [
+        "p_lesson_id"
+      ],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "mark_group_read": {
+      "args": [
+        "p_group_id",
+        "p_seq"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "next_version_tag": {
+      "args": [
+        "p_recipe_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "normalize_email": {
+      "args": [
+        "p_email"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "owns_plan": {
+      "args": [
+        "p_plan_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "owns_recipe": {
+      "args": [
+        "p_recipe_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "path_recipe_id": {
+      "args": [
+        "p_name"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "path_user_id": {
+      "args": [
+        "p_name"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "publish_recipe_to_lesson": {
+      "args": [
+        "p_lesson_id",
+        "p_recipe_id",
+        "p_name"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "purchase_base_qty": {
+      "args": [
+        "p_unit",
+        "p_count",
+        "p_qty"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "purchase_history": {
+      "args": [
+        "p_key"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "recipe_snapshot": {
+      "args": [
+        "p_recipe_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "recipes_pricing_on": {
+      "args": [
+        "p_key"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "recipes_using": {
+      "args": [
+        "p_recipe_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "record_purchase": {
+      "args": [
+        "p_key",
+        "p_name",
+        "p_purchase_unit",
+        "p_package_count",
+        "p_package_qty",
+        "p_purchase_total",
+        "p_usable_pct",
+        "p_supplier",
+        "p_purchased_at",
+        "p_note"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "redeem_group_invite": {
+      "args": [
+        "p_token"
+      ],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "reject_group_invite": {
+      "args": [
+        "p_token"
+      ],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "reject_group_join": {
+      "args": [
+        "p_group_id",
+        "p_user_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "replace_recipe_children": {
+      "args": [
+        "p_recipe_id",
+        "p_ingredients",
+        "p_steps",
+        "p_issues"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "request_group_join": {
+      "args": [
+        "p_code",
+        "p_note"
+      ],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "resend_group_invite": {
+      "args": [
+        "p_invite_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "restore_recipe_version": {
+      "args": [
+        "p_version_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "revoke_group_invite": {
+      "args": [
+        "p_invite_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "role_rank": {
+      "args": [
+        "p_role"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "save_group_recipe_copy": {
+      "args": [
+        "p_item_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "save_item_note": {
+      "args": [
+        "p_item_id",
+        "p_body"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "save_private_note": {
+      "args": [
+        "p_recipe_id",
+        "p_body"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "save_production_plan": {
+      "args": [
+        "p_plan",
+        "p_items",
+        "p_stock",
+        "p_plan_id",
+        "p_expected_updated_at"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "save_recipe": {
+      "args": [
+        "p_recipe",
+        "p_ingredients",
+        "p_steps",
+        "p_issues",
+        "p_recipe_id",
+        "p_expected_updated_at",
+        "p_version_note"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "set_plan_locked": {
+      "args": [
+        "p_plan_id",
+        "p_locked",
+        "p_snapshot"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "shares_group_with": {
+      "args": [
+        "p_user_id"
+      ],
+      "security_definer": true,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "topic_group_id": {
+      "args": [
+        "p_topic"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "touch_price_updated_at": {
+      "args": [],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "touch_updated_at": {
+      "args": [],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": false
+    },
+    "unpublish_recipe_from_lesson": {
+      "args": [
+        "p_item_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    "withdraw_group_join": {
+      "args": [
+        "p_group_id"
+      ],
+      "security_definer": false,
+      "anon_execute": false,
+      "authenticated_execute": true
+    }
+  }
+}

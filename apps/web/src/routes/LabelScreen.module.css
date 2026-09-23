@@ -1,0 +1,228 @@
+/* §2 screen 8 "תווית". §16's "רקע חוץ" (--c-outer-bg) is specified for exactly
+   this screen and the order sheet: a white card on a grey surface, so the thing
+   that will become paper looks like paper before it is printed.
+
+   The label box itself is deliberately plain — black hairline, square corners,
+   no shadow. It has to survive a monochrome thermal printer. */
+
+.wrap {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-outer-bg);
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-in-group);
+  padding: 8px 16px;
+  background: var(--c-app-bg);
+  border-block-end: 1px solid var(--c-line);
+}
+
+
+.topTitle {
+  margin-inline-start: auto;
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-between-groups);
+  /* A page, not a wall. These two screens live outside the app shell — §2
+     makes them depth screens without tabs — so nothing else constrains their
+     width, and on a 1440px monitor the sheet stretched edge to edge while the
+     printed version is ~180mm. --frame-w-wide is the widest layout the rest of
+     the app uses and comes out close to a printed page. */
+  inline-size: 100%;
+  max-inline-size: var(--frame-w-wide);
+  margin-inline: auto;
+  padding: 20px 18px 34px;
+}
+
+/* ── the label ───────────────────────────────────────────────────────────── */
+.label {
+  background: var(--c-white);
+  border: 1px solid var(--c-ink);
+  border-radius: 4px;
+  padding: 16px 16px 14px;
+  color: var(--c-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.declaration {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-ink);
+  line-height: 1.6;
+}
+
+.declKey {
+  font-weight: 600;
+}
+
+.declEmpty {
+  color: var(--c-muted);
+}
+
+.footRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+  margin-block-start: 3px;
+  padding-block-start: 10px;
+  border-block-start: 1px solid var(--c-line);
+  font-size: 12px;
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.storage,
+.batchLine {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+  line-height: 1.5;
+}
+
+.haccpRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-tight);
+  flex-wrap: wrap;
+}
+
+.chip {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--r-control);
+  font-size: var(--fs-meta);
+  background: var(--c-neutral-bg);
+  color: var(--c-muted);
+}
+
+.chip_ok {
+  background: var(--c-green-bg);
+  color: var(--c-green);
+}
+
+.chip_breach {
+  background: var(--c-red-bg);
+  color: var(--c-red);
+}
+
+.chip_partial {
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+}
+
+.chip_none {
+  background: var(--c-neutral-bg);
+  color: var(--c-muted);
+}
+
+.haccpNote {
+  font-size: var(--fs-label);
+  color: var(--c-muted);
+  line-height: 1.5;
+}
+
+/* ── guidance, none of which prints ──────────────────────────────────────── */
+.warn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  padding: 12px 13px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-ink);
+}
+
+.warnTitle {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-amber);
+}
+
+.warnBody,
+.warnList {
+  font-size: var(--fs-secondary);
+  line-height: 1.7;
+}
+
+.warnList {
+  font-weight: 600;
+}
+
+.warnLink {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  color: var(--c-green);
+  font-size: var(--fs-secondary);
+}
+
+.note,
+.legal {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+.breach {
+  padding: 10px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-secondary);
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+}
+
+/* An action the width of an action. Left to its own devices it became a
+   760px-wide chocolate bar on a tablet and wider still on a desktop. */
+.printBtn {
+  max-inline-size: 320px;
+  margin-inline: auto;
+  flex: 1;
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-size: var(--fs-body-lg);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.missing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding: 24px 20px;
+  color: var(--c-ink);
+}
+
+/* On paper the "outer background" is just grey ink around a white page. The
+   global print rule whitens html and body; this whitens the screen's own
+   surface, which sits between them. Found by screenshotting the page in print
+   media rather than by reading the CSS. */
+@media print {
+  .wrap {
+    background: var(--c-white);
+  }
+}

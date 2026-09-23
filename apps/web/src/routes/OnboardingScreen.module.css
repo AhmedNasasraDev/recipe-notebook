@@ -1,0 +1,225 @@
+.outer {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-outer-bg);
+}
+
+.frame {
+  width: 100%;
+  max-width: var(--frame-w);
+  height: 100vh;
+  height: 100dvh;
+  max-height: var(--frame-h);
+  display: flex;
+  flex-direction: column;
+  background: var(--c-app-bg);
+  overflow: hidden;
+}
+
+/* 560, not 440 — the same threshold AppShell uses, and for the same reason: at
+   440 an iPhone 16 Pro Max (440×956) was handed a rounded, shadowed window
+   instead of its own screen. Onboarding kept its own copy of this rule, so it
+   kept its own copy of the bug. */
+@media (min-width: 560px) and (min-height: 900px) {
+  .frame {
+    border-radius: 28px;
+    box-shadow: 0 24px 60px rgba(23, 26, 24, 0.18);
+  }
+}
+
+.head {
+  flex: none;
+  padding: 34px 20px 12px;
+}
+
+.dots {
+  display: flex;
+  gap: 5px;
+}
+.dotOn,
+.dotOff {
+  height: 4px;
+  flex: 1;
+  border-radius: var(--r-pill);
+}
+.dotOn {
+  background: var(--c-green);
+}
+.dotOff {
+  background: var(--c-line);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  font-weight: var(--fw-title);
+  line-height: 1.2;
+  color: var(--c-ink);
+  margin-top: 14px;
+}
+.sub {
+  margin-top: 7px;
+  font-size: var(--fs-body);
+  color: var(--c-muted);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 20px 20px;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+}
+
+.card,
+.cardOn {
+  width: 100%;
+  text-align: start;
+  padding: 13px var(--pad-card);
+  /* A choice you press takes the control radius, not 13. */
+  border-radius: var(--r-control);
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: var(--hit-min);
+}
+.cardOn {
+  border-color: var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green);
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.3;
+  color: var(--c-ink);
+}
+.cardDesc {
+  font-size: var(--fs-secondary);
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-between-groups);
+}
+
+.groupTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: 400;
+  color: var(--c-muted);
+  margin-bottom: 7px;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.pill,
+.pillOn {
+  min-height: var(--hit-min);
+  padding-inline: 13px;
+  border-radius: var(--r-control);
+  font-size: var(--fs-secondary);
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-muted);
+}
+.pillOn {
+  border-color: var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green);
+}
+
+.tool,
+.toolOn {
+  width: 100%;
+  text-align: start;
+  min-height: 46px;
+  padding: 0 var(--pad-card);
+  /* A choice you press takes the control radius, not 13. */
+  border-radius: var(--r-control);
+  font-size: var(--fs-body);
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-ink);
+}
+.toolOn {
+  border-color: var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green);
+}
+
+.note {
+  margin-top: 4px;
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+
+.sysNote {
+  padding: 11px 12px;
+  background: var(--c-green-bg);
+  border-radius: var(--r-card);
+  font-size: var(--fs-secondary);
+  color: var(--c-green);
+  line-height: 1.6;
+}
+
+.foot {
+  flex: none;
+  display: flex;
+  gap: var(--gap-in-group);
+  padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--c-line);
+  background: var(--c-app-bg);
+}
+
+.back {
+  min-height: 48px;
+  padding-inline: 18px;
+  border-radius: var(--r-control);
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-muted);
+  font-size: var(--fs-body-lg);
+}
+
+.next {
+  flex: 1;
+  min-height: 48px;
+  border-radius: var(--r-control);
+  border: 0;
+  background: var(--c-green);
+  color: var(--c-white);
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+/* The one line a confirmation link earns on arrival (QA 22.09.2026, finding 31). */
+.verified {
+  margin: 0 0 var(--gap-in-group);
+  padding: 10px 12px;
+  border-radius: var(--r-control);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-secondary);
+}

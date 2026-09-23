@@ -1,0 +1,14 @@
+PASS A1 save saved → 31c214d8-8b13-43f4-9eaf-5d2d7aa26c38 ; notice: המתכון נשמר במחברת
+PASS A2 reload recipe and 2 יח' for eggs still there after reload
+PASS A3 edit persists after edit + reload: true
+PASS A4 no duplicate on save notebook has 1 recipe(s) named בדיקה-QA סטטוס
+PASS A5 duplicate copy 3d6ed870-efbf-4fad-8434-595bef8848fe; title: בדיקה-QA סטטוס — נערך (עותק) אחר 500 גר' המת
+PASS A6 original untouched editing the copy left the original as it was
+FAIL A7 upload + reload hero after upload and reload: false
+PASS A8 replace + reload object changed: 5f7fe5f1-2f82-4747-b78f-d8c95ac3822f.webp → 33d4fdc7-981d-4dd2-a574-0afcc64faab0.webp
+PASS A9 delete image + reload no hero after delete + reload: true
+FAIL A-refused-delete ERROR TimeoutError: locator.click: Timeout 15000ms exceeded. Call log: [2m - waiting for locator('button:has-text("כן, למחוק")').first()[22m 
+FAIL A-real-delete ERROR TimeoutError: locator.click: Timeout 15000ms exceeded. Call log: [2m - waiting for locator('button:has-text("כן, למחוק")').first()[22m 
+PASS C4 notebook → recipe → cook → exit → notebook /recipe/cd1630f3-4a80-4a74-b4ea-775d29cd64c0 → /recipe/cd1630f3-4a80-4a74-b4ea-775d29cd64c0/cook → exit → /recipe/cd1630f3-4a80-4a74-b4ea-775d29cd64c0 → "המחברת" (BUTTON ) → /notebook
+NET4xx: []
+SUMMARY: 9/12 passed

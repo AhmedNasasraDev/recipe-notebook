@@ -1,0 +1,1213 @@
+/* §14 Cook Mode. Once the one dark screen in the app — now light like the
+   rest of it.
+
+   THE HISTORY, BECAUSE THE TOKEN NAMES STILL CARRY IT.
+
+   §14 named a near-black surface (#171A18) with cool greys on it; a later pass
+   warmed that to a dark chocolate. Ahmed's decision is that the weighing list
+   and the steps read light, so the five `--c-cook-*` tokens kept their names
+   and took light values (tokens.css says so in one place). Every pair on this
+   screen is therefore dark-on-light again, measured by the contrast guard in
+   tokens.test.ts the same way as the rest of the application. What §14 fixed
+   and this pass did not touch: the two type sizes (--fs-cook-body 25px,
+   --fs-cook-step 54px) and the 44px targets. */
+
+/* The screen owns the whole viewport. `min-height: 100%` resolved
+   against an ancestor that has no height of its own, so a short preparation
+   left a band of the light application showing under it — invisible while the
+   app background was near-white, a seam now that it is cream. */
+.wrap {
+  min-block-size: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-between-groups);
+  /*
+    A CENTRED WORKING COLUMN ON A BIG SCREEN.
+
+    Looked at on a desktop: the weighing rows were 1,770px wide, so the eye
+    travelled the whole monitor between "חמאה" and "250 גר'". The surface stays
+    full-bleed — a kitchen screen should own the display — and the CONTENT is
+    capped at 720 and centred by the padding, which is one declaration instead
+    of a wrapper element.
+  */
+  padding-block: 14px 22px;
+  padding-inline: max(18px, calc((100% - 720px) / 2));
+  /* Anything scrolled into view — the last checkbox under a keyboard — stops
+     above the pinned bar rather than under it. */
+  scroll-padding-block-end: 132px;
+  background: var(--c-cook-bg);
+  color: var(--c-cook-text);
+}
+
+.head {
+  display: flex;
+  /* Four controls and a name on a 360px phone do not fit one line; the
+     controls wrap and the name takes its own line under them rather than
+     the last control being cut off at the edge (seen at 402px, QA 22.09). */
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--gap-tight) var(--gap-in-group);
+}
+
+/*
+  The two screen-level controls — the way out and the fullscreen toggle — are
+  grouped at the inline start, where the thumb is, and the recipe's name takes
+  the rest of the row with its text still reading from the start edge. Nothing
+  sits in the far corner of the row, which is also where the audit page's
+  simulation chip is pinned.
+*/
+.recipeName {
+  flex: 1 1 100%;
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  color: var(--c-cook-text);
+  text-align: start;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* "עריכת המתכון" on the two dead-end states, and nothing else: the way OUT of
+   Cook Mode is components/BackLink now (§4), on this screen as on every
+   other. */
+.exit {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  padding-inline: 12px;
+  border-radius: var(--r-control);
+  color: var(--c-cook-text);
+  font-size: var(--fs-secondary);
+  text-decoration: none;
+  flex: none;
+}
+
+/* The one thing the shared control needs on this screen: it must not be
+   squeezed by the recipe's name beside it. */
+.exitPill {
+  flex: none;
+}
+
+/* ── the progress bar: one segment per step ───────────────────────────── */
+.bar {
+  display: flex;
+  gap: 4px;
+}
+
+.seg,
+.segDone,
+.segNow {
+  flex: 1;
+  /* A 44px target with an 8px bar inside it: the bar is thin, the tap is not.
+     Height only — global.css's `button { min-width: var(--hit-min) }` (spec
+     §3.4's 44px-wide floor for a standalone button) does not fit a row of N
+     segments sharing one continuous bar: at 28 steps that floor alone asks
+     for 1,232px, wider than any phone, which is the real cause of a
+     23.09.2026 real-device report (content cut off at the screen's edge,
+     confirmed by a screenshot of this exact bar touching the left edge with
+     no padding). `min-width: 0` here is the override, restoring the plain
+     `flex: 1` shrink the row was written for. */
+  min-width: 0;
+  min-height: var(--hit-min);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.seg::after,
+.segDone::after,
+.segNow::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 8px;
+  border-radius: 999px;
+  background: var(--c-cook-line);
+}
+
+/* On a light screen: a finished segment is the action green, the segment you
+   are ON is the darkest thing on the bar and taller than the others, and what
+   is left is the border colour. Brightness AND height tell them apart, not
+   hue alone. */
+.segDone::after {
+  background: var(--c-cook-accent);
+}
+
+.segNow::after {
+  background: var(--c-cook-text);
+  height: 12px;
+}
+
+.count {
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+}
+
+/* ── Mise en place: the first stage ───────────────────────────────────────
+   Same surface, same tokens, same type scale as the rest of the screen —
+   it is a stage of Cook Mode, not a screen of its own. What is deliberately
+   bigger than the app's default is the tap target: a 64px row and a 28px box,
+   because this is operated with wet hands while looking at a scale, and the
+   penalty for a mis-tap here is weighing something twice. */
+.mise {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  flex: 1;
+}
+
+/* The heading is the biggest thing here, and the instruction is not: the first
+   screenshot of this stage had a 16px title over 25px help text, which reads as
+   a caption over a headline. The ingredient NAMES stay at §14's 25px, because
+   those are what is read from arm's length at the scale. */
+.miseTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-cook-body);
+  line-height: 1.2;
+  color: var(--c-cook-text);
+}
+
+.miseHelp {
+  font-size: var(--fs-body-lg);
+  line-height: 1.5;
+  color: var(--c-cook-text);
+}
+
+.miseScale,
+.miseEmpty {
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+  line-height: 1.6;
+}
+
+/*
+  The line that says what is still unticked (§7). Secondary voice — it is a
+  statement, not a warning: since Ahmed's change the preparation is reachable
+  either way, and this says what is left behind. It disappears the moment the
+  list is complete.
+*/
+.gateNote {
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+  line-height: 1.6;
+}
+
+.miseDone {
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  color: var(--c-cook-text);
+}
+
+/* Room for the pinned bar at the end of the list: the last card is fully
+   clear of it at the bottom of the scroll, with no layer over it. `--bar-room`
+   is the bar's own height (count + optional "100%" line + the 60px gate). */
+.miseList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  margin: 0;
+  padding: 0 0 8px;
+  list-style: none;
+}
+
+.miseRow,
+.miseRowOn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 14px;
+  border: 1px solid var(--c-cook-line);
+  border-radius: var(--r-card);
+  background: var(--c-cook-raised);
+  color: var(--c-cook-text);
+  cursor: pointer;
+}
+
+/*
+  TICKED, AND STILL LEGIBLE — §7, WHICH THIS ROW WAS BREAKING.
+
+  A finished line used to be filled with the action colour itself: dark sage
+  with the surface colour on it. The handoff is explicit about that exact
+  thing — "רקע ירוק עדין לרכיב שהוכן. אין שורות ירוקות כהות או מחיקת טקסט
+  שמקשה לקרוא את המשקל" — and it is right: half the list is finished most of
+  the time, and reading 500 גרם off a dark block while holding a scale is
+  harder than it needs to be.
+
+  So a ticked row is the palette's own SELECTION tint with the ordinary ink on
+  it, and the sage moves to the border and the tick. The weight is unchanged
+  and the text keeps its colour, so "what is left" is answered by two things
+  at once — the fill and the mark in the box — and never by colour alone.
+*/
+.miseRowOn {
+  border-color: var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-cook-text);
+}
+
+.miseBox {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  accent-color: var(--c-cook-accent);
+  cursor: pointer;
+}
+
+.miseRowOn .miseBox {
+  accent-color: var(--c-green);
+}
+
+.miseName {
+  font-size: var(--fs-cook-body);
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+}
+
+.miseQty {
+  font-size: var(--fs-cook-body);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex: none;
+  /* The handoff separates the weight from the name with a hairline — worth
+     copying: it is the column the eye runs down while weighing. `inline-start`
+     is the edge facing the name in either direction. */
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid color-mix(in srgb, var(--c-cook-line) 70%, transparent);
+}
+
+.miseHint {
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+  flex: none;
+}
+
+.miseRowOn .miseHint {
+  color: var(--c-cook-muted);
+}
+
+/*
+  §7: "איפוס סימונים משני ומוגן מאובדן בטעות". Secondary — an outlined
+  control under the list, never beside the thing that starts the work — and it
+  asks first, because a mis-tap here means weighing a whole list again.
+*/
+.resetRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-tight);
+  align-items: center;
+}
+
+.reset {
+  min-height: var(--hit-compact);
+  padding-inline: 14px;
+  border: 1px solid var(--c-cook-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-cook-muted);
+  font: inherit;
+  font-size: var(--fs-secondary);
+  cursor: pointer;
+}
+
+.resetConfirm {
+  border-color: var(--c-green);
+  color: var(--c-green-ink);
+  background: var(--c-green-bg);
+}
+
+.reset:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.resetAsk {
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+}
+
+/* ── the progress line and the gate, pinned to the bottom ────────────────
+   Cook Mode is the one screen the product renders OUTSIDE the AppShell (§14
+   asks for a full screen without tabs), so the DOCUMENT is what scrolls it.
+   With six ingredients on a 620px-tall phone the gate was already off screen,
+   and the count that says whether the stage is finished was off the other end
+   — so the answer to "can I start?" was nowhere to be seen. Both ride along
+   at the bottom now.
+
+   NO FADE OVER THE LIST — AND THE REASON IT WAS THERE IS FIXED
+
+   This bar used to carry `box-shadow: 0 -10px 14px 10px` in the screen's own
+   colour: 24px of opaque wash painted OVER whatever was above it, which on a
+   full list was the bottom of the last ingredient — its weight and its
+   checkbox, half dissolved. It was there to soften the edge a row crosses as
+   it scrolls under the bar.
+
+   The edge is drawn instead of faded (a 1px line, the same one every card
+   uses), and the list is given room for the bar at its end, so at the bottom
+   of the scroll the last row sits ABOVE it in full and nothing is ever
+   covered. `scroll-padding-block-end` on the page does the same for
+   `scrollIntoView`, so focusing the last checkbox with a keyboard does not
+   park it under the bar either. */
+.gateBar {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 1;
+  margin-block-start: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  padding-block: 12px;
+  background: var(--c-cook-bg);
+  border-block-start: 1px solid var(--c-cook-line);
+}
+
+/* The gate. Full width, 60px, and unmistakably inert until the list is done. */
+.start {
+  min-height: 60px;
+  padding: 12px 18px;
+  border: 1px solid var(--c-cook-accent);
+  border-radius: var(--r-control);
+  background: var(--c-cook-accent);
+  color: var(--c-cook-on-accent);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/*
+  A SHUT BUTTON IS STILL READ.
+  This was `opacity: 0.6` over the muted ink, which computes to about 2.7:1 on
+  the page — the label of the one control that decides whether the stage is
+  finished, too faint to read in a lit kitchen. The shape carries the state
+  instead: an outline where the open button is filled sage, in the secondary
+  ink, which measures 5.20:1. The line above it says why it is shut.
+*/
+.start:disabled {
+  border-color: var(--c-cook-line);
+  background: transparent;
+  color: var(--c-cook-muted);
+  cursor: default;
+}
+
+/* ── the step ─────────────────────────────────────────────────────────── */
+.stepBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  flex: 1;
+}
+
+.stepBox:focus {
+  outline: none;
+}
+.stepBox:focus-visible {
+  outline: 2px solid var(--c-cook-text);
+  outline-offset: 6px;
+  border-radius: var(--r-card);
+}
+
+.stepNum {
+  font-family: var(--font-display);
+  font-size: var(--fs-cook-step);
+  line-height: 1;
+  color: var(--c-cook-muted);
+}
+
+.stepText {
+  font-size: var(--fs-cook-body);
+  line-height: 1.5;
+  color: var(--c-cook-text);
+}
+
+.stepMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-tight);
+  align-items: center;
+}
+
+/*
+  §8's chips: the temperature and the time, each as one readable object on the
+  selection tint — this is the information a cook checks from two steps away,
+  and it used to be a line of grey small print under the instruction.
+*/
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--hit-compact);
+  padding-inline: 12px;
+  border-radius: var(--r-control);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The kind of step — עבודה, אפייה — is context rather than a number. */
+.chipQuiet {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-compact);
+  padding-inline: 12px;
+  border-radius: var(--r-control);
+  border: 1px solid var(--c-cook-line);
+  color: var(--c-cook-muted);
+  font-size: var(--fs-secondary);
+}
+
+.mark,
+.markOn {
+  margin-block-start: 6px;
+  min-height: 56px;
+  padding: 12px 18px;
+  border: 1px solid var(--c-cook-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-cook-text);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.markOn {
+  border-color: var(--c-cook-accent);
+  background: var(--c-cook-accent);
+  color: var(--c-cook-on-accent);
+}
+
+/* The two ways to start a timer on a step, side by side and wrapping on a
+   narrow phone: the recipe's own time, and the one you set yourself (§8). */
+.timerRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-tight);
+  align-items: center;
+}
+
+.timerStart,
+.timerGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--hit-min);
+  padding: 10px 16px;
+  border: 1px solid var(--c-cook-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-cook-text);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.timerStart:disabled {
+  /* Legible while it is off, like every other disabled control here. */
+  color: var(--c-cook-muted);
+  background: var(--c-neutral-bg);
+  cursor: default;
+}
+
+.timerGhost {
+  color: var(--c-cook-muted);
+  border-style: dashed;
+}
+
+.timerStart:focus-visible,
+.timerGhost:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.ownTimer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-tight);
+  align-items: center;
+}
+
+.ownLabel {
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+}
+
+.ownInput {
+  inline-size: 5.5ch;
+  min-height: var(--hit-min);
+  padding-inline: 10px;
+  border: 1px solid var(--c-cook-line);
+  border-radius: var(--r-control);
+  background: var(--c-cook-raised);
+  color: var(--c-cook-text);
+  font: inherit;
+  font-size: var(--fs-body-lg);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.ownInput:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 1px;
+}
+
+/* ── the parallel timers ──────────────────────────────────────────────── */
+/*
+  QA 22.09.2026, §5. The clock is the biggest thing on the screen: 48px in
+  the ordinary view, 72px and up in fullscreen, tabular digits so the numbers
+  do not jitter. Each timer is a card in one of three colours AND one of
+  three written states — running, paused, finished — so the state is never
+  colour alone. The controls are 52px tall, a glyph beside a word.
+*/
+.timers {
+  display: grid;
+  gap: var(--gap-in-group);
+}
+
+.timer,
+.timerPaused,
+.timerDone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 2px solid var(--c-cook-line);
+  border-radius: var(--r-card);
+  background: var(--c-cook-raised);
+}
+
+.timerPaused {
+  border-color: var(--c-amber);
+  background: var(--c-amber-bg);
+}
+
+/* §14: "מסומנים באדום בסיום" — and said in words in `.timerState`. */
+.timerDone {
+  border-color: var(--c-red);
+  background: var(--c-red-bg);
+}
+
+.timerHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--gap-in-group);
+}
+
+.timerStep {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-cook-text);
+}
+
+.timerState {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+  color: var(--c-cook-text);
+}
+
+.timerDone .timerState {
+  color: var(--c-red);
+}
+
+.timerPaused .timerState {
+  color: var(--c-amber);
+}
+
+.timerClock {
+  display: block;
+  font-family: var(--font-display);
+  font-size: calc(48px * var(--cook-text-scale));
+  font-weight: var(--fw-title);
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-cook-text);
+  text-align: center;
+}
+
+.timerDone .timerClock {
+  color: var(--c-red);
+}
+
+.timerBar {
+  block-size: 8px;
+  border-radius: var(--r-control);
+  background: color-mix(in srgb, var(--c-cook-line) 70%, transparent);
+  overflow: hidden;
+}
+
+.timerBarFill {
+  display: block;
+  block-size: 100%;
+  background: var(--c-cook-accent);
+  transition: inline-size 250ms linear;
+}
+
+.timerDone .timerBarFill {
+  background: var(--c-red);
+}
+
+.timerMeta,
+.timerDoneText {
+  margin: 0;
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+  text-align: center;
+}
+
+.timerDoneText {
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-title);
+  color: var(--c-red);
+}
+
+.timerActions {
+  display: flex;
+  gap: var(--gap-in-group);
+}
+
+.timerBtn,
+.timerBtnPrimary {
+  flex: 1;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 2px solid var(--c-cook-text);
+  border-radius: var(--r-control);
+  background: var(--c-cook-raised);
+  color: var(--c-cook-text);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.timerBtnPrimary {
+  background: var(--c-cook-text);
+  color: var(--c-cook-raised);
+  border-color: var(--c-cook-text);
+}
+
+.timerBtn:focus-visible,
+.timerBtnPrimary:focus-visible {
+  outline: 3px solid var(--c-cook-accent);
+  outline-offset: 2px;
+}
+
+/* The step's own row, before a timer exists on it. */
+.timerIdle {
+  flex: 1 1 100%;
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-muted);
+}
+
+.cancelledNote {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-select);
+  color: var(--c-cook-text);
+  font-size: var(--fs-secondary);
+}
+
+/* Fullscreen: the clock is the centrepiece of the display. */
+.focus .timerClock {
+  font-size: clamp(72px, 14vw, 128px);
+}
+
+.focus .timerBtn,
+.focus .timerBtnPrimary {
+  min-height: 60px;
+  font-size: var(--fs-body-lg);
+}
+
+/* Lines that are not weighed — said under the list, never dropped silently. */
+.miseSkipped {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-secondary);
+  line-height: 1.6;
+}
+
+/* ── the ingredients, on demand ───────────────────────────────────────── */
+.ings {
+  border-block-start: 1px solid var(--c-cook-line);
+  padding-block-start: 10px;
+}
+
+.ingsSummary {
+  min-height: var(--hit-min);
+  display: flex;
+  align-items: center;
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-text);
+  cursor: pointer;
+}
+
+.ingsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  padding-block-start: 6px;
+}
+
+.ingRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+  font-size: var(--fs-secondary);
+  color: var(--c-cook-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── the footer ───────────────────────────────────────────────────────── */
+/*
+  BUG FIX (23.09.2026, real-device report on the redeployed Preview): a short
+  step left "הקודם" / "סיימתי" stranded mid-screen, with a large empty band
+  of `.wrap`'s own background below them — `.wrap` is `min-block-size:
+  100dvh` (deliberately, so cook mode's own colour fills a short screen
+  instead of the app showing through under it — see `.wrap`'s comment), but
+  nothing pushed THIS bar down to the true bottom edge, so it just sat where
+  the content happened to end.
+
+  `.gateBar` (mise en place's own bottom bar) already solves exactly this
+  with `position: sticky` + `inset-block-end: 0` + `margin-block-start:
+  auto`: pinned to the viewport's bottom when content is short, scrolls with
+  the page and never overlaps it when content is tall. This bar gets the
+  same treatment, so a cook's thumb finds the primary action in the same
+  place regardless of how long the step's text is.
+*/
+.foot {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 1;
+  margin-block-start: auto;
+  display: flex;
+  gap: var(--gap-in-group);
+  padding-block: 12px;
+  background: var(--c-cook-bg);
+  border-block-start: 1px solid var(--c-cook-line);
+}
+
+.navBtn {
+  flex: 1;
+  min-height: 52px;
+  border: 1px solid var(--c-cook-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-cook-text);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  cursor: pointer;
+}
+
+/* The forward move, filled — the same green as "סיום ההכנה", so the bottom
+   right of the screen always holds the one button that continues the work. */
+.navNext {
+  border-color: var(--c-cook-accent);
+  background: var(--c-cook-accent);
+  color: var(--c-cook-on-accent);
+  font-weight: var(--fw-title);
+}
+
+/* Same reasoning as the gate: "הקודם" on the first step is unavailable, not
+   invisible. */
+.navBtn:disabled {
+  border-color: var(--c-cook-line);
+  color: var(--c-cook-muted);
+  cursor: default;
+}
+
+.finish {
+  flex: 1;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-control);
+  background: var(--c-cook-accent);
+  color: var(--c-cook-on-accent);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ── nothing to cook ──────────────────────────────────────────────────── */
+.missing {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gap-in-group);
+  padding: 22px 18px;
+  background: var(--c-cook-bg);
+  color: var(--c-cook-text);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+}
+
+.missingTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  color: var(--c-cook-text);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   "מסך מלא" AND THE FOCUSED MODE
+
+   The button is quiet — it is not what you press to start work — and it says
+   which of the two states it is in. When the mode is on, the screen fills the
+   whole viewport, the padding tightens, and nothing that is not the
+   preparation is on it. Cook Mode has no tab bar to hide; what focus mode
+   removes is the breathing room the page keeps when it is one screen among
+   many.
+   ───────────────────────────────────────────────────────────────────────── */
+.fsBtn {
+  flex: none;
+  min-height: var(--hit-compact);
+  padding-inline: 12px;
+  border: 1px solid var(--c-cook-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-cook-muted);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  cursor: pointer;
+}
+
+/*
+  Spec §3.3 / U-2 follow-up (stage 9, 23.09.2026, Ahmed: "תקטין גם שם"). Was
+  filled in the accent colour — the loudest thing in a bar whose other
+  control, "מסך מלא", is a quiet outline. Print is occasional here (the
+  cooking itself is not), so it now matches .fsBtn's own quiet treatment:
+  same border, same transparent fill, same muted ink. Position, label, icon
+  and the 44px height are unchanged — only the two are the same weight now.
+*/
+.printBtn {
+  flex: none;
+  min-height: var(--hit-compact);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-inline: 12px;
+  border: 1px solid var(--c-cook-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-cook-muted);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.printBtn:focus-visible {
+  outline: 2px solid var(--c-cook-accent);
+  outline-offset: 2px;
+}
+
+.fsBtn[aria-pressed='true'] {
+  border-color: var(--c-cook-accent);
+  background: var(--c-select);
+  color: var(--c-cook-accent);
+}
+
+.fsBtn:focus-visible {
+  outline: 2px solid var(--c-cook-accent);
+  outline-offset: 2px;
+}
+
+/* Said once, only when a real fullscreen was refused, and never as an error. */
+.fsNote {
+  padding: 8px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-select);
+  color: var(--c-cook-text);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+
+.focus {
+  /* The mode fills whatever it is given: a real fullscreen element, or the
+     frame it is embedded in. `100dvh` covers both. */
+  min-block-size: 100dvh;
+  padding-block: 10px 14px;
+  padding-inline: max(14px, calc((100% - 860px) / 2));
+  gap: var(--gap-in-group);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   LANDSCAPE — THE PHONE ON ITS SIDE
+
+   Wide and SHORT: the height is the scarce thing, so the 54px step numeral
+   and the generous gaps have to give way to the instruction, which is what is
+   actually being read. Nothing is rotated and no orientation is locked — this
+   is the same markup laid out for the space that exists.
+
+   Keyed on the aspect ratio AND a short viewport so a tablet held in
+   landscape (which has plenty of height) keeps the portrait layout.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (orientation: landscape) and (max-height: 600px) {
+  .wrap {
+    padding-block: 8px 12px;
+    gap: var(--gap-in-group);
+    /* Room for the pinned step bar, so the end of a long instruction and the
+       end of the ingredient list both clear it. */
+    scroll-padding-block-end: 76px;
+  }
+
+  .head {
+    /* The name is the first thing to give up its line. */
+    gap: var(--gap-tight);
+  }
+
+  .recipeName {
+    font-size: var(--fs-secondary);
+  }
+
+  /*
+    §8: "לרוחב בפריסה מותאמת עם הוראה מימין וטיימר/מידע משמאל".
+
+    Two columns, and which is which follows the writing direction rather than
+    a hard-coded side: the instruction takes the first column — the right, in
+    Hebrew — and the facts and controls take the second. The numeral rides
+    with the instruction, as a figure beside it rather than a headline over
+    it, because on a short screen the height belongs to the words.
+
+    The instruction column scrolls on its own, so a long step is read by
+    scrolling the text and never by pushing the controls off the screen.
+  */
+  .stepBox {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(190px, 1fr);
+    grid-template-areas:
+      'text facts'
+      'text mark'
+      'text timer';
+    align-items: start;
+    column-gap: 18px;
+    row-gap: 8px;
+    overflow: hidden;
+    min-block-size: 0;
+  }
+
+  .stepNum {
+    font-size: 26px;
+    grid-area: text;
+    align-self: start;
+  }
+
+  .stepText {
+    grid-area: text;
+    /* The numeral sits in the same cell, so the text is indented past it
+       rather than overlapping it. `padding-inline-start` is the right in
+       Hebrew and the left anywhere else. */
+    padding-inline-start: 40px;
+    font-size: 21px;
+    line-height: 1.45;
+    overflow-y: auto;
+    max-block-size: 100%;
+  }
+
+  .stepMeta {
+    grid-area: facts;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* The facts column reads as one card, like the handoff draws it. */
+  .chip,
+  .chipQuiet {
+    justify-content: center;
+  }
+
+  .mark,
+  .markOn {
+    grid-area: mark;
+    min-height: 48px;
+    align-self: start;
+  }
+
+  .timerRow {
+    grid-area: timer;
+    align-self: start;
+  }
+
+  /*
+    The facts column has about 200px of height in landscape and three things
+    to fit in it — the chips, the mark and the two ways to start a timer — so
+    each one gives up its portrait padding. Measured: at the portrait sizes
+    the personal-timer control was clipped by the step box.
+  */
+  .chip,
+  .chipQuiet {
+    min-height: 36px;
+    font-size: var(--fs-body);
+  }
+
+  .timerStart,
+  .timerGhost {
+    min-height: 38px;
+    padding: 6px 12px;
+    font-size: var(--fs-meta-lg);
+  }
+
+  .ownInput {
+    min-height: 38px;
+  }
+
+  .miseTitle {
+    font-size: 20px;
+  }
+
+  /*
+    The weighing list in landscape (QA 22.09.2026, acceptance finding 14):
+    at 402px of height the pinned bar — count, note and a 60px gate — took
+    more than half of it and left one row of the list showing. The bar is
+    folded into one row and the gate to a 44px control; the two sentences
+    that explain the list are dropped, since the list itself is the
+    explanation on a screen this short.
+  */
+  .gateBar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    padding-block: 6px;
+  }
+  .gateBar .count,
+  .gateBar .miseDone,
+  .gateBar .gateNote {
+    margin: 0;
+    font-size: var(--fs-meta-lg);
+  }
+  .gateBar .gateNote {
+    flex-basis: 100%;
+  }
+  .gateBar .start {
+    min-height: 44px;
+    padding: 8px 16px;
+    flex: 1 1 auto;
+  }
+  .miseHelp {
+    display: none;
+  }
+
+  .miseHelp {
+    /* Still the app's body size — a phone on its side is still a phone — but
+       it gives up its leading, which is what the short screen needs. */
+    font-size: var(--fs-body);
+    line-height: 1.35;
+  }
+
+  /* The stage's own stack tightens so the list starts higher: on a 402px-tall
+     screen the title, the instruction and the batch line were using a third of
+     the height between them. */
+  .mise {
+    gap: var(--gap-tight);
+  }
+
+  /* The weighing list becomes two columns. The reading order is the row: with
+     `dir="rtl"` the first card is top-right, the second top-left, and then the
+     next row — the way the one-column list reads, only wider. Each quantity
+     stays inside its own card beside its own ingredient, so the pairing cannot
+     be misread across the gap. */
+  .miseList {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--gap-in-group);
+  }
+
+  .miseRow,
+  .miseRowOn {
+    min-height: 56px;
+  }
+
+  .miseName {
+    font-size: var(--fs-body-lg);
+  }
+
+  .miseQty {
+    font-size: var(--fs-body-lg);
+  }
+
+  /*
+    THE WAY FORWARD STAYS ON SCREEN.
+    Held sideways there is no room for the instruction, the marking button, the
+    timer, the ingredient list AND the two step buttons: measured at 874×402
+    the pair sat below the fold, so continuing meant scrolling first. The bar
+    pins itself to the bottom of the viewport the same way the weighing gate
+    does — in flow, pushed down by `margin-block-start: auto`, with a drawn
+    edge instead of a shadow, and the scroll padding that keeps the last line
+    of a long instruction clear of it.
+  */
+  .foot {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 1;
+    margin-block-start: auto;
+    padding-block: 8px;
+    background: var(--c-cook-bg);
+    border-block-start: 1px solid var(--c-cook-line);
+  }
+
+  .navBtn,
+  .finish {
+    min-height: 48px;
+  }
+
+  .start {
+    min-height: 52px;
+  }
+}
+
+/* The running-timer strip keeps its targets and loses its padding — on a short
+   screen it is competing with the instruction for the same pixels. */
+@media (orientation: landscape) and (max-height: 600px) {
+  .timers {
+    gap: var(--gap-tight);
+  }
+
+  .timer,
+  .timerPaused,
+  .timerDone {
+    padding-block: 8px;
+  }
+
+  .timerClock {
+    font-size: calc(40px * var(--cook-text-scale));
+  }
+
+  .focus .timerClock {
+    font-size: clamp(56px, 10vh, 96px);
+  }
+}
+
+/* In fullscreen on a phone the head carries four controls; with the print
+   button's caption they wrap to two lines and "חזרה לשקילה" sits alone on
+   the second (QA 22.09.2026, acceptance finding 42). The icon and its
+   aria-label are the whole button there. */
+@media (max-width: 480px) {
+  .focus .printBtn span {
+    display: none;
+  }
+  .focus .printBtn {
+    padding-inline: 10px;
+  }
+}

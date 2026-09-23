@@ -1,0 +1,238 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+ * Design tokens.
+ *
+ * WHERE THIS CAME FROM
+ *
+ * Spec §3.1 (SPEC.pdf, "דף אפיון — תיקון באגים וייצוב", stage 4, 23.09.2026)
+ * is the palette now, verbatim, and §3.2 the two faces: Heebo for the
+ * interface, Frank Ruhl Libre for headings and the recipe page. Eleven named
+ * colours and no others; the two banner tints below are the amber and the red
+ * laid over the paper at 14% and 12% (see their comment), not colours of
+ * their own.
+ *
+ * Everything structural is unchanged: the radius scale, the spacing, the 44px
+ * hit target, the phone frame, and the provenance colours keyed to the engine.
+ *
+ * ONE PLACE. Every screen reads these names and no stylesheet declares a
+ * colour of its own — `styles/tokens.test.ts` enforces both that and the
+ * contrast of every pairing.
+ * ───────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── the palette — spec §3.1, in its own words ─────────────────────────── */
+  --c-base: #e9ece8; /* משטח עבודה */
+  --c-surface: #fbfbf9; /* נייר ממשק */
+  --c-recipe-paper: #fdfbf6; /* נייר מתכון — the recipe page and its print */
+  --c-text: #171a18; /* דיו */
+  /*
+    Ahmed's decision (23.09.2026, following "תאשר"): darkened from the spec's
+    own grey (hex 6e7a73), which measured 3.76:1 on the workspace and 4.32:1 on paper —
+    AA for large text, short of it for body text. This is that grey at 88%
+    black, same hue, no new colour: 4.64:1 on the workspace, 5.33:1 on paper,
+    the floor everywhere it is used as text (asserted in tokens.test.ts).
+  */
+  --c-muted-ink: #616b65; /* אפור, מוחשך לנגישות */
+  --c-border: #cdd4ce; /* קווים */
+  --c-accent: #1e6b4c; /* ירוק — פעולות, אייקונים, בחירה */
+  --c-select: #e2efe8; /* ירוק רך — רקע לבחירה ולאייקונים */
+  /*
+    Same decision as the grey, same reason: the spec's amber (hex a56a0e) measured
+    3.66:1 on its own banner. This is that amber at 85% black: 4.92:1 on the
+    workspace, 5.66:1 on paper, 4.64:1 on its own banner fill below.
+  */
+  --c-amber: #8c5a0c; /* ענבר — אזהרה, "נתון מערכת" (מוחשך לנגישות) */
+  --c-red: #9e362c; /* אדום — שגיאה, מחיקה, "הערכה גסה" */
+  --c-warm: #c4a99b; /* שוליים חמים — the notebook's margin rule, decoration only */
+
+  /* ── the names every stylesheet already reads ──────────────────────────── */
+  --c-app-bg: var(--c-base);
+  --c-paper: var(--c-surface);
+  --c-white: var(--c-surface);
+  /* The area outside the phone frame, and the label and order sheets: the
+     workspace, which is what §3.1 calls the surface the paper lies on. */
+  --c-outer-bg: var(--c-base);
+  --c-line: var(--c-border);
+
+  /*
+    `--c-green` is the action colour. The name is structural — "the colour of
+    a thing you press" — and what it holds is §3.1's green. Measured: 6.21:1
+    on the paper, 5.40 on the workspace, and the paper on top of it 6.21 for
+    a filled button's label. The hover/link shade is the same green: the
+    spec has one green, and a hover is told by the underline.
+  */
+  --c-green: var(--c-accent);
+  --c-green-bg: var(--c-select);
+  --c-green-ink: var(--c-accent);
+
+  /*
+    MEANING KEEPS ITS OWN COLOURS — with one deliberate merge.
+
+    Success is the green. A second, different green for "correct" beside a
+    green action colour is two greens nobody can tell apart, and the tick
+    mark reads as success from its shape and its place. Warning and error
+    stay their own hues, which is what the distinction is actually for.
+
+    The two banner fills are the amber and the red themselves, laid over the
+    paper (#fbfbf9) at 14% and 12% — `color-mix(in srgb, var(--c-amber) 14%,
+    var(--c-surface))` — written out as hex because tokens.test.ts measures
+    every pairing arithmetically and cannot resolve a color-mix().
+  */
+  --c-ok: var(--c-accent);
+  --c-ok-bg: var(--c-select);
+
+  --c-amber-bg: #ebe4d8; /* the new amber at 14% over the paper */
+  --c-red-bg: #f0e3e0;
+
+  --c-ink: var(--c-text);
+  --c-muted: var(--c-muted-ink);
+  --c-neutral-bg: var(--c-select);
+  --c-sand: var(--c-select);
+
+  /*
+    COOK MODE IS LIGHT NOW.
+
+    It was the one dark screen in the application — §14's near-black, then a
+    dark chocolate. Ahmed's decision is that the weighing list and the steps
+    are light like everything else, so these five keep their names (every rule
+    in CookScreen.module.css reads them) and hold light values. A filled
+    control there is the sage with the surface colour on it, exactly as it is
+    everywhere else; there is no second theme to keep in step.
+  */
+  --c-cook-bg: var(--c-base);
+  --c-cook-raised: var(--c-surface);
+  --c-cook-line: var(--c-border);
+  --c-cook-text: var(--c-text);
+  --c-cook-muted: var(--c-muted-ink);
+  --c-cook-accent: var(--c-accent);
+  --c-cook-on-accent: var(--c-surface);
+
+  /* ── typography ───────────────────────────────────────────────────────── */
+  /*
+    TWO FACES, both served from this project (fonts.css). Spec §3.2: Heebo
+    for the interface — controls, lists, the working text — and Frank Ruhl
+    Libre for headings and for the recipe page, which is meant to read like
+    a page of a notebook rather than a screen. `--font-display` is the serif;
+    every heading rule already reads it.
+  */
+  --font-body: 'Heebo', 'Arial Hebrew', system-ui, sans-serif;
+  --font-display: 'Frank Ruhl Libre', 'Heebo', 'Arial Hebrew', serif;
+
+  --fs-label: 12px;
+  --fs-meta: 12px;
+  --fs-meta-lg: 13px;
+  --fs-secondary: 14px;
+  --fs-body: 16px;
+  --fs-body-lg: 17px;
+  --fs-screen-title: 24px;
+  --fs-recipe-title: 27px;
+  /* §14: the two sizes the kitchen screen is read at, from across a counter. */
+  /*
+    §10's text size, as one number. The kitchen screen's two type sizes are
+    both multiplied by it, so "גדול" makes the instruction and the weights
+    bigger together and nothing else in the application moves. The default is
+    1 — the size Cook Mode has always been — and the screen sets it from the
+    device's own choice (see data/offlineMirror.ts).
+  */
+  --cook-text-scale: 1;
+  --fs-cook-body: calc(25px * var(--cook-text-scale));
+  --fs-cook-step: calc(54px * var(--cook-text-scale));
+
+  /*
+    WEIGHT, IN ONE PLACE.
+    Heebo carries 400–700, but the interface uses only three steps: 400 for
+    everything that is read as a sentence (instructions, ingredients,
+    descriptions), 500 where a number or a secondary control has to stand out
+    without shouting, and 600 for titles and the actions that matter. Nothing
+    is set to 700: at this size, in Hebrew, it reads as a thickening of the
+    letterform rather than as emphasis.
+  */
+  --fw-body: 400;
+  --fw-mid: 500;
+  --fw-title: 600;
+
+  /*
+    A SHUT CONTROL IS STILL READ.
+
+    Disabled buttons across the app were faded with `opacity` (0.3 to 0.6),
+    which on this light page computes to 1.6:1–2.9:1 — the label of a control
+    that decides something becomes unreadable in a lit kitchen. The state is
+    carried by a flat neutral fill and the secondary ink instead, never by the
+    accent and never by transparency. Spec §3.1 has no disabled shade and no
+    new colours: the fill is the workspace (#e9ece8) and the label is the ink,
+    14.7:1 (asserted in tokens.test.ts) — the state is told by the flat fill
+    and the missing border, never by a faded label.
+  */
+  --c-off-bg: var(--c-base);
+  --c-off-ink: var(--c-text);
+
+  /* ── radius ───────────────────────────────────────────────────────────────
+     TWO STEPS, AND ONE OF THEM IS FOR CONTROLS.
+
+     Ahmed: "השתמש במלבנים עם עיגול עדין ואחיד של 12px בכל ארבע הפינות עבור
+     כפתורי פעולה, שדות חיפוש, שדות טקסט, בחירות ותיבות כתיבה. אין להשתמש
+     בצורת גלולה ברכיבים האלה. בכרטיסי תוכן גדולים אפשר להשתמש ברדיוס אחיד
+     של 16px."
+
+     So the scale collapsed. It used to be 12 / 14 / 18 / 24 / 999, and the
+     999 was on 46 controls — buttons, chips, the composer, the back link, the
+     filter row, the segmented controls — beside rectangles with 12 and 14.
+     That mixture is the thing he asked to end. It is now:
+
+       --r-control  12px  every button, field, select, textarea, chip, badge
+       --r-card     16px  a content card, at one value — `--r-card-lg` is kept
+                          as a NAME because ~20 stylesheets import it, and it
+                          resolves to the same 16
+       --r-sheet    24px  a modal sheet, which is not a card and not a control
+       --r-pill     999px kept for the five things whose roundness is the
+                          meaning: the two avatars, the onboarding progress
+                          dot, the step-progress segment and the wizard's
+                          numbered stage marker. Never on a control again.
+
+     A radio stays a circle: `input[type='radio']` is drawn by the browser and
+     is deliberately untouched — its shape is what tells it apart from a
+     checkbox. */
+  --r-check: 7px;
+  --r-control: 12px;
+  --r-card: 16px;
+  --r-card-lg: 16px;
+  --r-sheet: 24px;
+  --r-pill: 999px;
+
+  /* ── spacing ──────────────────────────────────────────────────────────── */
+  --gap-tight: 6px;
+  --gap-in-group: 10px;
+  --gap-between-groups: 16px;
+  --pad-card: 16px;
+
+  /* ── interaction ──────────────────────────────────────────────────────── */
+  /* §15 and spec §3.4: hit targets ≥ 44px. Non-negotiable — this is a
+     kitchen app. `--hit-compact` was 40px for controls that sit in rows; the
+     spec makes no such allowance (stage 1 counted 71 targets under 44px on a
+     phone), so the name is kept for the ~35 rules that read it and it
+     resolves to the same 44. */
+  --hit-min: 44px;
+  --hit-compact: 44px;
+  /* §9: how tall the chat's one-line composer may grow before it scrolls
+     inside itself — about four lines, after which the conversation above it
+     matters more than seeing the whole draft at once. */
+  --chat-input-max: 108px;
+
+  /* ── device frame ─────────────────────────────────────────────────────── */
+  --frame-w: 402px;
+  --frame-h: 874px;
+  --frame-w-wide: 760px;
+  --frame-h-wide: 1040px;
+}
+
+/* Provenance colours, keyed to the engine's Source union so a badge can never
+ * pick its own colour. Mirrors SOURCE_META in packages/engine/src/provenance.ts. */
+:root {
+  /* `--c-ok`, not the action colour: "this number is exact" is a fact about
+     the number, and it must not read as "press me". */
+  --c-source-exact: var(--c-ok);
+  --c-source-personal: var(--c-ok);
+  --c-source-recipe: var(--c-ok);
+  --c-source-system: var(--c-amber);
+  --c-source-estimate: var(--c-red);
+  --c-source-unavailable: var(--c-red);
+}

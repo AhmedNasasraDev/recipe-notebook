@@ -1,0 +1,2 @@
+hero.wide: {"height":220,"width":402,"objectFit":"cover","loaded":true}
+cleanup: "http://127.0.0.1:5199/notebook"

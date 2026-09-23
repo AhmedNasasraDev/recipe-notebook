@@ -1,0 +1,457 @@
+/* §2 screen 9 "דף הזמנה". §16's "רקע חוץ" surface again, with the sheet as a
+   white page on it. Square-ish corners and hairline rules, because this one is
+   going through a printer and then onto a bench with flour on it. */
+
+.wrap {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-outer-bg);
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-in-group);
+  padding: 8px 16px;
+  background: var(--c-app-bg);
+  border-block-end: 1px solid var(--c-line);
+}
+
+/* .printTop removed (spec §8.1, stage 8 follow-up, 23.09.2026): it was a
+   second window.print() button, identical to .printBtn at the foot of the
+   page — the one this single-purpose screen actually needs. */
+
+.topTitle {
+  margin-inline-start: auto;
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-between-groups);
+  /* A page, not a wall. These two screens live outside the app shell — §2
+     makes them depth screens without tabs — so nothing else constrains their
+     width, and on a 1440px monitor the sheet stretched edge to edge while the
+     printed version is ~180mm. --frame-w-wide is the widest layout the rest of
+     the app uses and comes out close to a printed page. */
+  inline-size: 100%;
+  max-inline-size: var(--frame-w-wide);
+  margin-inline: auto;
+  padding: 14px 14px 34px;
+}
+
+/* ── the details form ────────────────────────────────────────────────────── */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding: 12px 13px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-app-bg);
+}
+
+.formTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+  color: var(--c-muted);
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-in-group);
+}
+
+.label {
+  inline-size: 88px;
+  flex: none;
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+}
+
+/* Capped: on a desktop these stretched to 840px for a customer's name, which
+   reads as a form that does not know what it is asking for. */
+.input {
+  flex: 1;
+  max-inline-size: 360px;
+  min-height: var(--hit-min);
+  min-inline-size: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  font-size: var(--fs-body);
+  outline: 0;
+}
+
+.formNote {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+
+.warn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  padding: 11px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+}
+
+.warnTitle {
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-amber);
+}
+
+.warnBody {
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+  line-height: 1.6;
+}
+
+/* ── the sheet ───────────────────────────────────────────────────────────── */
+.sheet {
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: 6px;
+  padding: 18px 18px 20px;
+  color: var(--c-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.sheetHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gap-between-groups);
+  padding-block-end: 9px;
+  border-block-end: 2px solid var(--c-ink);
+}
+
+.sheetTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.sheetSub {
+  margin-block-start: 3px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+
+.sheetSide {
+  text-align: end;
+  font-size: 12px;
+  color: var(--c-muted);
+  line-height: 1.6;
+  flex: none;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-in-group);
+}
+
+.stat {
+  min-inline-size: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 9px;
+  border: 1px solid var(--c-line);
+  border-radius: 5px;
+}
+
+.statKey {
+  font-size: var(--fs-label);
+  color: var(--c-muted);
+}
+
+.statVal {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  margin-block-start: 3px;
+}
+
+/* ── the weighing table ──────────────────────────────────────────────────── */
+.table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-secondary);
+}
+
+.table thead th {
+  font-size: var(--fs-label);
+  font-weight: 400;
+  color: var(--c-muted);
+  text-align: start;
+  padding-block-end: 4px;
+  border-block-end: 1px solid var(--c-ink);
+}
+
+.table td {
+  padding: 6px 0;
+  border-block-end: 1px solid var(--c-line);
+  line-height: 1.35;
+  vertical-align: top;
+}
+
+.table tfoot td {
+  border-block-end: 0;
+  padding-block-start: 7px;
+  font-weight: 600;
+}
+
+.colTick {
+  inline-size: 22px;
+  color: var(--c-line);
+}
+
+.colQty {
+  inline-size: 74px;
+  text-align: end;
+  font-weight: 600;
+}
+
+.colPct {
+  inline-size: 46px;
+  text-align: end;
+  color: var(--c-muted);
+  font-weight: 400;
+}
+
+.table thead .colQty,
+.table thead .colPct {
+  text-align: end;
+}
+
+.rowNote {
+  color: var(--c-muted);
+}
+
+/* A row of underscores — the blank left for a weight nobody could compute, to
+   be filled in by hand on the printed sheet. The tracking here spaces a RULE,
+   not Hebrew letters, which is why it stays where the others went. */
+.unknown {
+  color: var(--c-red);
+  letter-spacing: 0.04em;
+}
+
+/* ── the work order ──────────────────────────────────────────────────────── */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.step {
+  display: flex;
+  gap: var(--gap-in-group);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.stepNum {
+  inline-size: 15px;
+  flex: none;
+  color: var(--c-muted);
+}
+
+.stepMeta {
+  color: var(--c-muted);
+}
+
+.recipeNote,
+.clientNote {
+  font-size: var(--fs-secondary);
+  line-height: 1.6;
+}
+
+.clientNote {
+  font-weight: 600;
+}
+
+.costLine {
+  padding-block-start: 8px;
+  border-block-start: 1px solid var(--c-line);
+  font-size: 12px;
+  color: var(--c-ink);
+}
+
+.partialChip {
+  margin-inline-start: 6px;
+  padding: 1px 7px;
+  border-radius: var(--r-control);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-label);
+}
+
+.allergens {
+  font-size: 12px;
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+
+.signRow {
+  display: flex;
+  gap: 16px;
+  margin-block-start: 3px;
+}
+
+.sign {
+  flex: 1;
+  border-block-start: 1px solid var(--c-ink);
+  padding-block-start: 4px;
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+/* ── actions ─────────────────────────────────────────────────────────────── */
+.actions {
+  display: flex;
+}
+
+/* Same as the label sheet: an action, not a banner across the page. */
+.printBtn {
+  max-inline-size: 320px;
+  margin-inline: auto;
+  flex: 1;
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-size: var(--fs-body-lg);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.note {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+.missing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding: 24px 20px;
+  color: var(--c-ink);
+}
+
+/* On paper the "outer background" is just grey ink around a white page. The
+   global print rule whitens html and body; this whitens the screen's own
+   surface, which sits between them. Found by screenshotting the page in print
+   media rather than by reading the CSS. */
+@media print {
+  .wrap {
+    background: var(--c-white);
+  }
+}
+
+/* ── the quantity control and the two blocks (QA 22.09.2026, §6) ──────── */
+.pickTabs {
+  display: flex;
+  gap: var(--gap-tight);
+}
+
+.pickTab,
+.pickTabOn {
+  flex: 1;
+  min-height: var(--hit-min);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  cursor: pointer;
+}
+
+.pickTabOn {
+  border-color: var(--c-green);
+  background: var(--c-select);
+  font-weight: 600;
+}
+
+.noQty {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-secondary);
+  line-height: 1.6;
+}
+
+.blocks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--gap-in-group);
+}
+
+.block,
+.blockEmpty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  padding: 10px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+}
+
+.blockEmpty {
+  border-style: dashed;
+}
+
+.blockTitle {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+  color: var(--c-muted);
+}
+
+.blockNote {
+  margin: 0;
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+
+@media print {
+  .blocks {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* A link inside a sentence, with a 44px tap target that does not move the
+   line (spec §3.4): padding for the finger, negative margin for the layout. */
+.inlineLink {
+  display: inline-block;
+  padding: 12px 6px;
+  margin: -12px -6px;
+  color: var(--c-green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

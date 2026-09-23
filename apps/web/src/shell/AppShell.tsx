@@ -1,0 +1,100 @@
+import { useRef } from 'react';
+import { Outlet } from 'react-router-dom';
+import { useAppData } from '../app/AppDataProvider.js';
+import { TabBar } from './TabBar.js';
+import { useScrollMemory } from './useScrollMemory.js';
+import { useSoftKeyboard } from './useSoftKeyboard.js';
+import styles from './AppShell.module.css';
+
+/**
+ * The frame every tab screen lives in: scroll region, the honesty banner, and
+ * the bottom tab bar from §2.
+ */
+export function AppShell() {
+  const { error, clearError, capabilities, backendNote } = useAppData();
+  /*
+    THE BAR IS NOT RENDERED WHILE THE SOFTWARE KEYBOARD IS UP.
+
+    It used to be carried up on top of the keyboard, because the frame is
+    sized in `dvh` and the keyboard shrinks that — see useSoftKeyboard.ts for
+    why no CSS length fixes it on both engines, and for the approval of this
+    fallback. Not rendered rather than hidden with CSS: the bar is a flex
+    child in the column, so removing it gives its height back to the scroller
+    and the field being typed into has more room, instead of a `display: none`
+    element still owning a row.
+
+    Nothing is remembered and nothing needs to be: the bar is four links, so
+    it comes back exactly as it was the moment the keyboard closes.
+  */
+  const keyboardOpen = useSoftKeyboard();
+  /*
+    The application scrolls inside this element, not on the document, so
+    coming back to a list would always land at the top — see
+    useScrollMemory.ts. The search and the filter need nothing: the notebook
+    keeps both in the address.
+  */
+  const scroller = useRef<HTMLElement | null>(null);
+  useScrollMemory(scroller);
+
+  // §17 / AC #17: the app states plainly where its data comes from. It never
+  // presents a local-only session as if it were connected.
+  //
+  // Connected-and-online is the only state with nothing to disclose. A demo
+  // session, a dropped connection and data served from the offline mirror are
+  // each a different promise about whether a save will stick, so each one says
+  // so — describeBackend() in AppDataProvider writes the sentence.
+  /*
+    'simulated' is deliberately ABSENT from this list. Ahmed asked for the
+    trial's disclosure box removed from every screen — "אל תחליף אותם בבאנר
+    או בהודעה אחרת" — so the element is not rendered rather than emptied:
+    nothing is mounted, so nothing takes space and nothing shifts. The
+    simulation is unchanged; only the sentence about it is gone. The three
+    states below are real product states and stay exactly as they were.
+  */
+  const showBackendNote =
+    capabilities.source === 'local-demo' ||
+    capabilities.servingFromCache ||
+    !capabilities.online;
+
+  return (
+    <div className={styles.outer}>
+      <div className={styles.frame}>
+        {error && (
+          <div className={`${styles.banner} ${styles.bannerError}`} role="alert">
+            <span className={styles.bannerText}>{error}</span>
+            <button
+              type="button"
+              className={styles.bannerClose}
+              onClick={clearError}
+              aria-label="סגירת ההודעה"
+            >
+              ×
+            </button>
+          </div>
+        )}
+        {!error && showBackendNote && (
+          <p className={styles.banner} role="status">
+            <span className={styles.bannerText}>{backendNote}</span>
+          </p>
+        )}
+        {/*
+          THE READING COLUMN.
+
+          On a phone the frame is the column. On a tablet and a desktop the
+          frame grows to 760 and every row inside it stretches with it: a menu
+          card's chevron ends up a hand's width from the name it belongs to,
+          and an ingredient's "המר" sits at the far edge of the screen from the
+          ingredient. The column caps the content and centres it — which is
+          also a sane measure for a line of Hebrew — while the scroller, the
+          banner and the tab bar keep the full width of the frame.
+        */}
+        <main ref={scroller} className={`${styles.content} hideScrollbar`}>
+          <div className={styles.column}>
+            <Outlet />
+          </div>
+        </main>
+        {!keyboardOpen && <TabBar />}
+      </div>
+    </div>
+  );
+}

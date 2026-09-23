@@ -1,0 +1,151 @@
+/* The printed recipe. Screen rules exist only so the sheet can be looked at
+   in a browser's print preview; `#print-root` itself is hidden on screen by
+   styles/global.css. Sizes in pt, because this is paper. */
+.sheet {
+  font-family: var(--font-body, Arial, sans-serif);
+  color: #111;
+  background: #fff;
+  font-size: 12pt;
+  line-height: 1.55;
+  direction: rtl;
+  text-align: start;
+}
+
+.head {
+  margin-block-end: 8pt;
+  border-block-end: 1.5pt solid #111;
+  padding-block-end: 6pt;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body, serif));
+  font-size: 22pt;
+  line-height: 1.2;
+}
+
+.category {
+  margin: 2pt 0 0;
+  font-size: 11pt;
+  color: #444;
+}
+
+.photo {
+  display: block;
+  inline-size: 100%;
+  max-block-size: 70mm;
+  object-fit: cover;
+  border-radius: 3mm;
+  margin-block: 6pt 10pt;
+  break-inside: avoid;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4pt 14pt;
+  margin: 0 0 4pt;
+  padding: 0;
+}
+
+.fact {
+  display: flex;
+  gap: 4pt;
+  align-items: baseline;
+}
+
+.fact dt {
+  color: #444;
+  font-size: 10.5pt;
+}
+
+.fact dt::after {
+  content: ':';
+}
+
+.fact dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.scaleLine {
+  margin: 0 0 10pt;
+  font-size: 10.5pt;
+  color: #444;
+}
+
+.h2 {
+  margin: 12pt 0 4pt;
+  font-size: 14pt;
+  break-after: avoid;
+}
+
+.table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 12pt;
+}
+
+.table th,
+.table td {
+  padding: 4pt 3pt;
+  border-block-end: 0.6pt solid #bbb;
+  text-align: start;
+  vertical-align: top;
+}
+
+.table th {
+  font-size: 10.5pt;
+  color: #444;
+  font-weight: 600;
+}
+
+.table tfoot td {
+  border-block-end: 0;
+  border-block-start: 1.2pt solid #111;
+  font-weight: 600;
+}
+
+.qtyCol {
+  inline-size: 24%;
+  white-space: nowrap;
+  text-align: end;
+}
+
+.note {
+  color: #555;
+  font-size: 10.5pt;
+}
+
+.steps {
+  margin: 0;
+  padding-inline-start: 18pt;
+}
+
+.step {
+  margin-block-end: 5pt;
+  break-inside: avoid;
+}
+
+.stepText {
+  display: block;
+}
+
+.stepMeta {
+  display: block;
+  font-size: 10.5pt;
+  color: #444;
+  text-align: end;
+}
+
+.notes {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+@media print {
+  .sheet tr,
+  .fact {
+    break-inside: avoid;
+  }
+}

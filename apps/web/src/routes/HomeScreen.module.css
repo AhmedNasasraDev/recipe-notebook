@@ -1,0 +1,424 @@
+/* §2 screen 2 "בית". Tiles and rows from the §16 tokens; nothing new. */
+
+/*
+  DESIGN PASS: THE HOME SCREEN READS AS CARDS, LIKE THE REST OF THE APP.
+
+  Every other screen in the application puts its sections on white surfaces
+  over the cream page — the recipe, "עוד", the settings. This one was built as
+  full-bleed blocks separated by hairlines, which is the shape of a settings
+  list: correct information, wrong voice, and on a phone it made the first
+  screen look like a menu rather than a kitchen's own page. The sections below
+  are the same sections with the same content; only the container changed.
+*/
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding: 16px var(--pad-card) 24px;
+}
+
+.head {
+  padding-block-end: 2px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  font-weight: var(--fw-title);
+  line-height: 1.2;
+  color: var(--c-ink);
+}
+
+.count {
+  margin-block-start: 4px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+
+.section,
+.resume,
+.start {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding: var(--pad-card);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card-lg);
+  background: var(--c-paper);
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: var(--fw-title);
+  letter-spacing: normal;
+  line-height: 1.3;
+  color: var(--c-ink);
+}
+
+.note {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+/* ── המשך מאיפה שעצרת ───────────────────────────────────────────────────── */
+.resumeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-app-bg);
+  text-decoration: none;
+}
+
+.resumeName {
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  color: var(--c-ink);
+}
+
+.resumeMeta {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.resumeCook {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  padding-inline: 16px;
+  border-radius: var(--r-control);
+  /* An action, so it takes the palette's action colour like the rest. */
+  background: var(--c-green);
+  color: var(--c-white);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ── categories ──────────────────────────────────────────────────────────── */
+/* Inside the card the tiles have 32px less width to share, so the column floor
+   comes down with it — otherwise a two-word category wraps and the row grows a
+   line taller than its neighbour. */
+.tiles {
+  display: grid;
+  /* Two to a row on a phone, as the handoff has it; more only when there is
+     genuinely room for them. */
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--gap-in-group);
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: var(--hit-min);
+  padding: 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-app-bg);
+  text-decoration: none;
+}
+
+/* ── the handoff's category cards ───────────────────────────────────────
+   A square photograph with the name on a white strip under it, two to a row
+   on a phone, and the whole card is the link. The photograph never replaces
+   the name: it sits above it, `aria-hidden`, and a category with no photo
+   keeps the glyph tile below. */
+.photoTile {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-paper);
+  text-decoration: none;
+}
+
+.tilePhoto {
+  inline-size: 100%;
+  /*
+    `block-size: auto` is doing real work, not tidying up. The tag carries
+    width=320 height=320 so the browser reserves the box before the file
+    arrives — and those attributes map to a presentational `height: 320px`,
+    which `aspect-ratio` cannot override because the height is then not auto.
+    Measured: every tile came out 140×320 instead of 140×140, and the first
+    screen of the application was two portraits. Releasing the height is what
+    lets the ratio below decide.
+  */
+  block-size: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  background: var(--c-neutral-bg);
+}
+
+.tileCaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+}
+
+.tileTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+  color: var(--c-ink);
+  line-height: 1.3;
+}
+
+.tileName {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  column-gap: 2px;
+  font-family: var(--font-display);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+  color: var(--c-ink);
+}
+
+.tileCount {
+  flex-basis: 100%;
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-body);
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── base recipes ────────────────────────────────────────────────────────── */
+.bases {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+}
+
+/* Inside a white card, a row does not need a second surface of its own — it
+   needs a line under it. Same target height, one layer less. */
+.baseRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--gap-in-group);
+  min-height: var(--hit-compact);
+  padding-block: 10px;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 60%, transparent);
+  text-decoration: none;
+}
+
+.bases li:last-child .baseRow,
+.quickList li:last-child .quickRow {
+  border-block-end: 0;
+}
+
+.baseName {
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+  min-width: 0;
+}
+
+.baseMeta {
+  flex: none;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.baseNoCost {
+  color: var(--c-muted);
+}
+
+.basePartial {
+  color: var(--c-amber);
+}
+
+/* ── UX pass: find a recipe, or write one ────────────────────────────────
+   The first block on the screen, because those are the two reasons to be on
+   it. The search field is full width with its own visible label; the new
+   recipe button is the one filled control here, so there is never a question
+   about which of the two is the loud one. */
+/* `.start` shares the card rule above; what is left here is its own rhythm. */
+.start {
+  gap: var(--gap-between-groups);
+}
+
+.searchForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.searchLabel {
+  /* The magnifier sits on the label's baseline row, not above the words. */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-block-end: 4px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+
+.searchRow {
+  display: flex;
+  gap: var(--gap-tight);
+}
+
+.search {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--hit-min);
+  padding-inline: 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  font-size: var(--fs-body);
+  color: var(--c-ink);
+}
+
+.search:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 1px;
+  border-color: var(--c-green);
+}
+
+.searchBtn {
+  flex: none;
+  /* A glyph beside the words: one row, centred, with the gap the set uses. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--hit-min);
+  padding-inline: 16px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+}
+
+.newBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  /* The same shape as "מצב הכנה" on the recipe page: in this application a
+     filled pill is the control that starts something. */
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-family: var(--font-body);
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.newBtn:hover {
+  background: var(--c-green-ink);
+  color: var(--c-white);
+}
+
+/* ── favourites and recents ──────────────────────────────────────────────── */
+.quickList {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+}
+
+.quickRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--gap-in-group);
+  min-height: var(--hit-min);
+  padding-block: 10px;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 60%, transparent);
+  text-decoration: none;
+}
+
+.quickName {
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+  min-width: 0;
+}
+
+.quickMeta {
+  flex: none;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+
+/* The category emblem — a glyph from the application's own set, not an emoji.
+   `aria-hidden` in the markup: the name is right beside it. */
+.tileIcon {
+  display: inline-flex;
+  flex: none;
+  margin-inline-end: 8px;
+  /* Aligned to the first line of a name that may take two. */
+  margin-block-start: 2px;
+  color: var(--c-muted);
+}
+
+/*
+  ── THE QUICK-ACTION ROW ──────────────────────────────────────────────────
+
+  Six entrances, in a grid that is three across on a phone and lays out wider
+  on a tablet without anybody writing a second breakpoint: `auto-fill` with a
+  92px floor does it, and the cards stay the same size as each other because
+  the tracks do.
+
+  A glyph over a word, not beside it — these are targets for a thumb, and the
+  word has to fit at 360px without wrapping in the middle of "חומרי גלם". The
+  whole card is the target, 72px tall, well over the project's 44px floor.
+*/
+.quick {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: var(--gap-in-group);
+}
+
+.quickCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 72px;
+  padding: 10px 6px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  text-decoration: none;
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.quickCard:hover {
+  background: var(--c-select);
+}
+
+.quickCard:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.quickGlyph {
+  display: grid;
+  place-items: center;
+  color: var(--c-green);
+}
+
+.quickLabel {
+  font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-mid);
+  text-align: center;
+  line-height: 1.25;
+}

@@ -1,0 +1,23 @@
+.wrap {
+  padding: 28px var(--pad-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-between-groups);
+}
+.title {
+  font-size: 20px;
+}
+.body {
+  font-size: var(--fs-body);
+  color: var(--c-muted);
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+  padding: 12px var(--pad-card);
+  background: var(--c-neutral-bg);
+  border-radius: var(--r-card);
+}

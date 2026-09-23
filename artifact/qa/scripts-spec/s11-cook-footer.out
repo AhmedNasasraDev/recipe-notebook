@@ -1,0 +1,8 @@
+totalSteps: 5
+shortStep.index: 4
+shortStep.footBox: {"x":18,"y":775,"width":366,"height":77}
+shortStep.footAtBottomEdge: false
+shortStep.footPosition: "sticky"
+longStep.index: 3
+longStep.footBox: {"x":18,"y":775,"width":366,"height":77}
+longStep.noOverlapWithLastContent: {"footTop":775,"ingsSummaryBottom":759,"covered":false}

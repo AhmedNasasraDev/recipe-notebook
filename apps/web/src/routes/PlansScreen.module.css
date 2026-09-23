@@ -1,0 +1,173 @@
+/*
+  THE SCREEN'S OWN GUTTER.
+
+  It had none: every child carried its own, and the header did not — so the
+  title and (since §4) the back control sat flush against the top and the side
+  of the frame. Measured by demo-check.mjs, which found the trial's "גרסת
+  ניסוי" strip touching the back control here and nowhere else.
+*/
+.page {
+  display: grid;
+  gap: 14px;
+  padding: 14px var(--pad-card) 24px;
+}
+
+.head {
+  display: grid;
+  gap: 6px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  font-weight: var(--fw-title);
+}
+
+.lede,
+.empty,
+.notice {
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+  color: var(--c-muted);
+}
+
+/*
+  STAGE-10 AUDIT FIX. These boxes paired a `--c-sand` background with
+  `--c-muted` text, measured at 2.02:1 — the worst contrast in the app, and
+  far under the 4.5:1 that 10.5-11.5px text needs. The token's own comment
+  says sand is a FILL ("step numbers, paper frame"), not a background for
+  secondary text. The palette itself is untouched (the handoff protects §16);
+  only the text is darkened here, which measures 7.93:1.
+*/
+.notice,
+.empty {
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  background: var(--c-sand);
+  color: var(--c-ink);
+}
+
+.error {
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+
+.addBtn {
+  min-height: var(--hit-min);
+  padding: 0 16px;
+  border: 1px dashed var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+}
+
+.addBtn:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-paper);
+}
+
+.itemHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.itemName {
+  /* The row's name is its link: the whole 44px row is the target (spec §3.4). */
+  display: flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+  color: var(--c-ink);
+}
+
+.itemWhen {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.itemMeta {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.lockedTag {
+  color: var(--c-green);
+  font-weight: var(--fw-title);
+}
+
+.itemActions,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.secondary,
+.danger {
+  min-height: var(--hit-compact);
+  /* A glyph beside the words: one row, centred, with the gap the set uses. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border-radius: var(--r-control);
+  border: 1px solid var(--c-line);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-title);
+}
+
+.secondary {
+  background: var(--c-paper);
+  color: var(--c-ink);
+}
+
+.danger {
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  border-color: var(--c-red);
+}
+
+.secondary:disabled,
+.danger:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+}
+
+.confirm {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-red);
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}

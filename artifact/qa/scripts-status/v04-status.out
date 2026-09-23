@@ -1,0 +1,24 @@
+FAIL A-create ERROR TimeoutError: locator.selectOption: Timeout 15000ms exceeded. Call log: [2m - waiting for locator('select').nth(1)[22m [2m - locator resolved to <select aria-invalid="false" id="pu-ing-mudaw2jl-1" class="_select_ezozj_107" aria-label="יחידת המחיר של קמח לחם">…</select>[22m [2m - attempting sele
+FAIL A-edit ERROR TimeoutError: page.fill: Timeout 15000ms exceeded. Call log: [2m - waiting for locator('#r-name')[22m 
+FAIL A-duplicate ERROR TimeoutError: locator.click: Timeout 15000ms exceeded. Call log: [2m - waiting for locator('summary').filter({ hasText: 'עוד פעולות' })[22m 
+FAIL A-images ERROR TimeoutError: locator.setInputFiles: Timeout 15000ms exceeded. Call log: [2m - waiting for locator('input[type=file]').last()[22m 
+FAIL A-refused-delete ERROR TimeoutError: locator.click: Timeout 15000ms exceeded. Call log: [2m - waiting for locator('summary').filter({ hasText: 'עוד פעולות' })[22m 
+FAIL A-real-delete ERROR Error: ENOENT: no such file or directory, open 'status-copy-id.txt'
+PASS B1 sign-in persistence brioche + photo after a fresh sign-in: recipe=true photo=true
+PASS B2 sign-out sign-out lands on the sign-in screen
+PASS B3 wrong password message האימייל או הסיסמה אינם נכונים.
+PASS C1 timer survives refresh before 08:59 → after reload 08:37
+PASS C2 fullscreen head tops [10,12,12,12]; timer digits 72px
+PASS C3 exit cook → recipe url after exit: /recipe/cd1630f3-4a80-4a74-b4ea-775d29cd64c0
+FAIL C4 back to notebook url: /recipe/cd1630f3-4a80-4a74-b4ea-775d29cd64c0/cook
+PASS C5 recipe PDF pages 2; eggs line present true; internal markers: none
+PASS C6 order PDF pages 1; raw per-unit 114 present true; internal: none
+FAIL C7 label PDF pages 1; eggs+vanilla declared; internal: none
+PASS D1 qa2 cannot open qa1 recipe by URL screen: המתכון הזה לא נמצא במחברת. המחברת בית מחברת קבוצות עוד
+PASS D2 qa2 cannot edit it editor for someone else's recipe shows: המתכון הזה לא נמצא במחברת. המחברת בית מחברת קבוצות עוד
+PASS D3 shared item visible with Hebrew units student view ok
+PASS E1 desktop 1440×900 14 screens: no text under 12px, no internal markers, no horizontal overflow
+PASS E2 phone 402×874 8 screens: no text under 12px, no internal markers, no horizontal overflow
+CONSOLE-ERRORS: ["console: Failed to load resource: the server responded with a status of 400 (Bad Request)","console: Failed to load resource: the server responded with a status of 400 (Bad Request)","console: Failed to load resource: the server responded with a status of 400 (Bad Request)","console: Failed to load resource: the server responded with a status of 400 (Bad Request)","console: Failed to load resource: the server responded with a status of 400 (Bad Request)","console: Failed to load resource: the server responded with a status of 400 (Bad Request)"]
+NET4xx: ["GET /rest/v1/recipe_images?select=*&recipe_id=eq.null&order=ord.asc%2Ccreated_at.asc 400","GET /rest/v1/recipe_images?select=*&recipe_id=eq.null&order=ord.asc%2Ccreated_at.asc 400","GET /rest/v1/recipe_versions?select=id%2Crecipe_id%2Ctag%2Cwhat%2Csnapshot%2Ccreated 400","POST /rest/v1/rpc/recipes_using 400","GET /rest/v1/private_notes?select=body&user_id=eq.3052437b-109e-4c8a-aca4-2e36a06383 400","GET /rest/v1/recipe_images?select=*&recipe_id=eq.null&order=ord.asc%2Ccreated_at.asc 400","GET /rest/v1/recipe_versions?select=id%2Crecipe_id%2Ctag%2Cwhat%2Csnapshot%2Ccreated 400","POST /rest/v1/rpc/recipes_using 400","GET /rest/v1/private_notes?select=body&user_id=eq.3052437b-109e-4c8a-aca4-2e36a06383 400","GET /rest/v1/recipe_images?select=*&recipe_id=eq.null&order=ord.asc%2Ccreated_at.asc 400"]
+SUMMARY: 13/21 passed

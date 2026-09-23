@@ -1,0 +1,387 @@
+/* The screen's own gutter. These three had none: every child was expected to
+   carry its own, and the heading did not — which put a 26px title flush
+   against the edge of the phone once the type scale went up. */
+.page {
+  display: grid;
+  gap: var(--gap-between-groups);
+  padding: 20px var(--pad-card) 28px;
+}
+
+
+
+.head {
+  display: grid;
+  gap: 6px;
+}
+
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  font-weight: var(--fw-title);
+  line-height: 1.2;
+  color: var(--c-ink);
+}
+
+.kind,
+.meta,
+.note,
+.summary,
+.hint,
+.state,
+.permsHint {
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+  color: var(--c-muted);
+}
+
+.meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.role {
+  color: var(--c-green);
+}
+
+.code {
+  padding: 8px 10px;
+  border-radius: var(--r-check);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-meta);
+}
+
+.headActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.notice,
+.problem {
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+
+.notice {
+  background: var(--c-neutral-bg);
+  color: var(--c-ink);
+}
+
+.problem {
+  background: var(--c-red-bg);
+  color: var(--c-red);
+}
+
+/*
+  Sticky, on both tabs.
+
+  The scroller is the shell's content area, so `top: 0` is the top of the
+  screen's visible box: the group's title and note scroll away and the way
+  between "שיעורים" and "צ׳אט" stays where it was. An opaque background and
+  the padding are what stop the messages from showing through as they pass
+  behind it, and `z-index` puts it above them.
+
+  On the lessons tab this is the same improvement for the same reason — the
+  chat is one tap away from the bottom of a long course list.
+*/
+/*
+  ── §9: ONE SEGMENTED CONTROL, NOT TWO PILLS ───────────────────────────
+
+  The handoff draws the two halves of this screen — שיעורים and צ׳אט — as a
+  single control across the width, each half a tab with its glyph, the
+  selected one filled in the palette's selection tint. That is also the
+  honest shape: these are two views of one group, not two separate actions.
+
+  `.tabs` is the STICKY BAND and `.segmented` is the control inside it. Two
+  elements rather than one because the band has to be opaque all the way
+  across — it is what the conversation scrolls behind (F27) — while the
+  control has rounded ends and does not reach the gutters.
+*/
+.tabs {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  padding-block: 8px;
+  background: var(--c-app-bg);
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-paper);
+}
+
+.tab {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--hit-min);
+  padding-inline: 10px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-muted);
+  font: inherit;
+  font-size: var(--fs-body);
+  cursor: pointer;
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: -2px;
+}
+
+/* Selected: the palette's own selection tint with the sage ink on it, which
+   is how a chosen thing looks everywhere else in the application. Weight and
+   colour both change, so the state is not carried by colour alone. */
+.tabOn {
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-weight: var(--fw-title);
+}
+
+.badge {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-green);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-title);
+  text-align: center;
+}
+
+.tab .badge {
+  background: var(--c-green);
+  color: var(--c-white);
+}
+
+.courses,
+.course {
+  display: grid;
+  gap: 10px;
+}
+
+.course {
+  padding: 12px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-paper);
+}
+
+.courseHead,
+.lessonHead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-title);
+}
+
+.h3 {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+}
+
+.lessons,
+.items {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.lesson {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: var(--r-check);
+  background: var(--c-white);
+}
+
+.done,
+.pendingTag {
+  padding: 1px 8px;
+  border-radius: var(--r-control);
+  font-size: var(--fs-label);
+}
+
+.done {
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+}
+
+.pendingTag {
+  background: var(--c-neutral-bg);
+  color: var(--c-muted);
+}
+
+/*
+  A shared recipe is a ROW you press, the way a recipe in the notebook is —
+  it used to be an underlined word in a grey box, which is a footnote. Same
+  destination, same permissions; it just looks like what it does.
+*/
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  padding: 4px 4px 4px 8px;
+  border-radius: var(--r-check);
+  background: var(--c-app-bg);
+}
+
+.itemLink {
+  flex: 1;
+  min-inline-size: 60%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--hit-min);
+  padding-inline: 8px;
+  border-radius: var(--r-check);
+  font-size: var(--fs-body);
+  color: var(--c-ink);
+  text-decoration: none;
+}
+
+.itemLink:hover {
+  background: var(--c-white);
+}
+
+.itemLink:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: -2px;
+}
+
+.itemName {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemChevron {
+  flex: none;
+  display: inline-flex;
+  color: var(--c-muted);
+}
+
+/* §9: the way out of a group, at the end and quiet. */
+.leave {
+  align-self: flex-start;
+  justify-self: start;
+  min-height: var(--hit-compact);
+  margin-block-start: 4px;
+  padding-inline: 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-muted);
+  font: inherit;
+  font-size: var(--fs-meta-lg);
+  cursor: pointer;
+}
+
+.leave:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.form {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-white);
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-body);
+}
+
+.primary,
+.secondary {
+  justify-self: start;
+  min-height: var(--hit-min);
+  padding: 8px 16px;
+  border-radius: var(--r-control);
+  font: inherit;
+  font-size: var(--fs-body);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.primary {
+  border: 1px solid var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+}
+
+.secondary {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-ink);
+}
+
+/* "יציאה מהקבוצה" and the lesson actions sit in rows of their own, so they take the compact 40px target the design system already has
+   for a control of this weight. They were 16px — a real action at a size the
+   project's own tokens do not allow. */
+.link {
+  border: 0;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-compact);
+  padding: 2px 6px;
+  color: var(--c-green);
+  font: inherit;
+  font-size: var(--fs-meta);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.primary:disabled,
+.link:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}

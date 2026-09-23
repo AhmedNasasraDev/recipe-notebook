@@ -1,0 +1,78 @@
+.page {
+  display: grid;
+  gap: 12px;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  font-weight: var(--fw-title);
+}
+
+.lede,
+.privacy {
+  font-size: var(--fs-body);
+  line-height: 1.7;
+  color: var(--c-ink);
+}
+
+.privacy {
+  padding: 10px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-meta);
+}
+
+.problem {
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.primary,
+.secondaryButton,
+.secondary {
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: var(--r-control);
+  font: inherit;
+  font-size: var(--fs-body);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.primary {
+  border: 1px solid var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+}
+
+.secondaryButton,
+.secondary {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-ink);
+}
+
+.primary:disabled,
+.secondaryButton:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}

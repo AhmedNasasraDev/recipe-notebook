@@ -1,0 +1,1912 @@
+/* The recipe page and its conversion sheet. Tokens only — no raw hex here. */
+
+/*
+   The recipe page. It wore the pastry palette first, on its own root element,
+   while the rest of the application was still §16 — that re-binding is gone:
+   the palette IS the system now (`styles/tokens.css`) and a second copy of it
+   here would be the drift the token file exists to prevent.
+*/
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-between-groups);
+  padding: 12px var(--pad-card) 32px;
+  /*
+    Spec §3.1/§3.3 (stage 4): the recipe page is a page of a notebook — its
+    own paper (נייר מתכון) and the book face for what is read on it. The
+    controls on the page stay in the interface face: a button is not part of
+    the page, whatever page it sits on.
+  */
+  background: var(--c-recipe-paper);
+  font-family: var(--font-display);
+}
+.page button,
+.page input,
+.page select,
+.page textarea,
+.page summary {
+  font-family: var(--font-body);
+}
+
+/*
+  ── THE HERO ─────────────────────────────────────────────────────────────
+
+  The handoff's recipe screen opens with a wide photograph, roughly a quarter
+  to a third of the phone, scrolling with the page, and the two controls sit
+  ON it. Two rules govern what is below:
+
+   · the picture bleeds to the edges of the frame, so the negative margins
+     undo `.page`'s padding rather than a second column being introduced;
+   · a recipe with no photograph gets NO box at all — `.heroBare` is the bar
+     on its own, which is what this screen had before the picture existed.
+*/
+.hero {
+  position: relative;
+  margin-inline: calc(var(--pad-card) * -1);
+  overflow: hidden;
+  border-end-start-radius: var(--r-card-lg);
+  border-end-end-radius: var(--r-card-lg);
+  background: var(--c-neutral-bg);
+}
+
+.heroPhoto {
+  display: block;
+  inline-size: 100%;
+  /* Spec §8.3: a FIXED height, so every recipe page has the same shape.
+     220px on a phone, 320px on the wide frame — proposed values (stage 5). */
+  block-size: 220px;
+  object-fit: cover;
+}
+
+/*
+  The same band with no photograph, or with one whose link no longer
+  resolves (§8.3): the notebook's paper, a rule under it, a quiet glyph. Not
+  an empty rectangle — a page with no picture pasted in yet.
+*/
+.heroFallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  block-size: 220px;
+  margin-inline: calc(var(--pad-card) * -1);
+  background: var(--c-recipe-paper);
+  border-block-end: 1px solid var(--c-line);
+  color: var(--c-muted);
+}
+.heroFallback svg {
+  width: 40px;
+  height: 40px;
+}
+.heroFallbackText {
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  min-height: 1.4em;
+}
+@media (min-width: 760px) {
+  .heroPhoto,
+  .heroFallback {
+    block-size: 320px;
+  }
+}
+
+/*
+  The bar: back on the RIGHT (first in the source, which in RTL is the
+  right-hand end) and the ⋮ menu on the left — nothing else (spec §8.1; the
+  print button that stood between them is a menu item now, U-2). Sticky at
+  the top of the scroller, on the page's own paper, so the way back and the
+  actions never scroll away and are never drawn over the photograph. The
+  negative margins and matching padding make it span edge to edge.
+*/
+.topBar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+  margin-inline: calc(var(--pad-card) * -1);
+  margin-block-start: -12px;
+  padding: 8px var(--pad-card);
+  background: var(--c-recipe-paper);
+}
+
+/*
+  The menu button beside it. The back control itself is components/BackLink —
+  §4 wants one of those in the whole application — and what is left here is
+  the square icon button that opens the recipe's actions, cut to the same
+  shape so the pair reads as one bar.
+*/
+.menuBtn {
+  min-height: var(--hit-min);
+  inline-size: var(--hit-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: var(--c-white);
+  color: var(--c-ink);
+  border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+  border-radius: var(--r-control);
+}
+
+.menuBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+/* ── the ⋮ menu (spec §8.1–8.2; features/recipe/RecipeMenu.tsx) ──────────── */
+.menuWrap {
+  position: relative;
+  flex: none;
+}
+.menuPop {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  /* Hangs from the button's outer edge — the left in RTL — and opens inwards. */
+  inset-inline-end: 0;
+  z-index: 20;
+  min-inline-size: 248px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: var(--c-paper);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--c-ink) 14%, transparent);
+}
+.menuItem,
+.menuItemDanger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  inline-size: 100%;
+  min-height: var(--hit-min);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-mid);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+.menuItemDanger {
+  color: var(--c-red);
+}
+.menuItem:hover,
+.menuItem:focus-visible {
+  background: var(--c-green-bg);
+  outline: 0;
+}
+.menuItemDanger:hover,
+.menuItemDanger:focus-visible {
+  background: var(--c-red-bg);
+  outline: 0;
+}
+.menuItem:disabled,
+.menuItemDanger:disabled {
+  background: transparent;
+  color: var(--c-muted);
+  cursor: default;
+}
+.menuIcon {
+  display: inline-flex;
+  flex: none;
+}
+.menuSep {
+  block-size: 1px;
+  margin: 6px 4px;
+  background: var(--c-line);
+}
+.menuStatus {
+  position: absolute;
+  inset-block-start: calc(100% + 6px);
+  inset-inline-end: 0;
+  z-index: 19;
+  margin: 0;
+  padding: 8px 12px;
+  white-space: nowrap;
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  border-radius: var(--r-control);
+  font-size: var(--fs-secondary);
+}
+
+.missing {
+  padding: 32px var(--pad-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  font-size: var(--fs-body);
+  color: var(--c-muted);
+}
+
+/*
+  Centred, which nothing else in the application is.
+
+  The handoff draws the recipe's identity — name, category, yield — centred
+  under the photograph, and it earns the exception: it is a title page, not a
+  list, and under a full-bleed picture a right-aligned line leaves the left
+  half of the hero hanging. Everything BELOW it stays right-aligned, because
+  that is reading.
+*/
+.header {
+  padding-block: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.categoryPill {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-compact);
+  padding-inline: 12px;
+  border-radius: var(--r-control);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-meta-lg);
+  text-decoration: none;
+}
+
+.categoryPill:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-recipe-title);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--c-ink);
+  /* A long name wraps; it is never cut. */
+  overflow-wrap: anywhere;
+}
+.meta {
+  margin-top: 0;
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+.lockedNote {
+  margin-top: 0;
+  display: inline-block;
+  font-size: var(--fs-meta-lg);
+  padding: 3px 9px;
+  border-radius: var(--r-control);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+}
+
+.card {
+  background: var(--c-paper);
+  /* The caramel hairline at full strength is a stripe; at 55% it is the edge
+     of a page. */
+  border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+  border-radius: var(--r-card-lg);
+  padding: 16px var(--pad-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--c-text) 6%, transparent);
+}
+
+/*
+  A SECTION HEADING THAT LOOKS LIKE A COOKBOOK'S.
+
+  It was 11.5px of grey body text with 0.03em of letter-spacing — which in
+  Hebrew prises the letters of a word apart rather than making it elegant. It
+  is the display serif now (Frank Ruhl Libre, already the project's Hebrew
+  display face), at a size that can be read across a counter, in chocolate,
+  with a short caramel rule under it instead of spacing tricks.
+*/
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.3;
+  color: var(--c-ink);
+  padding-block-end: 8px;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 45%, transparent);
+}
+
+.cardHeadRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+  flex-wrap: wrap;
+}
+
+/* ── tabs ─────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: var(--gap-tight);
+}
+.tab,
+.tabOn {
+  flex: 1;
+  min-height: var(--hit-min);
+  padding: 4px;
+  border-radius: var(--r-control);
+  font-size: var(--fs-meta-lg);
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-muted);
+}
+.tabOn {
+  border-color: var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+}
+
+.tabsSmall {
+  display: flex;
+  gap: 5px;
+}
+.tabSmall,
+.tabSmallOn {
+  min-height: var(--hit-compact);
+  padding-inline: 9px;
+  /* 12px like every other control. It was 9 — "the group's radius minus its
+     padding" — which is the reasoning that ends up with four radii in one
+     interface. The group around these carries no radius of its own, so these
+     corners are the only ones that show. */
+  border-radius: var(--r-control);
+  font-size: var(--fs-label);
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-muted);
+}
+.tabSmallOn {
+  border-color: var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+}
+
+/* ── inputs ───────────────────────────────────────────────────────────── */
+.scaleInputs {
+  display: flex;
+  gap: var(--gap-tight);
+}
+.input,
+.select {
+  flex: 1;
+  min-height: var(--hit-min);
+  padding-inline: 11px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  font-size: var(--fs-body);
+  outline: 0;
+}
+.input:focus-visible,
+.select:focus-visible {
+  border-color: var(--c-green);
+  box-shadow: 0 0 0 2px var(--c-green-bg);
+}
+
+.scaleSummary {
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+}
+.warn {
+  font-size: var(--fs-secondary);
+  color: var(--c-red);
+}
+.calcNote,
+.viewNote {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.5;
+}
+
+/* ── ingredients ──────────────────────────────────────────────────────── */
+.ingredients {
+  display: flex;
+  flex-direction: column;
+}
+
+.ingRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--gap-in-group);
+  padding: 12px 0;
+  min-height: var(--hit-min);
+  text-align: start;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--c-line) 60%, transparent);
+  background: transparent;
+}
+.ingredients li:last-child .ingRow {
+  border-bottom: 0;
+}
+
+.qty,
+.qtyMissing {
+  flex: none;
+  min-width: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  /* Quantities line up in a column and are read as numbers, not as words. */
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
+}
+.qtyMissing {
+  color: var(--c-red);
+}
+.qtyHint {
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+.ingName {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--c-ink);
+  /* A long ingredient name wraps inside its row rather than pushing the
+     quantity off the screen. */
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ingNote {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+.ingUnresolved {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-red);
+  line-height: 1.45;
+}
+
+.convertHint {
+  /* stage-10 audit: was --c-sand, 2.14:1, on an affordance. Green is the
+     action colour (§16) and measures 6.22:1 there.
+
+     The design pass moved it to the secondary brown ON THIS SCREEN — 5.54:1
+     on ivory, still comfortably AA. The reason is repetition: this word sits
+     on every ingredient row, and in the action colour eight of them shouted
+     as loudly as the recipe's own name. */
+  flex: none;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+
+.unresolvedSummary {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-amber);
+  background: var(--c-amber-bg);
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  line-height: 1.5;
+}
+
+/* ── production ───────────────────────────────────────────────────────── */
+.disclosure {
+  width: 100%;
+  min-height: var(--hit-min);
+  border-radius: var(--r-control);
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-green);
+  font-size: var(--fs-body);
+}
+
+.prodBlocks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-between-groups);
+}
+.prodBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+}
+.prodTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: 400;
+  color: var(--c-muted);
+}
+.prodRows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+.prodRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+  font-size: var(--fs-secondary);
+}
+.prodRow dt {
+  color: var(--c-muted);
+}
+.prodRow dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.warningsBox {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-amber);
+  background: var(--c-amber-bg);
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  line-height: 1.5;
+}
+.warningsTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* ── steps ────────────────────────────────────────────────────────────── */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+/*
+  THE STEP NUMBER IS A NUMBER, SO IT HAS TO BE READABLE.
+
+  It was the display serif in `--c-sand` — 2.14:1 on paper, carried since the
+  prototype as a documented §16 exception. Caramel on cream is no better
+  (1.87:1), and the brief is explicit that light beige is not for anything
+  that matters. So the numeral keeps the serif and the warmth, and gets a
+  filled disc to sit on: chocolate on the deep cream, measured 12.76:1.
+*/
+.stepNum {
+  flex: none;
+  display: grid;
+  place-items: center;
+  inline-size: 30px;
+  block-size: 30px;
+  border-radius: 50%;
+  background: var(--c-green-bg);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
+}
+.stepBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.stepText {
+  font-size: var(--fs-body);
+  line-height: 1.75;
+  color: var(--c-ink);
+  overflow-wrap: anywhere;
+}
+.stepMeta {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+
+.recipeNote {
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+  background: var(--c-green-bg);
+  padding: 11px 12px;
+  border-radius: var(--r-card);
+  line-height: 1.6;
+}
+
+.allergens {
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+}
+
+/* ── conversion sheet (§5.3) ──────────────────────────────────────────── */
+.sheetBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(23, 26, 24, 0.38);
+  padding: 0;
+}
+
+.sheet {
+  width: 100%;
+  max-width: var(--frame-w);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--c-app-bg);
+  border-start-start-radius: var(--r-sheet);
+  border-start-end-radius: var(--r-sheet);
+  padding: var(--pad-card) var(--pad-card) calc(20px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+}
+
+.sheetHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+}
+.sheetTitle {
+  font-size: 20px;
+}
+.sheetName {
+  margin-top: 2px;
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+}
+.sheetClose {
+  flex: none;
+  min-width: var(--hit-min);
+  min-height: var(--hit-min);
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  color: var(--c-muted);
+}
+.sheetSub {
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+.factRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  margin: 0;
+  padding: 12px;
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+}
+.factRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+  font-size: var(--fs-secondary);
+}
+.factRow dt {
+  color: var(--c-muted);
+}
+.factRow dd {
+  margin: 0;
+  text-align: end;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-tight);
+}
+.pill,
+.pillOn {
+  min-height: var(--hit-min);
+  padding-inline: 13px;
+  border-radius: var(--r-control);
+  font-size: var(--fs-secondary);
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-muted);
+}
+.pillOn {
+  border-color: var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green);
+}
+.pill:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: not-allowed;
+}
+
+.resultBox {
+  padding: 12px;
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+}
+.resultValue {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+}
+.resultBadgeRow {
+  display: flex;
+}
+.resultWhy,
+.resultNote {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.5;
+}
+.resultReview {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-amber);
+  line-height: 1.5;
+}
+.resultFail {
+  font-size: var(--fs-secondary);
+  color: var(--c-red);
+  line-height: 1.6;
+}
+
+.calibrateBtn {
+  min-height: 46px;
+  border-radius: var(--r-control);
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-green);
+  font-size: var(--fs-body);
+}
+
+/* ── requirement 8: how complete the calculation is ───────────────────── */
+/*
+   Two levels, two token colours already in §16: amber for "some of it",
+   red for "none of it". No new colour is introduced — the palette carries
+   the meaning it carries everywhere else in the app.
+*/
+.calcPartialBox,
+.calcNoneBox {
+  padding: 11px 13px;
+  border-radius: var(--r-card);
+  line-height: 1.55;
+  border-inline-start: 3px solid currentColor;
+}
+.calcPartialBox {
+  color: var(--c-amber);
+  background: var(--c-amber-bg);
+}
+.calcNoneBox {
+  color: var(--c-red);
+  background: var(--c-red-bg);
+}
+.calcNoticeTitle {
+  font-weight: 600;
+  font-size: var(--fs-secondary);
+}
+.calcNoticeBody {
+  font-size: var(--fs-meta-lg);
+}
+.calcNoticeList {
+  font-size: var(--fs-meta-lg);
+  opacity: 0.85;
+  margin-block-start: 3px;
+}
+
+/* Marks one figure as a sum over only part of the ingredients. */
+.partialChip {
+  display: inline-block;
+  margin-inline-start: 5px;
+  padding: 1px 5px;
+  border-radius: var(--r-control);
+  font-size: 12px;
+  font-family: var(--font-body);
+  color: var(--c-amber);
+  background: var(--c-amber-bg);
+  vertical-align: middle;
+}
+
+/* ── personal calibration sheet ───────────────────────────────────────── */
+.calibIntro {
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+
+.calibTool {
+  margin-block-start: 8px;
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.55;
+}
+.calibCustom {
+  opacity: 0.8;
+}
+
+.calibField {
+  margin-block-start: 14px;
+  display: flex;
+  flex-direction: column;
+}
+.calibLabel {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  margin-block-end: 4px;
+}
+.calibInput {
+  padding: 11px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  font-size: var(--fs-body-lg);
+  min-height: var(--hit-min);
+}
+.calibInput:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 1px;
+  border-color: var(--c-green);
+}
+
+.calibExisting {
+  margin-block-start: 10px;
+  padding: 8px 10px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.55;
+}
+.calibError {
+  margin-block-start: 10px;
+  padding: 8px 10px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-meta-lg);
+}
+
+.calibRelated {
+  margin-block-start: 18px;
+  padding-block-start: 14px;
+  border-block-start: 1px solid var(--c-line);
+}
+.calibRelatedNote {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+.calibRelatedList {
+  margin-block-start: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.calibRelatedList li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap-in-group);
+}
+.calibRelatedText {
+  flex: 1;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-ink);
+  line-height: 1.55;
+}
+.calibAttachBtn {
+  flex: none;
+  min-height: var(--hit-compact);
+  padding: 0 14px;
+  border: 1px solid var(--c-green);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-green);
+  font-size: var(--fs-secondary);
+}
+
+/* ── recipe-page actions (edit / duplicate / delete) ──────────────────── */
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-in-group);
+  padding: 0;
+}
+/* One of these is a <Link> and the others are <button>s — without this the
+   link sits against the edge of its pill with a global underline under it,
+   while the buttons beside it are centred and clean. */
+.actionBtn,
+.actionBtnDanger {
+  flex: 1 1 auto;
+  min-height: var(--hit-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  padding: 0 16px;
+  border-radius: var(--r-control);
+  border: 1px solid var(--c-line);
+  background: var(--c-paper);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+}
+.actionBtn {
+  color: var(--c-ink);
+}
+.actionBtnDanger {
+  color: var(--c-red);
+  border-color: var(--c-red);
+}
+.actionBtn:disabled,
+.actionBtnDanger:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+/* The delete confirmation. Deliberately a dialog and not a window.confirm:
+   §7 asks for a confirmation that says what will be lost, and a native confirm
+   cannot name the recipe or list its children. */
+.confirmBox {
+  margin: 0;
+  padding: 13px 15px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  border-inline-start: 3px solid currentColor;
+}
+.confirmTitle {
+  font-weight: 600;
+  font-size: var(--fs-secondary);
+}
+.confirmBody {
+  margin-block-start: 4px;
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+.confirmActions {
+  margin-block-start: 12px;
+  display: flex;
+  gap: var(--gap-in-group);
+}
+
+/* ── §9 version history ───────────────────────────────────────────────── */
+.versionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.versionCurrent,
+.versionItem {
+  padding: 10px 12px;
+  border-radius: var(--r-card);
+  border-inline-start: 3px solid var(--c-line);
+  background: var(--c-white);
+}
+/* The present is marked in green, so the timeline reads at a glance. */
+.versionCurrent {
+  border-inline-start-color: var(--c-green);
+  background: var(--c-green-bg);
+}
+
+.versionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+}
+.versionTag {
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+.versionNow {
+  font-size: var(--fs-meta);
+  color: var(--c-green-ink);
+}
+.versionWhen {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+.versionWhat {
+  margin-block-start: 3px;
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+  line-height: 1.5;
+}
+.versionMeta {
+  margin-block-start: 2px;
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.versionActions {
+  margin-block-start: 9px;
+  display: flex;
+  gap: var(--gap-in-group);
+}
+.versionBtn,
+.versionBtnPrimary {
+  min-height: var(--hit-compact);
+  padding: 0 14px;
+  border-radius: var(--r-control);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+}
+.versionBtn {
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-ink);
+}
+.versionBtnPrimary {
+  border: 1px solid var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+}
+.versionBtn:disabled,
+.versionBtnPrimary:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+.versionConfirm {
+  margin-block-start: 10px;
+  padding: 11px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  border-inline-start: 3px solid currentColor;
+}
+.versionConfirmTitle {
+  font-weight: 600;
+  font-size: var(--fs-secondary);
+}
+.versionConfirmBody {
+  margin-block-start: 3px;
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+.versionConfirmActions {
+  margin-block-start: 10px;
+  display: flex;
+  gap: var(--gap-in-group);
+}
+
+.versionEmpty {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+.versionError {
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.55;
+}
+.versionLocked {
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.55;
+}
+
+/* ── the version viewer (requirement 5) ──────────────────────────────── */
+.versionViewerNote {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.55;
+}
+.versionIngList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.versionIngRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+  padding-block: 7px;
+  border-block-end: 1px solid var(--c-line);
+  font-size: var(--fs-secondary);
+}
+.versionIngRow:last-child {
+  border-block-end: 0;
+}
+.versionIngName {
+  color: var(--c-ink);
+}
+.versionIngQty {
+  flex: none;
+  color: var(--c-muted);
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+.versionIngGrams {
+  color: var(--c-ink);
+}
+.versionIngMissing {
+  color: var(--c-red);
+}
+.versionSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+  line-height: 1.55;
+}
+
+/* Named dependents in the delete confirmation. */
+/* Since stage 6 this is a LIST of the recipes holding this one, each a link to
+   its editor — the user's next action is to go and unlink it, so the list is
+   the way out and not decoration. */
+.confirmDeps {
+  margin-block-start: 8px;
+  padding: 8px 10px;
+  border-radius: var(--r-card);
+  background: rgba(255, 255, 255, 0.55);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.confirmDeps a {
+  /* A comfortable tap target on a phone without turning the list into buttons. */
+  display: inline-block;
+  min-height: var(--hit-compact);
+  padding-block: 6px;
+  color: var(--c-green);
+  font-weight: 600;
+}
+
+/* ── version comparison (stage-6 requirements 7-13) ──────────────────────── */
+
+/* Two pickers. Stacked on a phone, side by side as soon as there is room —
+   they are a pair and reading them as a pair is the point. */
+.cmpPickers {
+  display: grid;
+  gap: 10px;
+  margin-block-end: 12px;
+}
+@container app (min-width: 600px) {
+  .cmpPickers {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.cmpHeading {
+  font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-title);
+  color: var(--c-muted);
+  margin-block-end: 8px;
+}
+.cmpSummary {
+  padding: 8px 10px;
+  border-radius: var(--r-card);
+  background: var(--c-sand);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+  margin-block-end: 12px;
+}
+.cmpEmpty {
+  padding: 12px;
+  border-radius: var(--r-card);
+  background: var(--c-sand);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.7;
+  /* stage-10 audit: was --c-muted on sand, 2.02:1. Now 7.93:1. */
+  color: var(--c-ink);
+}
+
+.cmpList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-block-end: 14px;
+}
+
+/* One change. On a phone the label sits above the two values so neither gets
+   squeezed; on a wider frame it becomes a single line. No table, because a
+   two-value-column table does not fit 402px without horizontal scrolling. */
+.cmpChange,
+.cmpAdded,
+.cmpRemoved {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: var(--r-card);
+  background: rgba(0, 0, 0, 0.03);
+}
+@container app (min-width: 600px) {
+  .cmpChange,
+  .cmpAdded,
+  .cmpRemoved {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+}
+.cmpAdded {
+  border-inline-start: 3px solid var(--c-green);
+}
+.cmpRemoved {
+  border-inline-start: 3px solid var(--c-red);
+}
+
+.cmpLabel {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+  font-weight: 600;
+}
+.cmpValues {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: var(--fs-meta-lg);
+}
+/* The old value is struck through rather than only greyed: colour alone is not
+   a distinction, and a reader who cannot see the difference still needs to know
+   which of the two is the earlier one. */
+.cmpBefore {
+  text-decoration: line-through;
+  color: var(--c-muted);
+}
+.cmpWord {
+  color: var(--c-muted);
+  font-weight: var(--fw-body);
+  font-size: var(--fs-meta);
+  margin-inline-end: 4px;
+}
+.cmpAfter {
+  font-weight: var(--fw-title);
+}
+
+.cmpIngBlock {
+  margin-block-end: 12px;
+}
+.cmpIngName {
+  font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-title);
+  margin-block-end: 4px;
+}
+
+/* "Compare two versions" — the entry point for an arbitrary pair, as opposed to
+   the per-row button that compares one version with the live recipe. */
+.versionCompareAll {
+  min-height: var(--hit-min);
+  width: 100%;
+  margin-block-start: 10px;
+  padding-inline: 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-green);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── food cost (stage-7 requirement 4) ───────────────────────────────────── */
+.fcBlock {
+  background: var(--c-paper);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  padding: 12px;
+  margin-block-end: 12px;
+}
+.fcTitle {
+  font-size: var(--fs-secondary);
+  font-weight: var(--fw-title);
+  margin-block-end: 8px;
+}
+.fcGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.fcRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding-block: 5px;
+  font-size: var(--fs-meta-lg);
+  border-block-end: 1px dotted var(--c-line);
+}
+.fcRow:last-child {
+  border-block-end: none;
+}
+/* The percentage is the one figure a pricing decision is made on. */
+.fcHeadline {
+  margin-block-start: 4px;
+  padding-block-start: 8px;
+  border-block-start: 1px solid var(--c-line);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+}
+.fcWhy {
+  margin-block-start: 8px;
+  padding: 8px 10px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-meta);
+  line-height: 1.7;
+}
+.fcTodo {
+  margin-block-start: 8px;
+  font-size: var(--fs-meta);
+  line-height: 1.7;
+  color: var(--c-muted);
+}
+.fcTodo a {
+  color: var(--c-green);
+  font-weight: 600;
+}
+
+/* ── §7 the pan card ─────────────────────────────────────────────────────
+   Reuses .card and .cardTitle; only the picker and the suggestion are new.
+   Colours are the §16 tokens, and the contrast guard in tokens.test.ts
+   measures every pair below. */
+.panNote {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--c-ink);
+}
+.panWhy {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--c-muted);
+}
+.panPicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  align-items: flex-end;
+  margin: 10px 0 0;
+}
+.panField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 96px;
+  flex: 1 1 96px;
+}
+.panLabel {
+  font-size: 12px;
+  color: var(--c-muted);
+}
+.panSelect,
+.panInput {
+  min-height: var(--hit-min);
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 15px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.panSuggest {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--r-control);
+  background: var(--c-amber-bg);
+  color: var(--c-ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.panAdapt {
+  margin: 10px 0 0;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ── §8 the personal note ────────────────────────────────────────────────── */
+.noteArea {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  resize: vertical;
+}
+.noteStatus {
+  margin: 6px 0 0;
+  min-height: 18px;
+  font-size: 13px;
+  color: var(--c-muted);
+}
+
+/* ── §14 the way into Cook Mode ─────────────────────────────────────────── */
+/* The one filled control on the page: the sage, the width of the column, and
+   the only thing shaped like a pill — there is never a question about which
+   button starts the work. The palette gives green to the actions, so this is
+   the same fill as every other primary button (measured in tokens.test.ts:
+   the surface colour on the accent, 5.75:1). */
+.cookBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  margin-block-end: 0;
+  margin-inline: 0;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-surface);
+  font-family: var(--font-body);
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+  text-decoration: none;
+  /* DESIGN PASS: the lift was 18% of the ink at 16px of blur, which on a light
+     page read as a dark smudge under the one green control. A button this size
+     does not need to be told twice that it is the primary one. */
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--c-text) 10%, transparent);
+}
+
+.cookBtn:hover {
+  background: var(--c-green-ink);
+  color: var(--c-surface);
+}
+
+/* ── §2 screens 8 and 9: the print outputs ───────────────────────────────── */
+/* Quieter than .cookBtn on purpose. "מצב הכנה" is what you press to start
+   working; these two produce a document, which is a less frequent act. */
+.printRow {
+  display: flex;
+  gap: var(--gap-in-group);
+  margin-block-end: 0;
+  margin-inline: 0;
+}
+
+.printLink {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--hit-min);
+  border: 1px solid var(--c-green);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-green);
+  font-size: var(--fs-secondary);
+  text-decoration: none;
+}
+
+/* ── the one disclosure (spec §3.3, stage 5) ───────────────────────────────
+   "עוד פעולות" moved into the ⋮ menu (RecipeMenu.tsx, stage 5a). What is left
+   is "נתוני ייצור ועלויות" — every production and cost figure (food cost,
+   yield and loss, the formula, allergens, versions, the trial log) behind
+   ONE button, exactly as §3.3 asks: not scattered on the page. A <details>:
+   the browser's own disclosure, so the keyboard and the screen reader
+   already know it, and the summary says what is inside. */
+/* One column: `.page` pads its own sides, so nothing inside adds a second
+   inset — which is what used to make the cook button and these panels
+   narrower than the cards above them. */
+.more,
+.proDetails {
+  margin-inline: 0;
+  border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+  border-radius: var(--r-card-lg);
+  background: var(--c-paper);
+}
+
+.moreSummary,
+.proSummary {
+  display: flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  padding-inline: var(--pad-card);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.moreSummary:focus-visible,
+.proSummary:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: -2px;
+}
+
+.moreBody,
+.proBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding-block-end: 12px;
+}
+
+/* The rows inside carry their own side padding, so the body does not add more
+   of it — otherwise a card inside a card inside a details drifts inward. */
+.moreBody > *,
+.proBody > * {
+  margin-inline: 0;
+}
+
+/* A favourite that is on. Not colour alone: the star is filled and the word
+   changes with it ("במועדפים" / "הוספה למועדפים"), and the button carries
+   aria-pressed. */
+.actionBtnOn {
+  flex: 1 1 auto;
+  min-height: var(--hit-min);
+  padding: 0 16px;
+  border-radius: var(--r-control);
+  border: 1px solid var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+}
+
+/* "נשמר" on arrival from the editor. Green, with words — never colour alone. */
+.savedNotice {
+  margin-inline: 0;
+  padding: 9px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+}
+
+/*
+  ── THE PERSONAL NOTE'S FAILURE STATES (stage 3, item 2) ─────────────────
+
+  A note that did not save is not a detail: what was typed is the only copy,
+  and the screen has to offer the way to try again rather than a sentence.
+  These three are the retry row, the two-versions block when the account's
+  text moved under an unsaved draft, and the version text itself — quoted, so
+  it reads as "this is what you wrote" and not as an editable field.
+*/
+.noteRetry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-tight);
+  align-items: center;
+}
+
+.noteRetryBtn {
+  min-height: var(--hit-min);
+  padding-inline: 14px;
+  border: 1px solid var(--c-green);
+  border-radius: var(--r-control);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font: inherit;
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.noteRetryBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.noteConflict {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  padding: 12px 14px;
+  border: 1px solid var(--c-amber);
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+}
+
+.noteVersion {
+  padding: 8px 10px;
+  border-radius: var(--r-check);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-size: var(--fs-secondary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/*
+  ── ADJUSTING WHERE THE PHOTOGRAPH IS LOOKED AT ────────────────────────────
+
+  `.focusTarget` is the whole hero band while the panel is open: a press on it
+  chooses the point that stays in the middle of the crop. It is a real button
+  with a real accessible name (see RecipeScreen.tsx), laid over the picture but
+  UNDER the top bar — `z-index` 1 against the bar's own stacking — so back and
+  the menu keep working while the position is being chosen.
+*/
+.focusTarget {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: crosshair;
+}
+
+/* The chosen point, drawn so it reads on a dark photograph and a light one:
+   a white ring with a dark outline, which no single colour manages. */
+.focusDot {
+  position: absolute;
+  inline-size: 22px;
+  block-size: 22px;
+  margin-inline-start: -11px;
+  margin-block-start: -11px;
+  border: 2px solid var(--c-white);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 1px rgba(23, 26, 24, 0.55),
+    inset 0 0 0 1px rgba(23, 26, 24, 0.55);
+  pointer-events: none;
+}
+
+.focusBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-in-group);
+  margin-block-start: 10px;
+}
+
+.focusBtn,
+.focusBtnPrimary {
+  min-height: var(--hit-compact);
+  padding-inline: 14px;
+  border-radius: var(--r-control);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-mid);
+  cursor: pointer;
+}
+
+.focusBtn {
+  border: 1px solid var(--c-line);
+  background: var(--c-paper);
+  color: var(--c-ink);
+}
+
+.focusBtnPrimary {
+  border: 1px solid var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+}
+
+.focusBtnPrimary:disabled {
+  border-color: var(--c-off-bg);
+  background: var(--c-off-bg);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+.focusHint {
+  flex: 1 1 200px;
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+  line-height: 1.4;
+}
+
+.focusOk {
+  font-size: var(--fs-meta);
+  color: var(--c-green-ink);
+}
+
+/* The focal-point save that did not land: said beside the buttons, in the
+   error colour, with the panel still open. */
+.focusError {
+  flex: 1 1 100%;
+  padding: 8px 12px;
+  border-radius: var(--r-control);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-secondary);
+  line-height: 1.5;
+}
+
+/* ── the trial log (spec 5.1; stage 3ב, A-6) ───────────────────────────────
+   Inside "נתוני ייצור ועלויות" (spec §3.3, stage 5), styled like the other
+   production blocks there. */
+.trialCard {
+  background: var(--c-paper);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  padding: 12px;
+  margin-block-end: 12px;
+}
+.trialHelp,
+.trialEmpty {
+  margin: 0 0 8px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+.trialList {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.trialRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-tight) var(--gap-in-group);
+  padding: 8px 0;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+}
+.trialRow:last-child {
+  border-block-end: 0;
+}
+.trialText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.trialDate {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+.trialNote {
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.trialConfirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-tight);
+  font-size: var(--fs-secondary);
+}
+.trialGhostBtn,
+.trialDangerBtn,
+.trialAddBtn {
+  min-height: var(--hit-min);
+  min-width: var(--hit-min);
+  padding-inline: 14px;
+  border-radius: var(--r-control);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+.trialGhostBtn {
+  border: 1px solid var(--c-line);
+  background: var(--c-paper);
+  color: var(--c-ink);
+}
+.trialDangerBtn {
+  border: 1px solid var(--c-red);
+  background: var(--c-paper);
+  color: var(--c-red);
+}
+.trialAddBtn {
+  border: 1px solid var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+}
+.trialGhostBtn:disabled,
+.trialDangerBtn:disabled,
+.trialAddBtn:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+.trialGhostBtn:focus-visible,
+.trialDangerBtn:focus-visible,
+.trialAddBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+.trialForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding-block-start: 8px;
+  border-block-start: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+}
+.trialFields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-in-group);
+}
+.trialLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  flex: 1 1 100%;
+}
+.trialLabel:first-child {
+  flex: 0 1 180px;
+}
+.trialInput,
+.trialArea {
+  min-height: var(--hit-min);
+  padding: 8px 11px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+.trialArea {
+  resize: vertical;
+}
+.trialInput:focus-visible,
+.trialArea:focus-visible {
+  border-color: var(--c-green);
+  box-shadow: 0 0 0 2px var(--c-green-bg);
+  outline: 0;
+}
+.trialActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-in-group);
+}

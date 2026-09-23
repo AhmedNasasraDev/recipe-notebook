@@ -1,0 +1,852 @@
+/*
+  The recipe editor.
+
+  Only §16 tokens — no new colour, radius or type size. Layout is logical-
+  property only, so RTL comes from <html dir> and nothing needs mirroring when
+  Arabic is added (§15).
+
+  Every interactive control is at least --hit-min (44px) tall. §15 calls that
+  non-negotiable and it is more true here than anywhere else in the app: this
+  is the screen someone uses with flour on their hands.
+
+  Responsiveness (requirement 14): the form is a single column on a phone and
+  becomes two columns from 600px, which is where a tablet in portrait has room
+  for a label and a field side by side. The breakpoint is on the CONTAINER, via
+  the frame widening in AppShell — not on the viewport — so the layout is right
+  whether the app is full-screen on a tablet or in a narrow window.
+*/
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pad-card);
+  padding-block: var(--pad-card) 40px;
+  /* Fill the scroller, so the save bar below lands at the bottom of the
+     screen on a short stage instead of floating in the middle of it with the
+     page's background underneath. */
+  min-block-size: 100%;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-in-group);
+  padding-inline: var(--pad-card);
+}
+
+.backLink {
+  min-height: var(--hit-compact);
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--c-green);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+}
+
+.screenTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  color: var(--c-ink);
+}
+
+.loading {
+  padding: 40px var(--pad-card) 12px;
+  font-size: var(--fs-body);
+  color: var(--c-muted);
+  text-align: center;
+}
+
+/* ── cards ────────────────────────────────────────────────────────────── */
+.card {
+  margin-inline: var(--pad-card);
+  padding: var(--pad-card);
+  border-radius: var(--r-card-lg);
+  background: var(--c-paper);
+  border: 1px solid var(--c-line);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.3;
+  color: var(--c-ink);
+}
+
+.cardHeadRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+}
+
+.countHint {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+/* ── fields ───────────────────────────────────────────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  margin-block-end: 4px;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-height: var(--hit-min);
+  padding: 10px 11px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  font-size: var(--fs-body);
+  color: var(--c-ink);
+}
+.textarea {
+  min-height: 62px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 1px;
+  border-color: var(--c-green);
+}
+
+.hint {
+  margin-block-start: 5px;
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.checkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap-in-group);
+  min-height: var(--hit-compact);
+  font-size: var(--fs-secondary);
+  line-height: 1.5;
+  cursor: pointer;
+}
+/*
+  24px, like every other checkbox in the product (PermsScreen's `.inline`, the
+  chat's own). It was 18 here, and the responsive audit did not catch it for
+  one reason: the editor was not in that audit's screen list until the wizard
+  was built. It is now, and three controls on it — "מתכון בסיס", and the two
+  formula ticks on every ingredient row — were measured at 18px against the
+  project's own 24px floor. Fixed rather than excused.
+*/
+.checkRow input {
+  margin-block-start: 1px;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  accent-color: var(--c-green);
+}
+.checkRow span {
+  display: flex;
+  flex-direction: column;
+}
+
+.checkPair {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-block-start: 10px;
+}
+
+/* ── ingredient and step rows ─────────────────────────────────────────── */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ingCard,
+.stepCard {
+  padding: 11px;
+  border-radius: var(--r-card);
+  background: var(--c-white);
+  border: 1px solid var(--c-line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ingHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap-in-group);
+}
+
+.ingIndex {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-block-start: 11px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--c-sand);
+  /* stage-10 audit: white on sand measured 2.21:1 on the row number.
+     Ink on the same sand badge is 7.93:1, and the badge looks unchanged. */
+  color: var(--c-ink);
+  font-size: var(--fs-meta);
+}
+
+.ingName {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowTools {
+  flex: none;
+  display: flex;
+  gap: 2px;
+}
+
+.iconBtn,
+.iconBtnDanger {
+  min-width: var(--hit-compact);
+  min-height: var(--hit-min);
+  border: 0;
+  border-radius: var(--r-control);
+  background: transparent;
+  font-size: 15px;
+  line-height: 1;
+}
+.iconBtn {
+  color: var(--c-muted);
+}
+.iconBtnDanger {
+  color: var(--c-red);
+  font-size: 19px;
+}
+/* An icon with no label of its own: it keeps a fade, but one that still
+   draws — 0.75 of the secondary ink is about 3.6:1, where 0.3 was 1.6. */
+.iconBtn:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+.iconBtn:hover:not(:disabled),
+.iconBtnDanger:hover {
+  background: var(--c-neutral-bg);
+}
+
+.ingGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* What the engine currently makes of this row. */
+.ingResult {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-in-group);
+  min-height: 20px;
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+}
+.ingMissing {
+  color: var(--c-red);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.5;
+}
+
+/* The two honest ways out of an unweighable row. */
+.fixRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-in-group);
+}
+.fixBtn,
+.fixBtnGhost {
+  min-height: var(--hit-compact);
+  padding: 0 13px;
+  border-radius: var(--r-control);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+}
+.fixBtn {
+  border: 1px solid var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+}
+.fixBtnGhost {
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-muted);
+}
+
+.more {
+  border-block-start: 1px dashed var(--c-line);
+  padding-block-start: 10px;
+}
+.moreSummary {
+  min-height: var(--hit-compact);
+  display: flex;
+  align-items: center;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-green);
+  cursor: pointer;
+}
+.more[open] .moreSummary {
+  margin-block-end: 10px;
+}
+/* The base-recipe name on a linked row's summary. It wraps rather than
+   truncating: a recipe name the reader cannot finish is not an identification. */
+.moreSub {
+  color: var(--c-muted);
+  font-weight: 600;
+}
+.moreSummary {
+  flex-wrap: wrap;
+  gap: 0 2px;
+}
+
+.addBtn {
+  min-height: var(--hit-min);
+  border: 1px dashed var(--c-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-green);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+}
+.addBtn:hover {
+  background: var(--c-green-bg);
+  border-color: var(--c-green);
+}
+
+/* ── the live calculation block (requirement 11) ──────────────────────── */
+.calcFull {
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-size: var(--fs-meta-lg);
+}
+
+.calcPartialBox,
+.calcNoneBox {
+  padding: 11px 13px;
+  border-radius: var(--r-card);
+  line-height: 1.55;
+  border-inline-start: 3px solid currentColor;
+}
+.calcPartialBox {
+  color: var(--c-amber);
+  background: var(--c-amber-bg);
+}
+.calcNoneBox {
+  color: var(--c-red);
+  background: var(--c-red-bg);
+}
+.calcNoticeTitle {
+  font-weight: 600;
+  font-size: var(--fs-secondary);
+}
+.calcNoticeBody {
+  font-size: var(--fs-meta-lg);
+}
+.calcNoticeList {
+  margin-block-start: 3px;
+  font-size: var(--fs-meta-lg);
+  opacity: 0.85;
+}
+
+.previewRows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.previewRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+  padding-block: 6px;
+  border-block-end: 1px solid var(--c-line);
+  font-size: var(--fs-secondary);
+}
+.previewRow:last-child {
+  border-block-end: 0;
+}
+.previewRow dt {
+  color: var(--c-muted);
+}
+.previewRow dd {
+  margin: 0;
+  color: var(--c-ink);
+}
+
+.partialChip {
+  display: inline-block;
+  margin-inline-start: 5px;
+  padding: 1px 5px;
+  border-radius: var(--r-control);
+  font-size: 12px;
+  color: var(--c-amber);
+  background: var(--c-amber-bg);
+  vertical-align: middle;
+}
+
+/* ── disclosure ───────────────────────────────────────────────────────── */
+.disclosure {
+  min-height: var(--hit-min);
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--c-neutral-bg);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+}
+
+.prodFields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── messages ─────────────────────────────────────────────────────────── */
+.errorSlot:focus-visible {
+  outline: 2px solid var(--c-red);
+  outline-offset: 2px;
+}
+
+.errorBox {
+  margin-inline: var(--pad-card);
+  padding: 11px 13px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+.errorTitle {
+  font-weight: 600;
+  margin-block-end: 3px;
+}
+
+.blockedBox {
+  margin-inline: var(--pad-card);
+  padding: 11px 13px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+
+/* ── the action bar ───────────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: var(--gap-in-group);
+  padding-inline: var(--pad-card);
+}
+
+.saveBtn {
+  flex: 2;
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-family: var(--font-body);
+  font-size: var(--fs-body-lg);
+  font-weight: 600;
+}
+.saveBtn:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+.cancelBtn {
+  flex: 1;
+  min-height: 48px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-muted);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+}
+
+/* ── tablet and wider (requirement 14) ───────────────────────────────── */
+/*
+  Container queries rather than media queries: the app lives inside a frame
+  whose width is set by AppShell, so asking the viewport would give the wrong
+  answer when the frame is narrower than the window.
+*/
+@container app (min-width: 600px) {
+  .row2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .ingGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .checkPair {
+    flex-direction: row;
+    gap: 20px;
+  }
+  .previewRows {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0 20px;
+  }
+}
+
+/* Fallback for a browser with no container-query support: the viewport is a
+   close enough proxy, because the frame only widens on a wide viewport. */
+@supports not (container-type: inline-size) {
+  @media (min-width: 700px) {
+    .row2 {
+      grid-template-columns: 1fr 1fr;
+    }
+    .ingGrid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}
+
+/* The cost side of the completeness notice. Amber rather than red: a missing
+   price is a gap in the pricing data, not a broken calculation. */
+.costNote {
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.55;
+}
+
+/* ── UX pass ─────────────────────────────────────────────────────────────
+   The form is four numbered steps now. The number is decoration beside a
+   heading that says the same thing in words, so it is `aria-hidden`. */
+.stepNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 22px;
+  block-size: 22px;
+  margin-inline-end: 8px;
+  border-radius: 50%;
+  background: var(--c-green);
+  color: var(--c-white);
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-title);
+  vertical-align: middle;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-block-end: 4px;
+}
+
+/* "חובה" beside the label — a word, not a red asterisk that has to be
+   decoded, and not colour on its own. */
+.required {
+  align-self: center;
+  margin-inline-start: 6px;
+  padding: 1px 7px;
+  border-radius: var(--r-control);
+  background: var(--c-amber-bg);
+  color: var(--c-amber);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+}
+
+/* The message beside the field it is about. */
+.fieldError {
+  margin-block-start: 5px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-red);
+  line-height: 1.5;
+}
+
+/* Step 4, the professional panel. */
+.proDetails {
+  margin-inline: var(--pad-card);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card-lg);
+  background: var(--c-paper);
+}
+
+.proSummary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--hit-min);
+  padding-inline: var(--pad-card);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.proSummary:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: -2px;
+}
+
+.proHint {
+  margin-inline-start: auto;
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+.proBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding-block-end: 12px;
+}
+
+.proBody > * {
+  margin-inline: 0;
+}
+
+/* The save bar rides along the bottom of the form. */
+.saveBar {
+  /*
+    `auto` places it at the bottom when the stage is shorter than the screen;
+    `sticky` pins it there when the stage is longer and the form scrolls. The
+    two do not fight: the auto margin only has slack to take when there is
+    slack, which is exactly when there is nothing to stick to.
+  */
+  margin-block-start: auto;
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-block: 12px;
+  background: var(--c-app-bg);
+  /* A drawn edge, not a 24px wash over the last field — see the note on
+     CookScreen's `.gateBar`, which had the same defect. */
+  border-block-start: 1px solid var(--c-line);
+}
+
+.saveWhy {
+  padding-inline: var(--pad-card);
+  font-size: var(--fs-meta-lg);
+  color: var(--c-amber);
+  line-height: 1.5;
+}
+
+/*
+  ── §6: THE STAGE STEPPER ────────────────────────────────────────────────
+
+  Four stages across the top — פרטים, חומרי גלם, אופן ההכנה, סיכום — with the
+  one you are in filled, the ones behind you marked as passed, and each of
+  them a control that takes you there. It is sticky because it is also the
+  answer to "where am I in this form", which is the question a long form
+  makes people ask.
+
+  A stage is a real target (44px) and never relies on colour alone: the filled
+  circle, the heavier label and `aria-current="step"` all say the same thing.
+*/
+.stepper {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+  padding-block: 8px;
+  background: var(--c-app-bg);
+  /* On a 360px phone four labels do not fit side by side; they scroll rather
+     than wrap into a second row that moves the form down. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.stepper::-webkit-scrollbar {
+  display: none;
+}
+
+.stageBtn {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--hit-min);
+  padding: 4px 10px;
+  border: 0;
+  /* A stage marker is something you PRESS, so it takes the control radius and
+     not the card one — 16px here made the editor read as two shape languages
+     at once. */
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-muted);
+  font: inherit;
+  font-size: var(--fs-meta-lg);
+  cursor: pointer;
+}
+
+.stageNum {
+  display: grid;
+  place-items: center;
+  inline-size: 26px;
+  block-size: 26px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-paper);
+  font-size: var(--fs-label);
+  font-variant-numeric: tabular-nums;
+}
+
+.stageLabel {
+  white-space: nowrap;
+}
+
+.stageOn {
+  color: var(--c-green-ink);
+  font-weight: var(--fw-title);
+}
+
+.stageOn .stageNum {
+  border-color: var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+}
+
+/* A stage you have already been past: the tint, not the fill. */
+.stagePast .stageNum {
+  border-color: var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+}
+
+.stageBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: -2px;
+}
+
+/* The way on, at the end of a stage. Quiet: the loud control on this screen
+   is the save, and this one only moves the page. */
+.nextStage {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  padding-inline: 16px;
+  border: 1px solid var(--c-green);
+  border-radius: var(--r-control);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font: inherit;
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nextStage:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+/* §6: "שמירת טיוטה" — a real control, and quieter than the stage's primary. */
+.draftBtn {
+  min-height: var(--hit-min);
+  padding-inline: 16px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-secondary);
+  cursor: pointer;
+}
+
+.draftBtn:disabled {
+  color: var(--c-muted);
+  background: var(--c-neutral-bg);
+  cursor: default;
+}
+
+.draftBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.saveOk {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-green-ink);
+}
+
+/*
+  ── THE PHOTOGRAPH CARD ON STAGE 1 ─────────────────────────────────────────
+
+  A new recipe has no row to attach a file to, so the file is held and shown
+  here first. The preview is the same shape as the hero it will become —
+  `object-fit: cover` in a 16:9-ish band — so what is chosen looks like what
+  will appear, rather than like a stretched thumbnail.
+*/
+.photoPreview {
+  display: block;
+  inline-size: 100%;
+  block-size: clamp(150px, 26vh, 240px);
+  object-fit: cover;
+  border-radius: var(--r-control);
+  background: var(--c-neutral-bg);
+}
+
+.photoRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-in-group);
+}
+
+/* A label, not a button: it wraps the file input, which is the standard way
+   to style a file picker without the browser's own control. */
+.photoPick {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--hit-min);
+  padding-inline: 16px;
+  border: 1px solid var(--c-green);
+  border-radius: var(--r-control);
+  background: var(--c-paper);
+  color: var(--c-green-ink);
+  font-size: var(--fs-secondary);
+  font-weight: var(--fw-mid);
+  cursor: pointer;
+}
+
+.photoPick:focus-within {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}

@@ -1,0 +1,397 @@
+.page {
+  padding: 16px;
+  padding-block-end: 96px;
+}
+
+.head {
+  margin-block-end: 14px;
+}
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  margin-block-end: 6px;
+}
+.lede {
+  font-size: var(--fs-meta-lg);
+  line-height: 1.7;
+  color: var(--c-muted);
+}
+
+.notice,
+.error,
+.empty {
+  padding: 12px;
+  border-radius: var(--r-card);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.7;
+  margin-block-end: 12px;
+}
+/*
+  STAGE-10 AUDIT FIX. These boxes paired a `--c-sand` background with
+  `--c-muted` text, measured at 2.02:1 — the worst contrast in the app, and
+  far under the 4.5:1 that 10.5-11.5px text needs. The token's own comment
+  says sand is a FILL ("step numbers, paper frame"), not a background for
+  secondary text. The palette itself is untouched (the handoff protects §16);
+  only the text is darkened here, which measures 7.93:1.
+*/
+.notice,
+.empty {
+  background: var(--c-sand);
+  color: var(--c-ink);
+}
+.error {
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-weight: 600;
+}
+
+.addBtn {
+  min-height: var(--hit-min);
+  width: 100%;
+  border: 1px dashed var(--c-line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--c-green);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  cursor: pointer;
+  margin-block-end: 16px;
+}
+.addBtn:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: not-allowed;
+}
+
+/* ── the form ───────────────────────────────────────────────────────────── */
+.form {
+  background: var(--c-paper);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  padding: 14px;
+  margin-block-end: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.label {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+  font-weight: 600;
+}
+.input,
+.select {
+  min-height: var(--hit-min);
+  padding-inline: 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-paper);
+  font-size: var(--fs-body);
+  color: var(--c-ink);
+  width: 100%;
+}
+
+/* Stacked on a phone; the three package fields sit on one line as soon as
+   there is room, because they are read as one sentence. */
+.grid {
+  display: grid;
+  gap: 10px;
+}
+@container app (min-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.derived {
+  padding: 10px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-sand);
+  font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-title);
+  line-height: 1.6;
+}
+
+.hint {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chipOn,
+.chipOff {
+  min-height: var(--hit-compact);
+  padding-inline: 10px;
+  border-radius: var(--r-control);
+  font-size: var(--fs-meta);
+  cursor: pointer;
+}
+.chipOn {
+  border: 1px solid var(--c-green);
+  background: var(--c-green);
+  color: var(--c-paper);
+  font-weight: 600;
+}
+.chipOff {
+  border: 1px dashed var(--c-line);
+  background: transparent;
+  color: var(--c-muted);
+}
+
+.affected {
+  padding: 10px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-sand);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.7;
+}
+.affectedTitle {
+  font-weight: var(--fw-title);
+  margin-block-end: 4px;
+}
+.affectedList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.affectedList a {
+  color: var(--c-green);
+  font-weight: 600;
+  min-height: var(--hit-compact);
+  display: inline-block;
+  padding-block: 4px;
+}
+.affectedNote {
+  color: var(--c-muted);
+  font-size: var(--fs-meta);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.primary,
+.secondary,
+.danger {
+  min-height: var(--hit-min);
+  /* A glyph beside the words: one row, centred, with the gap the set uses. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-inline: 16px;
+  border-radius: var(--r-control);
+  font-size: var(--fs-meta-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+.primary {
+  border: none;
+  background: var(--c-green);
+  color: var(--c-paper);
+}
+.secondary {
+  border: 1px solid var(--c-line);
+  background: transparent;
+  color: var(--c-ink);
+}
+.danger {
+  border: 1px solid var(--c-red);
+  background: transparent;
+  color: var(--c-red);
+}
+.primary:disabled,
+.secondary:disabled,
+.danger:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: not-allowed;
+}
+
+/* ── the list ───────────────────────────────────────────────────────────── */
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.item {
+  background: var(--c-paper);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  padding: 12px;
+}
+.itemHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.itemName {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+}
+.itemPrice {
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+}
+/* "No price" is a state, not a zero, so it reads as words and not as a figure. */
+.noPrice {
+  color: var(--c-muted);
+  font-weight: 600;
+  font-size: var(--fs-meta-lg);
+}
+.itemMeta,
+.itemAllergens {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+  line-height: 1.7;
+  margin-block-start: 2px;
+}
+.itemPack {
+  font-weight: 600;
+}
+.itemActions {
+  display: flex;
+  gap: 8px;
+  margin-block-start: 10px;
+  flex-wrap: wrap;
+}
+.confirm {
+  margin-block-start: 10px;
+  padding: 12px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.7;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── the derived price, and the scales it reads at (stage 8) ─────────────── */
+
+.derivedMain {
+  font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-title);
+  line-height: 1.6;
+}
+
+.derivedTag {
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+/* One number at three scales. Laid out as a row so they read as the same
+   fact seen closer up, not as three separate prices. */
+.conversions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 4px;
+  list-style: none;
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+.yieldNote {
+  margin-top: 6px;
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--c-ink);
+}
+
+/* ── the purchase history (requirement C) ───────────────────────────────── */
+
+.historyList {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.historyRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--c-line);
+  font-size: var(--fs-meta);
+}
+
+.historyRow:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.historyWhen {
+  min-width: 5.5em;
+  color: var(--c-muted);
+}
+
+.historyPrice {
+  font-weight: var(--fw-title);
+}
+
+.historyWho,
+.historyPack {
+  color: var(--c-muted);
+}
+
+.historyChange {
+  font-weight: var(--fw-title);
+  color: var(--c-red);
+}
+
+/* §10's search. One field, its own visible label, and the same control shape
+   the notebook's search uses — this is the same act in a different list. */
+.searchRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.searchLabel {
+  font-size: var(--fs-meta-lg);
+  /* The magnifier sits on the label's baseline row, not above the words. */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-muted);
+}
+
+.search {
+  min-height: var(--hit-min);
+  padding-inline: 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-body);
+}
+
+.search:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 1px;
+  border-color: var(--c-green);
+}

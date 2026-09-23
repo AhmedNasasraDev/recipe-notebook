@@ -1,0 +1,32 @@
+/* The provenance badge. Colour comes from the engine's Source, never from the
+ * call site — that is what stops an estimate being painted green (engine B3). */
+
+.badge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--r-control);
+  font-size: var(--fs-meta-lg);
+  background: var(--c-white);
+  border: 1px solid currentColor;
+}
+
+.exact,
+.personal,
+.recipe {
+  color: var(--c-green);
+}
+.system {
+  color: var(--c-amber);
+}
+.estimate,
+.unavailable {
+  color: var(--c-red);
+}
+
+.review {
+  font-size: var(--fs-label);
+  opacity: 0.85;
+}

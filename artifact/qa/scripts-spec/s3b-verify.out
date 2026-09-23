@@ -1,0 +1,17 @@
+A6.cardPresent: 1
+A6.before: "יומן ניסויים רישום של מה שנאפה בפועל: תאריך ומה קרה. היומן נשמר עם המתכון ולא משתנה בעריכה שלו, ואינו מועתק בשכפול. עדיין אין רשומות ביומן. תאריך מה קרה הוספה ליומן"
+A6.afterAdd: "יומן ניסויים רישום של מה שנאפה בפועל: תאריך ומה קרה. היומן נשמר עם המתכון ולא משתנה בעריכה שלו, ואינו מועתק בשכפול. 21 בספטמבר 2026 בדיקה-QA ניסוי 1 — נמס מהר מדי, לקרר יותר הסרה תאריך מה קרה הוספה ליומן נשמר"
+A6.hitTargets: ["הסרת הרשומה מ21 בס 63×44","date 180×44","textarea 342×66","הוספה ליומן 103×44"]
+A6.afterReload: "יומן ניסויים רישום של מה שנאפה בפועל: תאריך ומה קרה. היומן נשמר עם המתכון ולא משתנה בעריכה שלו, ואינו מועתק בשכפול. 21 בספטמבר 2026 בדיקה-QA ניסוי 1 — נמס מהר מדי, לקרר יותר הסרה תאריך מה קרה הוספה ליומן"
+A6.twoEntriesOrder: ["22 בספטמבר 2026\nבדיקה-QA ניסוי 2 — תקין\nהסרה","21 בספטמבר 2026\nבדיקה-QA ניסוי 1 — נמס מהר מדי, לקרר יותר\nהסרה"]
+A6.confirmText: "להסיר את הרשומה מ21 בספטמבר 2026? כן, להסיר ביטול"
+A6.afterRemove: ["22 בספטמבר 2026\nבדיקה-QA ניסוי 2 — תקין\nהסרה"]
+A6.afterRemoveReload: ["22 בספטמבר 2026\nבדיקה-QA ניסוי 2 — תקין\nהסרה"]
+A6.afterEditorSave: ["22 בספטמבר 2026\nבדיקה-QA ניסוי 2 — תקין\nהסרה"]
+A6.afterCleanup: "יומן ניסויים רישום של מה שנאפה בפועל: תאריך ומה קרה. היומן נשמר עם המתכון ולא משתנה בעריכה שלו, ואינו מועתק בשכפול. עדיין אין רשומות ביומן. תאריך מה קרה הוספה ליומן נשמר"
+A6.trialRequests: ["GET /rest/v1/trials?select=id&recipe_id=eq.b343acb2-8fdc-4044-963d-593cacd49e52","POST /rest/v1/trials?columns=%22recipe_id%22%2C%22date%22%2C%22note%22","GET /rest/v1/trials?select=id%2Cdate%2Cnote&recipe_id=eq.b343acb2-8fdc-4044-963d-593cacd49e52","GET /rest/v1/trials?select=id&recipe_id=eq.b343acb2-8fdc-4044-963d-593cacd49e52","POST /rest/v1/trials?columns=%22recipe_id%22%2C%22date%22%2C%22note%22","PATCH /rest/v1/trials?id=eq.1c3444d0-9ff6-4f6d-98a6-cf87a32a609b&recipe_id=eq.b343acb2-8fdc-4044","GET /rest/v1/trials?select=id%2Cdate%2Cnote&recipe_id=eq.b343acb2-8fdc-4044-963d-593cacd49e52","GET /rest/v1/trials?select=id&recipe_id=eq.b343acb2-8fdc-4044-963d-593cacd49e52","PATCH /rest/v1/
+A5.cardText: "גיבוי וייצוא הורדת קובץ JSON אחד עם כל המחברת: המתכונים על הרכיבים, השלבים, ההערות ויומן הניסויים, חומרי הגלם והמחירים, תוכניות הייצור וההעדפות. ההערות האישיות נכללות — הקובץ נשמר אצלכם בלבד ואינו נשלח לשום מקום. תמונות אינן נכללות. ייבוא חזרה מהקובץ עדיין אינו זמין. הורדת גיבוי (JSON)"
+A5.fileName: "download"
+A5.status: "הגיבוי הורד: 3 מתכונים, 3 חומרי גלם, 1 תוכניות ייצור."
+A5.json: {"format":"recipe-notebook-backup","version":1,"exportedAt":"2026-09-23T02:19:35.948Z","email":"nasasraah+qa1@gmail.com","recipes":3,"names":["בדיקה-QA בריוש חמאה קלאסי","בדיקה-QA בריוש","בדיקה-QA גנאש"],"catalog":3,"plans":1,"planNames":["בדיקה-QA תוכנית א"],"hasVersions":false,"hasUpdatedAt":false,"withPrivateNote":1,"firstRecipeKeys":["id","name","category","tags","isSub","locked","yieldUnits","unitWeight","targetFC","shelfLife","storage","freezing","thawing","equipment","notes","manualAllergens","versionNote","createdAt","ingredients","steps","salePriceBasis","weightBefore","weightAfter","privateNote"],"bytes":10252}
+pageErrors: []

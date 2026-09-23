@@ -1,0 +1,155 @@
+/*
+  THE BOTTOM BAR — A GLYPH AND ITS NAME, IN THE SAGE-AND-CREAM DRESS.
+
+  WHAT CHANGED AND WHAT DID NOT
+
+  The four destinations, their order and their addresses are exactly what §2
+  specifies. The name is back UNDER the glyph, on every width: Ahmed asked for
+  the icon and the word together, which is also what the handoff draws. It is
+  real text, so it is the link's accessible name as well — see TabBar.tsx.
+
+  The four glyphs come from Lucide (see shell/Icons.tsx): House, NotebookText,
+  Users and Ellipsis. NotebookText rather than a plain book because the plain
+  one read as an empty rectangle at 24px — Ahmed asked for "אייקון מחברת עם
+  פרטים קריאים".
+
+  The colours are the pastry tokens, used directly rather than by re-binding
+  §16's names — the bar sits outside the recipe page, so a re-binding here
+  would be the leak the guard in `styles/tokens.test.ts` exists to catch.
+  Measured: chocolate on ivory 14.86:1, the secondary brown on ivory 5.54:1.
+
+  THE ACTIVE TAB IS MARKED TWICE, NEVER BY COLOUR ALONE
+
+    1. a soft rounded fill behind the glyph (`--c-cream-deep`)
+    2. the glyph itself is drawn at a heavier stroke — 2.5 against 1.75 — which
+       is a property of the icon set, so all four change together
+
+  Colour is the third cue, not the only one.
+*/
+
+/*
+  THE BAR SITS AT THE BOTTOM OF THE FRAME, AND THE DEVICE'S SAFE AREA IS
+  INSIDE IT.
+
+  Ahmed: "אזור בטוח שנדרש על ידי המכשיר צריך להשתלב ברקע הפס, בלי ליצור
+  רצועה נפרדת או ריווח כפול."
+
+  That is what `padding-bottom: calc(6px + env(...))` does and why the inset
+  is padding rather than margin: the bar's own `background` paints the whole
+  box, padding included, so the strip over the home indicator is the bar's
+  colour and not a second band under it. There is no outer spacing to go with
+  it — the bar is a flex child of the frame with `flex: none`, so it ends
+  exactly where the frame ends, and the frame now ends exactly where the
+  viewport does (see the note in AppShell.module.css about the 874px cap).
+
+  Nothing here is `position: fixed`. A fixed bar is what makes the last row of
+  a list unreachable, and it is also what rides up with the keyboard; this one
+  is in normal flow, so the scroller above it gets exactly the height that is
+  left and no content can end up behind it.
+*/
+.bar {
+  flex: none;
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  gap: 2px;
+  padding: 6px 8px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid color-mix(in srgb, var(--c-border) 55%, transparent);
+  background: var(--c-surface);
+}
+
+.tab {
+  flex: 1;
+  /* Ahmed asked for 48×48 — above the project's own 44px floor, and this is a
+     control pressed with a thumb while holding a bowl. With the caption back
+     the tab is taller than that, which only helps. */
+  min-height: 52px;
+  min-width: 48px;
+  border: 0;
+  background: transparent;
+  color: var(--c-muted-ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-decoration: none;
+  /* The one control radius. It was 14 — the kind of near-miss that makes an
+     interface feel unresolved without anybody being able to name why. */
+  border-radius: var(--r-control);
+  position: relative;
+}
+
+/* The glyph's own box: the marker behind the active tab is drawn on THIS, so
+   the tap target stays 48px while the marker stays narrower than the tab.
+   The radius is the project's one control radius — it was a full pill, which
+   is the shape Ahmed asked to take off every control. */
+.glyph {
+  display: grid;
+  place-items: center;
+  inline-size: 44px;
+  block-size: 28px;
+  border-radius: var(--r-control);
+  color: inherit;
+}
+
+.active {
+  color: var(--c-text);
+}
+
+.active .glyph {
+  background: var(--c-select);
+}
+
+/* Keyboard focus is its own state, and it is visible on both the rest and the
+   active tab. */
+.tab:focus-visible {
+  outline: 2px solid var(--c-text);
+  outline-offset: -3px;
+}
+
+/*
+  THE NAME UNDER THE GLYPH.
+
+  Small — this is a caption, not a heading — and it never wraps or shrinks the
+  glyph: at 360px the four words are בית, מחברת, קבוצות and עוד, which fit
+  side by side at 11px with the 48px targets intact (measured in the browser
+  at 360, 390 and 402).
+
+  The active tab's name is heavier as well as darker, so the state is carried
+  by weight, by the filled glyph and by colour — never by colour alone.
+*/
+.label {
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.active .label {
+  font-weight: var(--fw-title);
+}
+
+/*
+  A TAB THAT IS NOT BUILT YET.
+
+  Nothing is, today — all four lead somewhere — and the caption that used to
+  say "בהכנה" went with the labels. The state is kept rather than deleted,
+  because §2 will grow: the name carries the words (TabBar.tsx) and this is
+  the mark a sighted user sees, which is a shape and a position rather than a
+  colour.
+*/
+.pending {
+  color: var(--c-muted-ink);
+}
+
+.pendingDot {
+  position: absolute;
+  inset-block-start: 6px;
+  inset-inline-end: 12px;
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: 50%;
+  background: var(--c-border);
+}

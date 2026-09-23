@@ -1,0 +1,188 @@
+/* §21 "כלי המדידה שלי". The same card/pill language as onboarding and "עוד",
+   built from the §16 tokens only — no new colours, no new radii. Every
+   background/colour pair below is measured by the contrast guard in
+   styles/tokens.test.ts. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 20px;
+  border-block-end: 1px solid var(--c-line);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  font-weight: var(--fw-title);
+  line-height: 1.2;
+  color: var(--c-ink);
+}
+
+.lead {
+  margin-block-start: 6px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+.notice {
+  margin: 12px 20px 0;
+  padding: 10px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-ink);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+
+.card {
+  padding: 16px 20px;
+  border-block-end: 1px solid var(--c-line);
+}
+
+.cardTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.note {
+  margin-block-start: 8px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+.options {
+  margin-block-start: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.option,
+.optionOn {
+  min-height: var(--hit-min);
+  padding: 8px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  text-align: start;
+  cursor: pointer;
+}
+
+.optionOn {
+  border-color: var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+  font-weight: 600;
+}
+
+.sysNote {
+  margin: 0;
+  padding: 14px 20px;
+  border-block-end: 1px solid var(--c-line);
+  background: var(--c-neutral-bg);
+  color: var(--c-ink);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.7;
+}
+
+.calibList {
+  margin-block-start: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calibItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap-in-group);
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  background: var(--c-green-bg);
+}
+
+.calibText {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.calibName {
+  font-size: var(--fs-secondary);
+  color: var(--c-green-ink);
+  font-weight: 600;
+}
+
+.calibDetail {
+  margin-block-start: 2px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-green-ink);
+  line-height: 1.5;
+}
+
+.remove {
+  flex: none;
+  min-height: var(--hit-compact);
+  padding: 0 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-red);
+  font-family: var(--font-body);
+  font-size: var(--fs-meta-lg);
+  cursor: pointer;
+}
+
+
+/* §10's card head: the glyph, the tool's name, and the volume it holds. */
+.toolHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.toolIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--r-check);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+}
+
+.toolNames {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.toolMlLabel {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+
+.toolMl {
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-title);
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}

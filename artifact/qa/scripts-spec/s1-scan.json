@@ -1,0 +1,822 @@
+{
+ "phone.home": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "auto",
+   "outlineWidth": "1px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.notebook": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 1,
+  "small": [
+   "הדבקה 64×40"
+  ],
+  "focus": {
+   "outlineStyle": "auto",
+   "outlineWidth": "1px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.recipe": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 7,
+  "small": [
+   "התאמת מיקום התמונה 151×40",
+   "בצקים 58×40",
+   "תצוגה כמו במתכון 75×40",
+   "גרמים 49×40",
+   "ביתי 41×40",
+   "מחיקת התמונה 88×40",
+   "מה קורה לתמונה שמעלים? 142×40"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.recipe-ganache": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 5,
+  "small": [
+   "גנאשים ורטבים 105×40",
+   "תצוגה כמו במתכון 75×40",
+   "גרמים 49×40",
+   "ביתי 41×40",
+   "מה קורה לתמונה שמעלים? 142×40"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.edit": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 3,
+  "small": [
+   "checkbox 24×24",
+   "מחיקת התמונה 88×40",
+   "מה קורה לתמונה שמעלים? 142×40"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.paste": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "none",
+   "outlineWidth": "0px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.cook": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 10,
+  "small": [
+   "מסך מלא 75×40",
+   "הדפסה או שמירה כ-PDF ש 127×40",
+   "checkbox 28×28"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.order": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 1,
+  "small": [
+   "להזין מחיר במרכז חומרי 157×19"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.label": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.ingredients": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.plans": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo"
+  },
+  "smallCount": 1,
+  "small": [
+   "בדיקה-QA תוכנית א 134×24"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.plan": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 2,
+  "small": [
+   "הסרת שורה 1 61×40",
+   "הסרת שורה 2 61×40"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.groups": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "auto",
+   "outlineWidth": "1px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.group": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 8,
+  "small": [
+   "חברים והרשאות 139×42",
+   "שיעור חדש 68×40",
+   "מחיקת הקורס 80×40",
+   "הסרה 40×40",
+   "הוספת מתכון מהמחברת 129×41",
+   "סימון כהועבר 77×41",
+   "מחיקת השיעור 85×41",
+   "בצקים מועשרים 348×43"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.perms": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 13,
+  "small": [
+   "תלמידמנהלמדריך 80×40",
+   "הסרה 40×40",
+   "כתובת המייל של המוזמן 372×42",
+   "מחזור י״ד 372×42",
+   "יצירת הזמנה 115×42",
+   "העתקת הקישור 89×40",
+   "ביטול 39×40",
+   "שליחה מחדש 79×40",
+   "checkbox 24×24"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.settings": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 20,
+  "small": [
+   "חבר בקבוצה 304×42",
+   "שמירת השם 116×42",
+   "מ\"ג 47×40",
+   "גרם 50×40",
+   "ק\"ג 48×40",
+   "אונקיה 67×40",
+   "מ\"ל 50×40",
+   "ליטר 56×40",
+   "אונקיית נוזל 94×40",
+   "כוס 49×40",
+   "כף 45×40",
+   "כפית 57×40",
+   "יח' 45×40",
+   "ביצה 56×40"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "phone.more": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo"
+  },
+  "smallCount": 1,
+  "small": [
+   "הגדרות 50×42"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "color(srgb 0.160784 0.176471 0.160784 / "
+  }
+ },
+ "phone.tools": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.home": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "auto",
+   "outlineWidth": "1px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.notebook": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 1,
+  "small": [
+   "הדבקה 64×40"
+  ],
+  "focus": {
+   "outlineStyle": "auto",
+   "outlineWidth": "1px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.recipe": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 7,
+  "small": [
+   "התאמת מיקום התמונה 151×40",
+   "בצקים 58×40",
+   "תצוגה כמו במתכון 75×40",
+   "גרמים 49×40",
+   "ביתי 41×40",
+   "מחיקת התמונה 88×40",
+   "מה קורה לתמונה שמעלים? 142×40"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.recipe-ganache": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 5,
+  "small": [
+   "גנאשים ורטבים 105×40",
+   "תצוגה כמו במתכון 75×40",
+   "גרמים 49×40",
+   "ביתי 41×40",
+   "מה קורה לתמונה שמעלים? 142×40"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.edit": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 3,
+  "small": [
+   "checkbox 24×24",
+   "מחיקת התמונה 88×40",
+   "מה קורה לתמונה שמעלים? 142×40"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.paste": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "none",
+   "outlineWidth": "0px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.cook": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 10,
+  "small": [
+   "מסך מלא 75×40",
+   "הדפסה או שמירה כ-PDF ש 127×40",
+   "checkbox 28×28"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.order": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 1,
+  "small": [
+   "להזין מחיר במרכז חומרי 157×19"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.label": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.ingredients": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.plans": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo"
+  },
+  "smallCount": 1,
+  "small": [
+   "בדיקה-QA תוכנית א 134×24"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.plan": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 2,
+  "small": [
+   "הסרת שורה 1 61×40",
+   "הסרת שורה 2 61×40"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.groups": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "auto",
+   "outlineWidth": "1px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.group": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 7,
+  "small": [
+   "חברים והרשאות 139×42",
+   "שיעור חדש 68×40",
+   "מחיקת הקורס 80×40",
+   "הסרה 40×40",
+   "הוספת מתכון מהמחברת 129×44",
+   "סימון כהועבר 77×44",
+   "מחיקת השיעור 85×44"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.perms": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 13,
+  "small": [
+   "תלמידמנהלמדריך 80×40",
+   "הסרה 40×40",
+   "כתובת המייל של המוזמן 610×42",
+   "מחזור י״ד 610×42",
+   "יצירת הזמנה 115×42",
+   "העתקת הקישור 89×40",
+   "ביטול 39×40",
+   "שליחה מחדש 79×40",
+   "checkbox 24×24"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.settings": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo",
+   "input": "Heebo"
+  },
+  "smallCount": 20,
+  "small": [
+   "חבר בקבוצה 542×42",
+   "שמירת השם 116×42",
+   "מ\"ג 47×40",
+   "גרם 50×40",
+   "ק\"ג 48×40",
+   "אונקיה 67×40",
+   "מ\"ל 50×40",
+   "ליטר 56×40",
+   "אונקיית נוזל 94×40",
+   "כוס 49×40",
+   "כף 45×40",
+   "כפית 57×40",
+   "יח' 45×40",
+   "ביצה 56×40"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "desk.more": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo"
+  },
+  "smallCount": 1,
+  "small": [
+   "הגדרות 50×42"
+  ],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "color(srgb 0.160784 0.176471 0.160784 / "
+  }
+ },
+ "desk.tools": {
+  "dir": "rtl",
+  "fonts": {
+   "h1": "Heebo",
+   "h2": "Heebo",
+   "body": "Heebo",
+   "button": "Heebo"
+  },
+  "smallCount": 0,
+  "small": [],
+  "focus": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "boxShadow": "none"
+  }
+ },
+ "U1.bottomMore": 1,
+ "U1.topMenuButton": {
+  "count": 1,
+  "box": {
+   "x": 16,
+   "y": 8,
+   "width": 44,
+   "height": 44
+  },
+  "ariaHasPopup": null,
+  "ariaExpanded": "false"
+ },
+ "U1.clickResult": {
+  "menuRoleCount": 0,
+  "scrolledPx": 2555,
+  "bottomPanelOpen": 1
+ },
+ "U1.escape": {
+  "bottomPanelStillOpen": 1,
+  "activeEl": "עוד פעולות על המתכון"
+ },
+ "U1.actionsInventory": [
+  "המחברת",
+  "הדפסה או שמירה כ-PDF של המתכון",
+  "עוד פעולות על המתכון",
+  "התאמת מיקום התמונה",
+  "מצב הכנה",
+  "מחיקת התמונה",
+  "מה קורה לתמונה שמעלים?",
+  "☆ הוספה למועדפים",
+  "עוד פעולות",
+  "תווית מוצר",
+  "דף הזמנה",
+  "שכפול בדיקה-QA בריוש חמאה קלאסי",
+  "מחיקת בדיקה-QA בריוש חמאה קלאסי"
+ ],
+ "U2.printTop": {
+  "box": {
+   "x": 70,
+   "y": 8,
+   "width": 207.390625,
+   "height": 44
+  },
+  "text": "הדפסה / שמירה כ-PDF",
+  "bg": "rgb(73, 100, 81)"
+ },
+ "U3.hero": {
+  "hero": true,
+  "width": 402,
+  "mainWidth": 402,
+  "height": 262,
+  "img": true,
+  "objectFit": "cover",
+  "objectPosition": "50% 50%",
+  "imgLoaded": true,
+  "titleAbove": false
+ },
+ "U3.heroDesk": {
+  "width": 640,
+  "mainWidth": 760,
+  "height": 270
+ },
+ "U3.noImage": {
+  "hero": false,
+  "imagesSectionText": "הוספת תמונה"
+ },
+ "U3.brokenImage": {
+  "hero": false,
+  "brokenImgIcon": false,
+  "message": "התמונה לא נמצאה בשרת."
+ },
+ "S33.numbersOutsidePro": {
+  "lines": 83,
+  "withNumbers": 33,
+  "sample": [
+   "12 יחידות",
+   "100 גר' ליחידה",
+   "2 שע' 12 דק'",
+   "נתונים חלקיים — חסרים נתונים עבור 2 רכיבים. סך המשקל, העלות והמחיר מחושבים מ-6 רכיבים בלבד ואינם מלאים.",
+   "938 גר'",
+   "12",
+   "8.2",
+   "12",
+   "500 גר'",
+   "10 גר'",
+   "60 גר'",
+   "15 גר'"
+  ]
+ },
+ "S33.ganacheProDetails": {
+  "hydration": false,
+  "ddt": false,
+  "category": "גנאשים ורטבים"
+ },
+ "S33.briocheProDetails": {
+  "hydration": true,
+  "ddt": false
+ },
+ "S51.pasteButtons": [
+  "פענוח",
+  "המחברת"
+ ],
+ "S51.pasteText": "הדבקת מתכון מדביקים מתכון מכל מקום — הודעה, אתר, צילום שהומר לטקסט — והמערכת מזהה את הרכיבים, הכמויות, היחידות, הזמנים והטמפרטורות. הפענוח נעשה על המכשיר שלכם ולא נשלח לשום מקום. הטקסט של המתכון פענוח פענוח חכם דרך מודל שפה אינו זמין: הוא מחייב שרת מתווך עם מגבלת קצב, כדי שמפתח ה-API לא יהיה בדפדפן. הפענוח המקומי כאן עובד בלי שרת ובלי לשלוח את המתכון שלכם לאף אחד. המחברת בית מחברת קבוצות עוד"
+}

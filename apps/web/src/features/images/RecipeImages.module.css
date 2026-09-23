@@ -1,0 +1,263 @@
+/* §5 photographs, on the recipe page. §16 tokens only. */
+
+.card {
+  background: var(--c-paper);
+  border: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+  border-radius: var(--r-card-lg);
+  padding: 16px var(--pad-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--c-text) 6%, transparent);
+}
+
+/* The same cookbook heading the recipe page's sections use — this card is
+   rendered inside `.page`, so it inherits that screen's palette and type. */
+.title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.3;
+  color: var(--c-ink);
+  padding-block-end: 8px;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 45%, transparent);
+}
+
+.note,
+.hint {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+.error {
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-secondary);
+  line-height: 1.6;
+}
+
+.grid {
+  display: grid;
+  /* One column on a phone, two once there is room. A recipe photo wants to be
+     as large as the page allows. */
+  grid-template-columns: 1fr;
+  gap: var(--gap-in-group);
+  list-style: none;
+}
+
+@media (min-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+}
+
+.frame {
+  /* aspect-ratio is set inline from the stored dimensions, so the box is
+     reserved before the signed URL resolves and the page does not reflow.
+
+     A BALANCED HEIGHT: a portrait photograph of a cake is taller than the
+     phone, and the brief asked that the picture not push the quantities off
+     the screen. The box keeps the photograph's own proportions until they
+     reach 260px and then crops, which is the difference between a recipe page
+     with a photograph on it and a photograph with a recipe underneath. */
+  inline-size: 100%;
+  max-block-size: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--r-card);
+  background: var(--c-neutral-bg);
+}
+
+.frameNote {
+  padding: 12px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.caption {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-ink);
+  line-height: 1.6;
+}
+
+/*
+  THE EMPTY STATE IS A CONTROL, NOT A HOLE IN THE PAGE.
+
+  It used to be a 108px dashed frame — "a picture goes here" — drawn on every
+  recipe with no photograph. The handoff is explicit that a recipe without a
+  picture must not show a large empty rectangle, so what is left is the one
+  thing that was ever pressable: the button. The first photograph now opens
+  the page as a hero (see recipe.module.css), which is where the reader looks
+  for a picture; this card is where they are managed.
+*/
+.addBtn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--hit-min);
+  padding-inline: 16px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.addBtn:focus-within {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+.removeBtn {
+  align-self: flex-start;
+  /* A glyph beside the words: one row, centred, with the gap the set uses. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--hit-compact);
+  padding-inline: 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-muted);
+  font-size: var(--fs-meta-lg);
+}
+
+.confirm {
+  display: flex;
+  gap: var(--gap-tight);
+}
+
+.confirmYes,
+.confirmNo {
+  min-height: var(--hit-compact);
+  padding-inline: 12px;
+  border-radius: var(--r-control);
+  font-size: var(--fs-meta-lg);
+}
+
+.confirmYes {
+  border: 1px solid var(--c-red);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+}
+
+.confirmNo {
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-muted);
+}
+
+/* The upload's small print, behind a summary that says what it answers. */
+.hintBox {
+  margin-block-start: 4px;
+}
+
+.hintSummary {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-compact);
+  font-size: var(--fs-meta-lg);
+  color: var(--c-green);
+  cursor: pointer;
+}
+
+.hintSummary:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+/* ── the outcome of the last action: a sentence, and a way to do it again ── */
+.notice {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--r-control);
+  background: var(--c-green-bg, #eaf4ee);
+  color: var(--c-green-ink, #1e6b4c);
+  font-size: var(--fs-secondary);
+  line-height: 1.5;
+}
+
+.error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-in-group);
+}
+
+.errorText {
+  flex: 1 1 200px;
+  margin: 0;
+}
+
+.retryBtn {
+  flex: none;
+  min-height: var(--hit-min);
+  padding: 0 16px;
+  border: 1px solid currentColor;
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: inherit;
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.retryBtn:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+.replaceBtn,
+.replaceBtnOff {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--hit-min);
+  padding: 0 14px;
+  margin-block-start: 6px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-size: var(--fs-secondary);
+  cursor: pointer;
+}
+
+.replaceBtnOff {
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+.replaceBtn:focus-within {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}

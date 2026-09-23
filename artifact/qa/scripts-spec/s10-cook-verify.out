@@ -1,0 +1,3 @@
+printBtn.style: {"bg":"rgba(0, 0, 0, 0)","border":"rgb(205, 212, 206)","color":"rgb(97, 107, 101)","height":44,"width":126}
+fsBtn.style: {"bg":"rgba(0, 0, 0, 0)","border":"rgb(205, 212, 206)","color":"rgb(97, 107, 101)","height":44}
+printBtn.stillPrints: true

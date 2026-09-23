@@ -1,0 +1,17 @@
+stock.ingredientOptions: ["בחרו רכיב","קמח לחם","מלח","סוכר","שמרים טריים","חלב","חמאה"]
+stock.chosenIngredient: "קמח לחם"
+stock.factorSummary: "מקדם ×0.50 · 469 גר' · 6 יחידות ⚠ לפי המשקלים האצווה מפיקה כ-4."
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+locator.click: Error: strict mode violation: getByRole('button', { name: 'כמו במתכון' }) resolved to 2 elements:
+    1) <button type="button" aria-pressed="false" class="_tab_18lrl_331" aria-label="כמויות כמו במתכון">כמו במתכון</button> aka getByRole('button', { name: 'כמויות כמו במתכון' })
+    2) <button type="button" aria-pressed="true" class="_tabSmallOn_18lrl_357" aria-label="תצוגה כמו במתכון">כמו במתכון</button> aka getByRole('button', { name: 'תצוגה כמו במתכון' })
+
+Call log:
+[2m  - waiting for getByRole('button', { name: 'כמו במתכון' })[22m
+
+    at /tmp/claude-0/-home-user-recipe-notebook/c3a9fa06-9b8e-56e2-96b0-42c6561963e9/scratchpad/qa/s7b-scale-stock.mjs:26:56
+
+Node.js v22.22.2

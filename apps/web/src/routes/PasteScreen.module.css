@@ -1,0 +1,230 @@
+/* §2 screen 6 "הדבקה". Cards and controls from the §16 tokens; the only thing
+   specific to this screen is the amber warning box, which carries the lines the
+   parser refused to convert and has to be read before anything is saved. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  padding: 20px 20px 14px;
+  border-block-end: 1px solid var(--c-line);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  color: var(--c-ink);
+}
+
+.lead {
+  margin-block-start: 6px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+.notice {
+  margin: 12px 20px 0;
+  padding: 10px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-ink);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+
+.card {
+  padding: 16px 20px;
+  border-block-end: 1px solid var(--c-line);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+}
+
+.cardTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.label {
+  font-size: var(--fs-label);
+  color: var(--c-muted);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.input {
+  min-height: var(--hit-min);
+  padding: 8px 11px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+}
+
+.parseBtn,
+.saveBtn {
+  align-self: flex-start;
+  min-height: var(--hit-min);
+  padding: 10px 20px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.parseBtn:disabled,
+.saveBtn:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+.hint {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+.empty {
+  margin: 16px 20px;
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  background: var(--c-neutral-bg);
+  color: var(--c-ink);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.7;
+}
+
+/* ── what the parser would not guess at ───────────────────────────────── */
+.warnBox {
+  margin: 16px 20px;
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-ink);
+}
+
+.warnTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.warnList {
+  margin-block-start: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+  list-style: none;
+}
+.warnList li::before {
+  content: '· ';
+}
+
+.warnNote {
+  margin-block-start: 8px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-ink);
+  line-height: 1.6;
+}
+
+/* ── the preview ──────────────────────────────────────────────────────── */
+.list,
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-tight);
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-in-group);
+  padding: 7px 10px;
+  border-radius: var(--r-card);
+  background: var(--c-paper);
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+}
+
+.rowName {
+  min-width: 0;
+}
+
+.rowQty {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.steps {
+  counter-reset: step;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 10px;
+  border-radius: var(--r-card);
+  background: var(--c-paper);
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+  line-height: 1.5;
+}
+
+.step::before {
+  counter-increment: step;
+  content: counter(step) '.';
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.stepMeta {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.error {
+  padding: 8px 10px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+

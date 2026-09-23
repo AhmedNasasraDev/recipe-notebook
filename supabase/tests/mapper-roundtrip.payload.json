@@ -1,0 +1,219 @@
+{
+  "_comment": "GENERATED. The expected Recipe and the SQL that must reproduce it. See supabase/scripts/mapper-roundtrip.mts.",
+  "ownerId": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+  "recipeId": "d0000000-0000-4000-8000-00000000000a",
+  "expectedDigest": "fa702274a2e11ca3865c6ba55bfa7a8d40cbf15f1aae582198cc5e136f81a920",
+  "expected": {
+    "id": "d0000000-0000-4000-8000-00000000000a",
+    "name": "לחם כוסמין 82% — בדיקת מסד",
+    "category": "לחמים",
+    "tags": [
+      "בדיקה",
+      "כוסמין"
+    ],
+    "isSub": false,
+    "locked": false,
+    "yieldUnits": 2,
+    "unitWeight": 800,
+    "targetFC": 27.5,
+    "shelfLife": "3 ימים",
+    "storage": "",
+    "freezing": "",
+    "thawing": "",
+    "equipment": "",
+    "notes": "הערה עם גרשיים: קמח 82%",
+    "manualAllergens": [],
+    "versionNote": "",
+    "createdAt": "2026-01-01",
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "ingredients": [
+      {
+        "id": "i0",
+        "name": "קמח מלא",
+        "qty": 600,
+        "unit": "g",
+        "ingredientKey": "קמח מלא",
+        "flour": true,
+        "price": 4.25,
+        "priceUnit": "ק\"ג"
+      },
+      {
+        "id": "i1",
+        "name": "מים",
+        "qty": 420,
+        "unit": "g",
+        "ingredientKey": "מים",
+        "liquid": true,
+        "waterPct": 100
+      },
+      {
+        "id": "i2",
+        "name": "שמן זית",
+        "qty": 30,
+        "unit": "ml",
+        "ingredientKey": "שמן זית",
+        "waterPct": 0
+      },
+      {
+        "id": "i3",
+        "name": "מלח",
+        "qty": 12,
+        "unit": "g",
+        "ingredientKey": "מלח"
+      }
+    ],
+    "steps": [
+      {
+        "id": "s0",
+        "text": "ללוש 12 דקות",
+        "tempUnit": "C",
+        "minutes": 12,
+        "kind": "active"
+      },
+      {
+        "id": "s1",
+        "text": "לאפות",
+        "temp": 240,
+        "tempUnit": "C",
+        "minutes": 40
+      }
+    ],
+    "salePrice": 95,
+    "salePriceBasis": "unit",
+    "packagingCost": 2.5,
+    "laborCost": 0,
+    "targetGM": 62.5
+  },
+  "parentRow": {
+    "owner_id": "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+    "group_id": null,
+    "name": "לחם כוסמין 82% — בדיקת מסד",
+    "category": "לחמים",
+    "tags": [
+      "בדיקה",
+      "כוסמין"
+    ],
+    "is_sub": false,
+    "locked": false,
+    "yield_units": 2,
+    "unit_weight": 800,
+    "yield_actual": null,
+    "weight_before": null,
+    "weight_after": null,
+    "dough_mode": false,
+    "ddt": null,
+    "flour_temp": null,
+    "room_temp": null,
+    "friction": null,
+    "target_fc": 27.5,
+    "sale_price": 95,
+    "sale_price_basis": "unit",
+    "packaging_cost": 2.5,
+    "labor_cost": 0,
+    "other_cost": null,
+    "target_gm": 62.5,
+    "shelf_life": "3 ימים",
+    "storage": "",
+    "freezing": "",
+    "thawing": "",
+    "equipment": "",
+    "notes": "הערה עם גרשיים: קמח 82%",
+    "manual_allergens": [],
+    "pan": null,
+    "version_of": null,
+    "version_note": "",
+    "saved_from_item_id": null
+  },
+  "ingredientRows": [
+    {
+      "recipe_id": "d0000000-0000-4000-8000-00000000000a",
+      "ord": 0,
+      "name": "קמח מלא",
+      "ingredient_key": "קמח מלא",
+      "qty": 600,
+      "unit": "g",
+      "flour": true,
+      "liquid": false,
+      "water_pct": null,
+      "unit_weight": null,
+      "g_per_100": null,
+      "price": 4.25,
+      "price_unit": "ק\"ג",
+      "sub_recipe_id": null,
+      "note": ""
+    },
+    {
+      "recipe_id": "d0000000-0000-4000-8000-00000000000a",
+      "ord": 1,
+      "name": "מים",
+      "ingredient_key": "מים",
+      "qty": 420,
+      "unit": "g",
+      "flour": false,
+      "liquid": true,
+      "water_pct": 100,
+      "unit_weight": null,
+      "g_per_100": null,
+      "price": null,
+      "price_unit": null,
+      "sub_recipe_id": null,
+      "note": ""
+    },
+    {
+      "recipe_id": "d0000000-0000-4000-8000-00000000000a",
+      "ord": 2,
+      "name": "שמן זית",
+      "ingredient_key": "שמן זית",
+      "qty": 30,
+      "unit": "ml",
+      "flour": false,
+      "liquid": false,
+      "water_pct": 0,
+      "unit_weight": null,
+      "g_per_100": null,
+      "price": null,
+      "price_unit": null,
+      "sub_recipe_id": null,
+      "note": ""
+    },
+    {
+      "recipe_id": "d0000000-0000-4000-8000-00000000000a",
+      "ord": 3,
+      "name": "מלח",
+      "ingredient_key": "מלח",
+      "qty": 12,
+      "unit": "g",
+      "flour": false,
+      "liquid": false,
+      "water_pct": null,
+      "unit_weight": null,
+      "g_per_100": null,
+      "price": null,
+      "price_unit": null,
+      "sub_recipe_id": null,
+      "note": ""
+    }
+  ],
+  "stepRows": [
+    {
+      "recipe_id": "d0000000-0000-4000-8000-00000000000a",
+      "ord": 0,
+      "text": "ללוש 12 דקות",
+      "temp": null,
+      "temp_unit": "C",
+      "minutes": 12,
+      "kind": "active"
+    },
+    {
+      "recipe_id": "d0000000-0000-4000-8000-00000000000a",
+      "ord": 1,
+      "text": "לאפות",
+      "temp": 240,
+      "temp_unit": "C",
+      "minutes": 40,
+      "kind": null
+    }
+  ],
+  "sql": "-- GENERATED by supabase/scripts/mapper-roundtrip.mts. Fixtures are removed at\n-- the end and the cleanup is asserted.\ninsert into auth.users (id, email)\nvalues ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'roundtrip@test.invalid');\n\ninsert into public.recipes (\n  id, owner_id, group_id, name, category, tags, is_sub, locked, yield_units, unit_weight, yield_actual, weight_before, weight_after, dough_mode, ddt, flour_temp, room_temp, friction, target_fc, sale_price, sale_price_basis, packaging_cost, labor_cost, other_cost, target_gm, shelf_life, storage, freezing, thawing, equipment, notes, manual_allergens, pan, version_of, version_note, saved_from_item_id\n) values (\n  'd0000000-0000-4000-8000-00000000000a', 'dddddddd-dddd-4ddd-8ddd-dddddddddddd', NULL, 'לחם כוסמין 82% — בדיקת מסד', 'לחמים', ARRAY['בדיקה', 'כוסמין']::text[], false, false, 2, 800, NULL, NULL, NULL, false, NULL, NULL, NULL, NULL, 27.5, 95, 'unit', 2.5, 0, NULL, 62.5, '3 ימים', '', '', '', '', 'הערה עם גרשיים: קמח 82%', '{}'::text[], NULL, NULL, '', NULL\n);\n\ninsert into public.ingredients (\n  recipe_id, ord, name, ingredient_key, qty, unit, flour, liquid, water_pct, unit_weight, g_per_100, price, price_unit, sub_recipe_id, note\n) values\n  ('d0000000-0000-4000-8000-00000000000a', 0, 'קמח מלא', 'קמח מלא', 600, 'g', true, false, NULL, NULL, NULL, 4.25, 'ק\"ג', NULL, ''),\n  ('d0000000-0000-4000-8000-00000000000a', 1, 'מים', 'מים', 420, 'g', false, true, 100, NULL, NULL, NULL, NULL, NULL, ''),\n  ('d0000000-0000-4000-8000-00000000000a', 2, 'שמן זית', 'שמן זית', 30, 'ml', false, false, 0, NULL, NULL, NULL, NULL, NULL, ''),\n  ('d0000000-0000-4000-8000-00000000000a', 3, 'מלח', 'מלח', 12, 'g', false, false, NULL, NULL, NULL, NULL, NULL, NULL, '');\n\ninsert into public.steps (\n  recipe_id, ord, text, temp, temp_unit, minutes, kind\n) values\n  ('d0000000-0000-4000-8000-00000000000a', 0, 'ללוש 12 דקות', NULL, 'C', 12, 'active'),\n  ('d0000000-0000-4000-8000-00000000000a', 1, 'לאפות', 240, 'C', 40, NULL);\n\n-- Read it back in exactly the nested shape RECIPE_SELECT produces.\nselect jsonb_build_object(\n  'recipe', to_jsonb(r.*),\n  'ingredients', coalesce((select jsonb_agg(to_jsonb(i.*) order by i.ord)\n                            from public.ingredients i where i.recipe_id = r.id), '[]'::jsonb),\n  'steps', coalesce((select jsonb_agg(to_jsonb(s.*) order by s.ord)\n                      from public.steps s where s.recipe_id = r.id), '[]'::jsonb)\n) as bundle\nfrom public.recipes r\nwhere r.id = 'd0000000-0000-4000-8000-00000000000a';",
+  "cleanup": "delete from auth.users where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';\nselect (select count(*) from auth.users  where id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd')\n     + (select count(*) from public.recipes where owner_id = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd') as leftovers;"
+}

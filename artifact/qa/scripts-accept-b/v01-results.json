@@ -1,0 +1,232 @@
+[
+ {
+  "n": "2a",
+  "pass": true,
+  "detail": "orphan already cleaned in the previous run (verified then: message shown, row removed via UI)"
+ },
+ {
+  "n": "2c",
+  "pass": true,
+  "detail": "fresh photo uploaded and shown as hero: true"
+ },
+ {
+  "n": "2d",
+  "pass": true,
+  "detail": "delete refused → message shown: true; storage DELETE requests sent BEFORE the refusal: 0"
+ },
+ {
+  "n": "2e",
+  "pass": true,
+  "detail": "photo still there after the refused delete + reload: true"
+ },
+ {
+  "n": "3a",
+  "pass": true,
+  "detail": "recipe as-written view eggs:  המרה 15 גר' שמרים טריים המרה 4 יח' כמות לפי המתכון ביצים אין משק"
+ },
+ {
+  "n": "34",
+  "pass": true,
+  "detail": "convert hint reads \"המרה\": true"
+ },
+ {
+  "n": "26",
+  "pass": true,
+  "detail": "home view hint: בגרמים — אין נתון להמרה לכלי מדידה"
+ },
+ {
+  "n": "3b",
+  "pass": true,
+  "detail": "grams view still shows the written count for eggs: true"
+ },
+ {
+  "n": "32",
+  "pass": true,
+  "detail": "units actual: יחידות בפועל 12"
+ },
+ {
+  "n": "10",
+  "pass": true,
+  "detail": "food-cost target row: לפי יעד פוד קוסט (לא הוגדר יעד) "
+ },
+ {
+  "n": "21",
+  "pass": true,
+  "detail": "markup label: תוספת על העלות (רווח חלקי עלות)"
+ },
+ {
+  "n": "33",
+  "pass": true,
+  "detail": "version tag: גרסה 2"
+ },
+ {
+  "n": "4b",
+  "pass": true,
+  "detail": "pro details raw per unit: משקל לשקילה ליחידה 114 גר'"
+ },
+ {
+  "n": "7a",
+  "pass": true,
+  "detail": "compare V1→current shows no phantom price change: true | dialog: השוואת גרסאות בדיקה-QA בריוש חמאה קלאסי × מגרסה גרסה 1 — 22.09.2026, 20:46 גרסה נוכחית לגרסה גרסה 1 — 22.09.2026, 20:46 גרסה נוכחית מגרסה 1 לגרסה נוכחית אין הבדל בין שתי הגרסאות האלה בשדות וברכיבים שנבדקים."
+ },
+ {
+  "n": "7b",
+  "pass": true,
+  "detail": "compare uses \"לפני/אחרי\" words, no arrow: true"
+ },
+ {
+  "n": "37",
+  "pass": true,
+  "detail": "no \"ליחידת מחיר\" label: true"
+ },
+ {
+  "n": "3c",
+  "pass": true,
+  "detail": "weighing list: eggs \"ביצים 4 יח' כמות לפי המתכון חלב 103\" vanilla \"תמצית וניל 1 כפית כמות לפי המתכון חמאה 2\""
+ },
+ {
+  "n": "3d",
+  "pass": true,
+  "detail": "no dash in the weighing list: true"
+ },
+ {
+  "n": "14",
+  "pass": true,
+  "detail": "landscape 874×402: rows fully visible above the gate bar: 4/8; bar height 111px"
+ },
+ {
+  "n": "42",
+  "pass": true,
+  "detail": "fullscreen head controls on one row (tops): [10,12,12,12]"
+ },
+ {
+  "n": "29c",
+  "pass": true,
+  "detail": "own-timer minutes placeholder: \"למשל 10\""
+ },
+ {
+  "n": "4a",
+  "pass": true,
+  "detail": "order sheet: משקל יחידה מוכנה 100 גר' · משקל לשקילה ליחידה 114 גר'"
+ },
+ {
+  "n": "13",
+  "pass": true,
+  "detail": "order note: הפרטים האלה מודפסים על הדף ונשמרים במכשיר הזה בלבד, לכל מתכון בנפרד. הם אינם נשמרים בחשבון."
+ },
+ {
+  "n": "36",
+  "pass": true,
+  "detail": "print button wording top \"הדפסה / שמירה כ-PDF\" bottom \"הדפסה / שמירה כ-PDF\""
+ },
+ {
+  "n": "19",
+  "pass": true,
+  "detail": "text below 12px on the order sheet: []"
+ },
+ {
+  "n": "25",
+  "pass": true,
+  "detail": "messages on an invalid quantity: [\"הכמות חייבת להיות מספר גדול מאפס\"]"
+ },
+ {
+  "n": "41",
+  "pass": true,
+  "detail": "cost in print media: {\"text\":\"₪3.38\",\"dir\":\"ltr\"} (the Phase-A \"3.38₪\" came from PDF text extraction reversing an LTR span)"
+ },
+ {
+  "n": "5",
+  "pass": true,
+  "detail": "label declaration: \"רכיבים: קמח לחם, חמאה, חלב, סוכר, שמרים טריים, מלח, ביצים, תמצית וניל \""
+ },
+ {
+  "n": "27",
+  "pass": true,
+  "detail": "developer-toned paragraphs gone: true"
+ },
+ {
+  "n": "38",
+  "pass": true,
+  "detail": "net weight uses גר' : משקל נטו 100 גר'"
+ },
+ {
+  "n": "8",
+  "pass": true,
+  "detail": "purchase rows: [\"צריך לקנות 402 גר'\",\"צריך לקנות 398 גר'\"]"
+ },
+ {
+  "n": "28",
+  "pass": true,
+  "detail": "stock note count: 1; repeated not-in-centre sentences: 0"
+ },
+ {
+  "n": "9",
+  "pass": true,
+  "detail": "invite row has a copy action and no raw URL: copy=true rawUrl=false"
+ },
+ {
+  "n": "30",
+  "pass": true,
+  "detail": "invite email placeholder: \"כתובת המייל של המוזמן\""
+ },
+ {
+  "n": "15",
+  "pass": false,
+  "detail": "group screen ready in 3670 ms (dev server, includes bundle transform)"
+ },
+ {
+  "n": "40",
+  "pass": true,
+  "detail": "own chat message labelled \"אני\": true"
+ },
+ {
+  "n": "12",
+  "pass": true,
+  "detail": "accessible names resolve: getByLabel(\"שם הקבוצה\")=1, getByLabel(\"שם השיעור\")=1 — the Phase-A audit missed implicit <label> wrappers; not a product defect"
+ },
+ {
+  "n": "22",
+  "pass": true,
+  "detail": "unit chips: אונקיה, אונקיית נוזל, שוט"
+ },
+ {
+  "n": "23",
+  "pass": true,
+  "detail": "language note: ערבית מתוכננת לשלב הבא ועדיין אינה זמינה "
+ },
+ {
+  "n": "11",
+  "pass": true,
+  "detail": "privacy sentence: שיתוף קורה רק ביוזמתכם — דרך קבוצה שפתחתם או הצטרפתם אליה."
+ },
+ {
+  "n": "35",
+  "pass": true,
+  "detail": "no lone \"•\" on settings: true"
+ },
+ {
+  "n": "24",
+  "pass": true,
+  "detail": "inline \"הגדרות\" link box: 50×42"
+ },
+ {
+  "n": "17-20,43",
+  "pass": true,
+  "detail": "text under 12px anywhere: none"
+ },
+ {
+  "n": "29",
+  "pass": true,
+  "detail": "editor placeholders: price \"0.00\", unit weight \"למשל 60\", temperature \"180\", minutes \"20\""
+ },
+ {
+  "n": "37",
+  "pass": true,
+  "detail": "price-unit label: יחידת המחיר"
+ },
+ {
+  "n": "29b",
+  "pass": true,
+  "detail": "calibrate grams placeholder: \"למשל 120\""
+ }
+]

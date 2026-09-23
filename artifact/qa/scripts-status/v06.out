@@ -1,0 +1,7 @@
+PASS A7 upload + reload (polled up to 10 s) hero loaded after reload: true
+PASS A7b photo after fresh sign-in hero loaded in a new signed-in session: true
+PASS A10 refused delete keeps photo message=true storageDeletes=0 photoAfterReload=true
+PASS A11 real delete after delete: המתכון הזה לא נמצא במחברת. המחברת בית מחברת קבוצות עוד
+PASS A12 gone from notebook no בדיקה-QA סטטוס entries left
+NET4xx: []
+SUMMARY: 5/5 passed

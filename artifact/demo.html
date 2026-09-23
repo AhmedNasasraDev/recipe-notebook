@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <meta
+      name="description"
+      content="מחברת מתכונים — גרסת ניסוי עם נתוני דוגמה. רצה כולה בדפדפן, בלי חשבון ובלי שרת."
+    />
+    <title>מחברת מתכונים — גרסת ניסוי</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background: #f7f5ef;
+      }
+      /*
+        THE TRIAL'S "גרסת ניסוי" CONTROL GETS A BAND OF ITS OWN.
+
+        It used to float in the top-left corner over the application. That
+        corner was empty until the design pass gave the recipe screen a menu
+        button there, and artifact/scripts/demo-check.mjs — which holds the
+        pill to "covers no control" on every screen at every size — caught it
+        at once. Every other corner is taken too: the back control at the top
+        right, the tab bar along the bottom.
+
+        So it stops floating: 20px of the viewport that the app no longer
+        occupies. The frame measures itself against the VIEWPORT (100dvh), so
+        the same 20px has to come off it as well — moving #root alone would
+        push the tab bar below the fold. The selectors match the hashed
+        CSS-module names, which all contain the source name.
+      */
+      #root {
+        height: calc(100% - 20px);
+        min-height: 0;
+        margin-block-start: 20px;
+      }
+      [class*='outer'] {
+        min-height: calc(100dvh - 20px) !important;
+      }
+      [class*='frame'] {
+        height: calc(100dvh - 20px) !important;
+      }
+      /* Shown only until the bundle runs — and if it never does (a browser too
+         old for ES modules), this is what the person reads instead of a blank
+         page. */
+      .boot {
+        display: flex;
+        min-height: 100dvh;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        font: 16px/1.6 'Arial Hebrew', Arial, sans-serif;
+        color: #292d29;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="boot">
+        מחברת מתכונים — גרסת ניסוי. אם המסך נשאר כך, הדפדפן הזה אינו תומך
+        בהפעלת הקובץ; נסו דפדפן עדכני (Chrome, Edge, Safari או Firefox).
+      </div>
+    </div>
+    <script type="module" src="./viewer/demo.tsx"></script>
+  </body>
+</html>

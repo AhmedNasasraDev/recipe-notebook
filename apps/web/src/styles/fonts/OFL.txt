@@ -1,0 +1,19 @@
+Heebo is distributed under the SIL OPEN FONT LICENSE Version 1.1
+(http://scripts.sil.org/OFL).
+
+Heebo — Copyright (c) 2015, Oded Ezer, Meir Sadan
+(Hebrew extension of Roboto, Copyright (c) 2011 Google Inc.)
+
+Frank Ruhl Libre — Copyright 2016 The Frank Ruhl Libre Project Authors
+(https://github.com/fontsource/frank-ruhl-libre), also under the SIL Open
+Font License 1.1, bundled here in the same way.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+the Font Software, to use, study, copy, merge, embed, modify, redistribute, and
+sell modified and unmodified copies of the Font Software, subject to the terms
+of the OFL 1.1: the fonts may not be sold by themselves, must be distributed
+with this notice, and any derivative must not use the Reserved Font Names.
+
+The files in this directory are the unmodified woff2 subsets that Google Fonts
+serves (hebrew and latin ranges, variable weight 400–700), vendored so that the
+application does not depend on a third-party host at run time.

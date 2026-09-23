@@ -1,0 +1,374 @@
+/* The screen's own gutter. These three had none: every child was expected to
+   carry its own, and the heading did not — which put a 26px title flush
+   against the edge of the phone once the type scale went up. */
+.page {
+  display: grid;
+  gap: var(--gap-between-groups);
+  padding: 20px var(--pad-card) 28px;
+}
+
+.head {
+  display: grid;
+  gap: 6px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  font-weight: var(--fw-title);
+  line-height: 1.2;
+  color: var(--c-ink);
+}
+
+.lede,
+.hint,
+.empty,
+.notice,
+.startNote {
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+  color: var(--c-muted);
+}
+
+/*
+  STAGE-10 AUDIT FIX. These boxes paired a `--c-sand` background with
+  `--c-muted` text, measured at 2.02:1 — the worst contrast in the app, and
+  far under the 4.5:1 that 10.5-11.5px text needs. The token's own comment
+  says sand is a FILL ("step numbers, paper frame"), not a background for
+  secondary text. The palette itself is untouched (the handoff protects §16);
+  only the text is darkened here, which measures 7.93:1.
+*/
+.notice,
+.empty {
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  background: var(--c-sand);
+  color: var(--c-ink);
+}
+
+.locked {
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  border: 1px solid var(--c-green);
+  background: var(--c-sand);
+  color: var(--c-ink);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+
+.error {
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+
+.card {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-paper);
+}
+
+.cardTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.3;
+  color: var(--c-ink);
+}
+
+.disclosure {
+  min-height: var(--hit-min);
+  padding: 0 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-sand);
+  color: var(--c-ink);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+  text-align: start;
+}
+
+.block {
+  display: grid;
+  gap: 10px;
+}
+
+.grid {
+  display: grid;
+  gap: 10px;
+}
+
+@container app (min-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+}
+
+.label {
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.input {
+  min-height: var(--hit-min);
+  padding: 0 12px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  font-size: var(--fs-body);
+  font-family: inherit;
+}
+
+.input:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+}
+
+.stockInput {
+  width: 6em;
+  min-height: var(--hit-compact);
+  padding: 0 8px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  font-size: var(--fs-meta);
+  font-family: inherit;
+}
+
+.rows,
+.plainList {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+}
+
+.factor {
+  font-size: var(--fs-meta);
+  font-weight: var(--fw-title);
+  line-height: 1.6;
+}
+
+.factorNote {
+  font-weight: 400;
+  color: var(--c-muted);
+}
+
+.missing {
+  color: var(--c-red);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.primary,
+.secondary,
+.danger {
+  min-height: var(--hit-min);
+  padding: 0 16px;
+  border-radius: var(--r-control);
+  border: 1px solid var(--c-line);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+}
+
+.primary {
+  background: var(--c-green);
+  color: var(--c-paper);
+  border-color: var(--c-green);
+}
+
+.secondary {
+  background: var(--c-paper);
+  color: var(--c-ink);
+}
+
+/* Quieter than it was. "הסרה" appears on every row of the plan, and as a
+   filled red block it shouted louder than the quantities the screen is for —
+   on a desktop, four of them at once. The colour still says "destructive"; it
+   no longer says it in a raised voice. */
+.danger {
+  min-height: var(--hit-compact);
+  padding: 0 14px;
+  background: transparent;
+  color: var(--c-red);
+  border-color: color-mix(in srgb, var(--c-red) 45%, transparent);
+  font-size: var(--fs-meta-lg);
+  justify-self: start;
+}
+
+.danger:hover {
+  background: var(--c-red-bg);
+  border-color: var(--c-red);
+}
+
+.primary:disabled,
+.secondary:disabled,
+.danger:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+}
+
+/* ── the requirement list ───────────────────────────────────────────── */
+
+.needRow,
+.stepRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--c-line);
+  font-size: var(--fs-meta);
+}
+
+.needRow:last-child,
+.stepRow:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.needName {
+  font-weight: var(--fw-title);
+}
+
+.needQty {
+  font-weight: var(--fw-title);
+}
+
+.needWho {
+  color: var(--c-muted);
+}
+
+/* ── the purchase list ──────────────────────────────────────────────── */
+
+.buyLine {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+}
+
+.buyRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--c-line);
+  font-size: var(--fs-meta);
+}
+
+.buyHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.buyGrid {
+  display: grid;
+  gap: 6px 14px;
+}
+
+@container app (min-width: 600px) {
+  .buyGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.buyCell {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--fs-meta);
+}
+
+.buyCell dt {
+  color: var(--c-muted);
+}
+
+.buyCell dd {
+  font-weight: var(--fw-title);
+}
+
+.totalRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--c-line);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-title);
+}
+
+.warnBox {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--r-card);
+  background: var(--c-sand);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+
+/* ── the timeline ───────────────────────────────────────────────────── */
+
+.product {
+  display: grid;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--c-line);
+}
+
+.productName {
+  font-family: var(--font-display);
+  font-size: var(--fs-meta-lg);
+  font-weight: var(--fw-title);
+}
+
+.stepWhen {
+  min-width: 9.5em;
+  font-weight: var(--fw-title);
+}
+
+.stepText {
+  flex: 1 1 12em;
+}
+
+.stepKind,
+.stepMin {
+  color: var(--c-muted);
+}

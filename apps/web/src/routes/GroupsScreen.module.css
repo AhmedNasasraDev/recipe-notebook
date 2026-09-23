@@ -1,0 +1,233 @@
+/* The screen's own gutter. These three had none: every child was expected to
+   carry its own, and the heading did not — which put a 26px title flush
+   against the edge of the phone once the type scale went up. */
+.page {
+  display: grid;
+  gap: var(--gap-between-groups);
+  padding: 20px var(--pad-card) 28px;
+}
+
+.head {
+  display: grid;
+  gap: 6px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  font-weight: var(--fw-title);
+  line-height: 1.2;
+  color: var(--c-ink);
+}
+
+.lede,
+.meta,
+.hint,
+.waysTitle {
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+  color: var(--c-muted);
+}
+
+.notice,
+.empty,
+.ok,
+.problem {
+  padding: 12px 14px;
+  border-radius: var(--r-card);
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+}
+
+.notice,
+.empty {
+  background: var(--c-neutral-bg);
+  color: var(--c-ink);
+}
+
+.ok {
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+}
+
+.problem {
+  background: var(--c-red-bg);
+  color: var(--c-red);
+}
+
+.empty {
+  display: grid;
+  gap: 8px;
+}
+
+.ways {
+  display: grid;
+  gap: 6px;
+  padding-inline-start: 18px;
+  font-size: var(--fs-meta);
+  line-height: 1.6;
+  color: var(--c-ink);
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.card {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-paper);
+}
+
+.cardLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cardBody {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cardChevron {
+  flex: none;
+  display: inline-flex;
+  color: var(--c-muted);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-title);
+}
+
+.kind {
+  font-size: var(--fs-meta);
+  color: var(--c-sand);
+}
+
+.meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.role {
+  color: var(--c-green);
+}
+
+/* The unread count. A number, not a dot: "how many" is the question. */
+.badge {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-title);
+  text-align: center;
+}
+
+.section {
+  display: grid;
+  gap: 10px;
+}
+
+.h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-title);
+}
+
+.form {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  background: var(--c-white);
+}
+
+.field {
+  display: grid;
+  gap: 4px;
+  font-size: var(--fs-meta);
+  color: var(--c-muted);
+}
+
+.input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-body);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.primary,
+.secondary,
+.linkButton {
+  font: inherit;
+  font-size: var(--fs-body);
+  cursor: pointer;
+  border-radius: var(--r-control);
+  /* 44px of touch target: these are the primary actions of the screen. */
+  min-height: var(--hit-min);
+  padding: 8px 16px;
+}
+
+.primary {
+  border: 1px solid var(--c-green);
+  background: var(--c-green);
+  color: var(--c-white);
+}
+
+.secondary {
+  border: 1px solid var(--c-line);
+  background: var(--c-white);
+  color: var(--c-ink);
+}
+
+.linkButton {
+  align-self: start;
+  padding: 4px 0;
+  min-height: 0;
+  border: 0;
+  background: none;
+  color: var(--c-green);
+  font-size: var(--fs-meta);
+  text-decoration: underline;
+}
+
+.primary:disabled,
+.secondary:disabled,
+.linkButton:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}

@@ -1,0 +1,9 @@
+PASS #1a while recipes load slowly (1.5 s): "טוען את המחברת…"
+PASS #1b recipes request fails (settled after 7168 ms): "המחברת לא נטענה טעינת המחברת נכשלה: אין חיבור לשרת. בדקו את החיבור לאינטרנט ונסו שוב — מה שהוקלד נשאר על המסך. בדקו את החיבור לאינטרנט ונסו "
+PASS #1c after "ניסיון חוזר" (1019 ms): notebook loaded = true
+PASS #1d Supabase unreachable at start (settled after 7172 ms): "המחברת לא נטענה טעינת ההעדפות נכשלה: אין חיבור לשרת. בדקו את החיבור לאינטרנט ונסו שוב — מה שהוקלד נשאר על המסך. בדקו את "
+PASS #16 message: "כתובת האימייל אינה תקינה."; token requests sent: 0
+PASS #6 student rows: "קמח לחם 500 גר' מלח 10 גר' סוכר 60 גר' שמרים טריים 15 גר' ביצים 4 יח' · כמות לפי המתכון חלב 100 מ"ל · 103 גר' תמצית וניל 1 כפית · כמות לפי המתכון חמאה 250 גר'"
+PASS #31 onboarding after a confirmation link: "כתובת האימייל אומתה. ברוכים הבאים!"
+PASS #39 empty notebook: "יצירת המתכון הראשון או הדבקת מתכון מטקסט בית מחבר"
+SUMMARY: 8/8 passed

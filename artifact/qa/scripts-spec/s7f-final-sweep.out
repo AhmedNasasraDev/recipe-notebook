@@ -1,0 +1,6 @@
+backup.opensAndParses: {"format":"recipe-notebook-backup","recipes":3,"readableName":"בדיקה-QA בריוש חמאה קלאסי"}
+paste.opensEditor: {"url":"http://127.0.0.1:5199/recipe/new","name":"בדיקה-QA רענון סופי"}
+paste.cancelLeavesNothing: "http://127.0.0.1:5199/paste"
+sweep.totalSmallPhone: 1
+sweep.totalSmallDesk: 0
+sweep.details: {"phone.group":[" 348×43"]}

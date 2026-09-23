@@ -1,0 +1,14 @@
+{
+ "qa1": {
+  "status": 200,
+  "body": "{\"signedURL\":\"/object/sign/recipe-images/cd1630f3-4a80-4a74-b4ea-775d29cd64c0/13551e39-5568-4a6e-97b8-6626e96725cf.webp?"
+ },
+ "qa2": {
+  "status": 200,
+  "body": "{\"signedURL\":\"/object/sign/recipe-images/cd1630f3-4a80-4a74-b4ea-775d29cd64c0/13551e39-5568-4a6e-97b8-6626e96725cf.webp?"
+ },
+ "qa3": {
+  "status": 400,
+  "body": "{\"statusCode\":\"404\",\"error\":\"not_found\",\"message\":\"Object not found\",\"code\":\"NoSuchKey\"}"
+ }
+}
