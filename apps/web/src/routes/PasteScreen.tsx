@@ -173,9 +173,14 @@ export function PasteScreen() {
           פענוח
         </button>
         <p className={styles.hint}>
-          פענוח חכם דרך מודל שפה אינו זמין: הוא מחייב שרת מתווך עם מגבלת קצב, כדי
-          שמפתח ה-API לא יהיה בדפדפן. הפענוח המקומי כאן עובד בלי שרת ובלי לשלוח
-          את המתכון שלכם לאף אחד.
+          {/*
+            A-13 (spec stage 1, 23.09.2026, קוסמטי): the sentence used to name
+            a proxy server, a rate limit and an API key — implementation
+            details a home baker has no use for. The WHY that matters to them
+            is kept, in their words: nothing is sent anywhere.
+          */}
+          פענוח חכם בעזרת בינה מלאכותית אינו זמין כרגע. הפענוח שכאן עובד על
+          המכשיר שלכם, בלי לשלוח את המתכון לאף אחד.
         </p>
       </section>
 

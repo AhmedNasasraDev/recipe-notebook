@@ -197,7 +197,7 @@ describe('what the parser would not guess at', () => {
 describe('§17 the screen does not pretend', () => {
   it('explains why smart parsing is absent instead of offering a dead button', async () => {
     show();
-    expect(await screen.findByText(/פענוח חכם דרך מודל שפה אינו זמין/)).toBeInTheDocument();
+    expect(await screen.findByText(/פענוח חכם בעזרת בינה מלאכותית אינו זמין/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /חכם/ })).not.toBeInTheDocument();
   });
 

@@ -1,0 +1,4 @@
+A13.newText: true
+A13.noJargon: {"proxyGone":true,"rateLimitGone":true,"apiKeyGone":true}
+A9.parseBtnFocusRing: {"outlineStyle":"solid","outlineWidth":"2px","outlineColor":"rgb(30, 107, 76)"}
+A9.desk.parseBtnFocusRing: {"outlineStyle":"none","outlineWidth":"0px"}
