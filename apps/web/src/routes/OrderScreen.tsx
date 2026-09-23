@@ -37,7 +37,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { BackControl } from '../components/BackLink.js';
-import { PrintIcon } from '../shell/Icons.js';
 import { compute, formatGrams, formatNis } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
 import { resolveFromCatalog } from '../features/pricing/catalog.js';
@@ -207,17 +206,18 @@ export function OrderScreen() {
 
   return (
     <div className={styles.wrap}>
+      {/*
+        Spec §8.1 (stage 8 follow-up, 23.09.2026): one print action, not two.
+        This screen's whole purpose is the sheet it prints (see the header
+        comment), and the primary "הדפסה / שמירה כ-PDF" button at the foot of
+        the page IS that action — full width, unmissable. The top button was
+        the exact same `window.print()` a scroll away, which is the
+        duplication U-2/A-2 named. Removed here, not shrunk: there is nothing
+        left for a small version of it to do that the one at the bottom does
+        not already do better.
+      */}
       <div className={`${styles.topBar} noprint`}>
         <BackControl>המתכון</BackControl>
-        <button
-          type="button"
-          className={styles.printTop}
-          onClick={() => window.print()}
-          aria-label="הדפסה או שמירה כ-PDF של דף ההזמנה"
-        >
-          <PrintIcon />
-          <span>הדפסה / שמירה כ-PDF</span>
-        </button>
         <span className={styles.topTitle}>דף הזמנה</span>
       </div>
 

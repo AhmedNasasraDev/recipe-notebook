@@ -1,0 +1,3 @@
+topBar.printButtons: [{"text":"הדפסה / שמירה כ-PDF","top":1939}]
+topBar.controls: ["המתכון","דף הזמנה"]
+bottomButton.stillPrints: true
