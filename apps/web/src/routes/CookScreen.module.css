@@ -859,8 +859,14 @@
   cursor: pointer;
 }
 
-/* "הדפסה / PDF" in the head: same height as the fullscreen toggle, filled so
-   it reads as the action it is, a glyph beside its word. */
+/*
+  Spec §3.3 / U-2 follow-up (stage 9, 23.09.2026, Ahmed: "תקטין גם שם"). Was
+  filled in the accent colour — the loudest thing in a bar whose other
+  control, "מסך מלא", is a quiet outline. Print is occasional here (the
+  cooking itself is not), so it now matches .fsBtn's own quiet treatment:
+  same border, same transparent fill, same muted ink. Position, label, icon
+  and the 44px height are unchanged — only the two are the same weight now.
+*/
 .printBtn {
   flex: none;
   min-height: var(--hit-compact);
@@ -868,19 +874,18 @@
   align-items: center;
   gap: 6px;
   padding-inline: 12px;
-  border: 1px solid var(--c-cook-accent);
+  border: 1px solid var(--c-cook-line);
   border-radius: var(--r-control);
-  background: var(--c-cook-accent);
-  color: var(--c-cook-on-accent);
+  background: transparent;
+  color: var(--c-cook-muted);
   font-family: var(--font-body);
   font-size: var(--fs-meta-lg);
-  font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
 }
 
 .printBtn:focus-visible {
-  outline: 2px solid var(--c-cook-text);
+  outline: 2px solid var(--c-cook-accent);
   outline-offset: 2px;
 }
 
