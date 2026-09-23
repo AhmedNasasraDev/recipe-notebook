@@ -21,7 +21,7 @@
 // all of it in a single transaction. Reads stay as ordinary selects.
 
 import { describeCause } from '../lib/errorText.js';
-import type { Calibration, MeasurementPrefs, Recipe } from '@recipe-notebook/engine';
+import type { Calibration, MeasurementPrefs, Recipe, RecipeTrial } from '@recipe-notebook/engine';
 import type { CatalogItem } from '../features/pricing/catalog.js';
 import type {
   PurchaseInput,
@@ -479,6 +479,77 @@ export function createSupabaseRepository({
       await mirror.forgetRecipe(id);
       const index = await mirror.readRecipeIndex();
       void mirror.writeRecipeIndex(index.filter((r) => r.id !== id));
+    },
+
+    // ── the trial log (spec stage 3ב, A-6) ────────────────────────────────
+
+    async saveTrials(recipeId: string, trials: readonly RecipeTrial[]): Promise<RecipeTrial[]> {
+      requireOnline('יומן הניסויים');
+      /*
+        Straight to the table under its own RLS (`trials_via_recipe`, 0002:
+        the recipe's owner, for every command). No RPC exists for trials and
+        none is added: each row stands on its own, so a half-applied change is
+        a log with one entry fewer, not a corrupted recipe.
+
+        The order is chosen so that a failure loses nothing that was typed:
+        new rows are written first, changed rows next, and only then are the
+        rows the user removed deleted.
+      */
+      const keep = trials.filter((t) => (t.note ?? '').trim() !== '' || t.date);
+      const fresh = keep.filter((t) => !t.id);
+      const kept = keep.filter((t): t is RecipeTrial & { id: string } => typeof t.id === 'string');
+
+      const { data: before, error: beforeError } = await client
+        .from('trials')
+        .select('id')
+        .eq('recipe_id', recipeId);
+      if (beforeError) throw new SupabaseRepositoryError('טעינת יומן הניסויים נכשלה', beforeError);
+
+      if (fresh.length > 0) {
+        const { error } = await client.from('trials').insert(
+          fresh.map((t) => ({ recipe_id: recipeId, date: t.date || null, note: t.note ?? '' })),
+        );
+        if (error) throw new SupabaseRepositoryError('שמירת יומן הניסויים נכשלה', error);
+      }
+      for (const t of kept) {
+        const { error } = await client
+          .from('trials')
+          .update({ date: t.date || null, note: t.note ?? '' })
+          .eq('id', t.id)
+          .eq('recipe_id', recipeId);
+        if (error) throw new SupabaseRepositoryError('שמירת יומן הניסויים נכשלה', error);
+      }
+      const keptIds = new Set(kept.map((t) => t.id));
+      const stale = (before ?? []).map((r) => r.id).filter((id) => !keptIds.has(id));
+      if (stale.length > 0) {
+        const { error } = await client
+          .from('trials')
+          .delete()
+          .in('id', stale)
+          .eq('recipe_id', recipeId);
+        if (error) throw new SupabaseRepositoryError('הסרת רשומה מיומן הניסויים נכשלה', error);
+      }
+
+      const { data: after, error: afterError } = await client
+        .from('trials')
+        .select('id, date, note')
+        .eq('recipe_id', recipeId);
+      if (afterError) throw new SupabaseRepositoryError('טעינת יומן הניסויים נכשלה', afterError);
+      const saved = sortTrials(
+        (after ?? []).map<RecipeTrial>((r) => ({
+          id: r.id,
+          ...(r.date ? { date: r.date } : {}),
+          note: r.note,
+        })),
+      );
+      // The mirror holds the recipe with its log, so the offline copy follows.
+      try {
+        const cached = await mirror.readRecipe(recipeId);
+        if (cached) void mirror.writeRecipe({ ...cached, trials: saved });
+      } catch {
+        /* the server is the truth; the mirror catches up on the next load */
+      }
+      return saved;
     },
 
     // ── the ingredient centre (stage 7) ────────────────────────────────────
@@ -1105,3 +1176,8 @@ export function createSupabaseRepository({
  * migration 0007, called from inside the save and restore RPCs — the same six
  * statements, in one transaction instead of six.
  */
+
+/** Newest bake first; undated entries last, in the order they came. */
+function sortTrials(list: RecipeTrial[]): RecipeTrial[] {
+  return [...list].sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+}

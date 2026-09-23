@@ -1664,3 +1664,154 @@
   font-size: var(--fs-secondary);
   line-height: 1.5;
 }
+
+/* ── the trial log (spec 5.1; stage 3ב, A-6) ───────────────────────────────
+   Inside "פרטים מקצועיים", styled like the other production blocks there. */
+.trialCard {
+  background: var(--c-paper);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-card);
+  padding: 12px;
+  margin-block-end: 12px;
+}
+.trialHelp,
+.trialEmpty {
+  margin: 0 0 8px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.6;
+}
+.trialList {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.trialRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-tight) var(--gap-in-group);
+  padding: 8px 0;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+}
+.trialRow:last-child {
+  border-block-end: 0;
+}
+.trialText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.trialDate {
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+}
+.trialNote {
+  font-size: var(--fs-secondary);
+  color: var(--c-ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.trialConfirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-tight);
+  font-size: var(--fs-secondary);
+}
+.trialGhostBtn,
+.trialDangerBtn,
+.trialAddBtn {
+  min-height: var(--hit-min);
+  min-width: var(--hit-min);
+  padding-inline: 14px;
+  border-radius: var(--r-control);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+.trialGhostBtn {
+  border: 1px solid var(--c-line);
+  background: var(--c-paper);
+  color: var(--c-ink);
+}
+.trialDangerBtn {
+  border: 1px solid var(--c-red);
+  background: var(--c-paper);
+  color: var(--c-red);
+}
+.trialAddBtn {
+  border: 1px solid var(--c-green);
+  background: var(--c-green-bg);
+  color: var(--c-green-ink);
+}
+.trialGhostBtn:disabled,
+.trialDangerBtn:disabled,
+.trialAddBtn:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+.trialGhostBtn:focus-visible,
+.trialDangerBtn:focus-visible,
+.trialAddBtn:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+.trialForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding-block-start: 8px;
+  border-block-start: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+}
+.trialFields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-in-group);
+}
+.trialLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  flex: 1 1 100%;
+}
+.trialLabel:first-child {
+  flex: 0 1 180px;
+}
+.trialInput,
+.trialArea {
+  min-height: var(--hit-min);
+  padding: 8px 11px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+}
+.trialArea {
+  resize: vertical;
+}
+.trialInput:focus-visible,
+.trialArea:focus-visible {
+  border-color: var(--c-green);
+  box-shadow: 0 0 0 2px var(--c-green-bg);
+  outline: 0;
+}
+.trialActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-in-group);
+}

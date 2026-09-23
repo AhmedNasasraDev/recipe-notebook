@@ -27,6 +27,7 @@ import { duplicateRecipe } from '../features/recipe/duplicate.js';
 import { VersionHistory } from '../features/recipe/VersionHistory.js';
 import { PanCard } from '../features/recipe/PanCard.js';
 import { PrivateNote } from '../features/recipe/PrivateNote.js';
+import { TrialLog } from '../features/recipe/TrialLog.js';
 import { RecipeImages } from '../features/images/RecipeImages.js';
 import { useRecipeImages } from '../features/images/useRecipeImages.js';
 import { DeleteIcon, EditIcon, MenuDotsIcon, PrintIcon } from '../shell/Icons.js';
@@ -97,6 +98,7 @@ export function RecipeScreen() {
     capabilities,
     saveRecipe,
     deleteRecipe,
+    saveTrials,
     setCalibrations,
     listVersions,
     restoreVersion,
@@ -1424,6 +1426,16 @@ export function RecipeScreen() {
           busyId={restoreBusy}
           error={versionError}
           onRestore={(v) => void onRestore(v)}
+        />
+
+        {/* ── the trial log (spec 5.1; stage 3ב, A-6) ──────────────────────
+            Last in the professional details: a record of bakes, read after
+            the numbers and written after the oven. In stage 5 this whole
+            block moves behind "נתוני ייצור ועלויות". */}
+        <TrialLog
+          trials={recipe.trials ?? []}
+          canWrite={capabilities.canWrite}
+          onSave={(next) => saveTrials(recipe.id, next)}
         />
 
         </div>

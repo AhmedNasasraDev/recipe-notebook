@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { compute, defaultPrefs, type Recipe } from '@recipe-notebook/engine';
+import { compute, defaultPrefs, type Recipe, type RecipeTrial } from '@recipe-notebook/engine';
 import { RecipeScreen } from './RecipeScreen.js';
 import { fakeRepository, renderRoute } from '../test/render.js';
 import { useAppData } from '../app/AppDataProvider.js';
@@ -1055,5 +1055,40 @@ describe('comparing a version against the live recipe (QA 22.09.2026, acceptance
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent('אין הבדל בין שתי הגרסאות האלה');
     expect(dialog).not.toHaveTextContent('מחיר');
+  });
+});
+
+describe('the trial log lives in the professional details (spec 5.1, stage 3ב A-6)', () => {
+  const LOGGED: Recipe = {
+    ...CUP_CAKE,
+    id: 'r-log',
+    trials: [{ id: 't1', date: '2026-09-20', note: 'קרום כהה מדי' }],
+  };
+
+  it('shows the recipe\'s entries behind "פרטים מקצועיים", and a new one after saving', async () => {
+    const user = userEvent.setup();
+    const saved: RecipeTrial[][] = [];
+    renderRoute(<RecipeScreen />, {
+      path: '/recipe/:recipeId',
+      route: '/recipe/r-log',
+      repository: fakeRepository({
+        prefs: prefsAt(240),
+        recipes: [LOGGED],
+        canWrite: true,
+        onSaveTrials: (_id, list) => saved.push([...list]),
+      }),
+    });
+    await screen.findByRole('heading', { name: LOGGED.name! });
+    expect(screen.queryByLabelText('יומן ניסויים')).not.toBeInTheDocument();
+    await user.click(screen.getByText('פרטים מקצועיים'));
+    const log = await screen.findByLabelText('יומן ניסויים');
+    expect(log).toHaveTextContent('קרום כהה מדי');
+
+    await user.type(within(log).getByLabelText('מה קרה'), 'הפעם מצוין');
+    await user.click(within(log).getByRole('button', { name: 'הוספה ליומן' }));
+    await waitFor(() => expect(saved).toHaveLength(1));
+    expect(saved[0]!.map((t) => t.note)).toEqual(['הפעם מצוין', 'קרום כהה מדי']);
+    // The page shows the log as the repository stored it.
+    expect(await within(log).findByText('הפעם מצוין')).toBeInTheDocument();
   });
 });

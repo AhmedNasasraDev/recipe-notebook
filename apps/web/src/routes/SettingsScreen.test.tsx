@@ -20,7 +20,7 @@ beforeEach(() => resetMemoryIdb());
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { defaultPrefs, type MeasurementPrefs } from '@recipe-notebook/engine';
+import { defaultPrefs, type MeasurementPrefs, type Recipe } from '@recipe-notebook/engine';
 import { SettingsScreen } from './SettingsScreen.js';
 import { readCookTextSize } from '../data/offlineMirror.js';
 import { AppDataProvider } from '../app/AppDataProvider.js';
@@ -37,6 +37,7 @@ interface Options {
   canWrite?: boolean;
   /** signed out, i.e. the no-account case */
   anonymous?: boolean;
+  recipes?: Recipe[];
 }
 
 function show(opts: Options = {}) {
@@ -48,6 +49,7 @@ function show(opts: Options = {}) {
   });
   const repository = fakeRepository({
     prefs: { ...defaultPrefs('pro'), done: true, ...opts.prefs },
+    ...(opts.recipes ? { recipes: opts.recipes } : {}),
     canWrite: opts.canWrite ?? true,
     ...(opts.onSavePrefs ? { onSavePrefs: opts.onSavePrefs } : {}),
   });
@@ -255,5 +257,48 @@ describe('the size of the text in Cook Mode', () => {
     expect(await readCookTextSize()).toBe('large');
     // And the preview carries the scale, not just the words.
     expect(panel).toHaveTextContent('תצוגה מקדימה');
+  });
+});
+
+describe('spec 5.1 backup and export (stage 3ב, A-5)', () => {
+  const TWO: Recipe[] = [
+    { id: 'r1', name: 'בריוש', category: 'לחמים', ingredients: [{ id: 'i1', name: 'קמח', qty: 500, unit: 'g' }], steps: [] },
+    { id: 'r2', name: 'גנאש', category: 'גנאשים ורטבים', ingredients: [{ id: 'i2', name: 'שוקולד', qty: 200, unit: 'g' }], steps: [] },
+  ];
+
+  it('says what the file holds, that it stays with the user, and that import is not available', async () => {
+    show();
+    const card = await screen.findByLabelText('גיבוי וייצוא');
+    expect(card).toHaveTextContent(/ההערות האישיות נכללות/);
+    expect(card).toHaveTextContent(/נשמר אצלכם בלבד/);
+    expect(card).toHaveTextContent(/ייבוא חזרה מהקובץ עדיין אינו זמין/);
+  });
+
+  it('downloads one JSON file with every recipe, and reports the counts', async () => {
+    const user = userEvent.setup();
+    const create = vi.fn((_blob: Blob) => 'blob:backup');
+    vi.stubGlobal('URL', { ...URL, createObjectURL: create, revokeObjectURL: vi.fn() });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    try {
+      show({ recipes: TWO });
+      const card = await screen.findByLabelText('גיבוי וייצוא');
+      await user.click(within(card).getByRole('button', { name: 'הורדת גיבוי (JSON)' }));
+      expect(await within(card).findByRole('status')).toHaveTextContent('הגיבוי הורד: 2 מתכונים, 0 חומרי גלם, 0 תוכניות ייצור.');
+      expect(click).toHaveBeenCalledTimes(1);
+      const blob = create.mock.calls[0]![0];
+      // jsdom's Blob has no text(); a FileReader reads it the way a browser would.
+      const text = await new Promise<string>((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(String(fr.result));
+        fr.onerror = () => reject(fr.error ?? new Error('הקריאה נכשלה'));
+        fr.readAsText(blob);
+      });
+      const parsed = JSON.parse(text) as { recipes: { name: string }[]; format: string };
+      expect(parsed.format).toBe('recipe-notebook-backup');
+      expect(parsed.recipes.map((r) => r.name)).toEqual(['בריוש', 'גנאש']);
+    } finally {
+      click.mockRestore();
+      vi.unstubAllGlobals();
+    }
   });
 });

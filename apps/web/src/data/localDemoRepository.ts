@@ -102,6 +102,10 @@ export function createLocalDemoRepository(): Repository {
       throw new WriteNotAllowedError(NO_BACKEND_REASON);
     },
 
+    async saveTrials(): Promise<never> {
+      throw new WriteNotAllowedError(NO_BACKEND_REASON);
+    },
+
     async deleteRecipe(): Promise<void> {
       // Refused rather than faked. Silently "deleting" a demo recipe from the
       // screen and having it reappear on reload is the shape of lie this

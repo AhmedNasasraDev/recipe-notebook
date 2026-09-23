@@ -5,7 +5,13 @@ import { AppDataProvider } from '../app/AppDataProvider.js';
 import type { Repository, RepositoryCapabilities } from '../data/repository.js';
 import { DEMO_CATEGORIES, DEMO_RECIPES } from '../data/demoRecipes.js';
 import type { RecipeImage, StoredVersion } from '../data/repository.js';
-import { defaultPrefs, type Calibration, type MeasurementPrefs, type Recipe } from '@recipe-notebook/engine';
+import {
+  defaultPrefs,
+  type Calibration,
+  type MeasurementPrefs,
+  type Recipe,
+  type RecipeTrial,
+} from '@recipe-notebook/engine';
 import { basePriceOf, type CatalogItem } from '../features/pricing/catalog.js';
 import type {
   PurchaseInput,
@@ -22,6 +28,7 @@ export interface FakeRepoOptions {
   onSavePrefs?(p: MeasurementPrefs): void;
   onSaveRecipe?(r: Recipe): void;
   onDeleteRecipe?(id: string): void;
+  onSaveTrials?(recipeId: string, trials: readonly RecipeTrial[]): void;
   onSaveCalibrations?(list: readonly Calibration[]): void;
   versions?: readonly StoredVersion[];
   catalog?: readonly CatalogItem[];
@@ -110,6 +117,17 @@ export function fakeRepository(opts: FakeRepoOptions = {}): Repository {
     deleteRecipe: async (id) => {
       recipes = recipes.filter((r) => r.id !== id);
       opts.onDeleteRecipe?.(id);
+    },
+    saveTrials: async (recipeId, trials) => {
+      // Ids the way the database would assign them; newest bake first.
+      let n = 0;
+      const saved = trials
+        .filter((t) => (t.note ?? '').trim() !== '' || t.date)
+        .map((t) => ({ ...t, id: t.id ?? `trial-${recipeId}-${++n}` }))
+        .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''));
+      recipes = recipes.map((r) => (r.id === recipeId ? { ...r, trials: saved } : r));
+      opts.onSaveTrials?.(recipeId, saved);
+      return saved;
     },
     listVersions: async (recipeId) =>
       (opts.versions ?? []).filter((v) => v.recipeId === recipeId),

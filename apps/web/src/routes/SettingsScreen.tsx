@@ -30,6 +30,11 @@ import {
   writeCookTextSize,
   type CookTextSize,
 } from '../data/offlineMirror.js';
+import {
+  backupFileName,
+  buildNotebookBackup,
+  downloadJson,
+} from '../features/backup/exportNotebook.js';
 import styles from './SettingsScreen.module.css';
 
 /** §10's three sizes, in the words the handoff uses for them. */
@@ -40,7 +45,8 @@ const TEXT_SIZES: readonly { id: CookTextSize; he: string }[] = [
 ];
 
 export function SettingsScreen() {
-  const { prefs, setPrefs, capabilities } = useAppData();
+  const { prefs, setPrefs, capabilities, recipes, catalog, listPlans, getPlan, getPrivateNote } =
+    useAppData();
   const { status, user, signOut, changePassword } = useAuth();
   const navigate = useNavigate();
 
@@ -125,6 +131,55 @@ export function SettingsScreen() {
       setPwError(e instanceof Error ? e.message : 'שינוי הסיסמה נכשל.');
     } finally {
       setBusy(false);
+    }
+  };
+
+  /*
+    Spec 5.1 backup (stage 3ב, A-5). Everything but the plans and the private
+    notes is already in memory; those two are read now, plan by plan and note
+    by note, because neither is held by the provider (a plan is not an input to
+    anyone else's figures, and a private note is loaded only on its own page).
+    A single failure fails the whole export — a "backup" with a plan missing
+    is worse than none — and says which part.
+  */
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [backupStatus, setBackupStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const onBackup = async () => {
+    setBackupBusy(true);
+    setBackupStatus(null);
+    try {
+      const summaries = await listPlans();
+      const plans = [];
+      for (const p of summaries) {
+        const full = await getPlan(p.id);
+        if (!full) throw new Error(`תוכנית הייצור "${p.name}" לא נטענה.`);
+        plans.push(full);
+      }
+      const privateNotes: Record<string, string> = {};
+      for (const r of recipes) {
+        const note = await getPrivateNote(r.id);
+        if (note) privateNotes[r.id] = note;
+      }
+      const backup = buildNotebookBackup({
+        recipes,
+        catalog,
+        prefs,
+        plans,
+        privateNotes,
+        email: user?.email ?? null,
+      });
+      downloadJson(backupFileName(), backup);
+      setBackupStatus({
+        ok: true,
+        text: `הגיבוי הורד: ${recipes.length} מתכונים, ${catalog.length} חומרי גלם, ${plans.length} תוכניות ייצור.`,
+      });
+    } catch (e) {
+      setBackupStatus({
+        ok: false,
+        text: `הכנת הגיבוי נכשלה: ${e instanceof Error ? e.message : 'שגיאה לא ידועה'}. אפשר לנסות שוב.`,
+      });
+    } finally {
+      setBackupBusy(false);
     }
   };
 
@@ -278,6 +333,30 @@ export function SettingsScreen() {
         <p className={styles.note}>
           אלה חוקים שהמערכת אוכפת במסד הנתונים עצמו, ולא הגדרות שניתן לכבות.
         </p>
+      </section>
+
+      {/* ── spec 5.1 backup and export (stage 3ב, A-5) ─────────────────── */}
+      <section className={styles.card} aria-label="גיבוי וייצוא">
+        <h2 className={styles.cardTitle}>גיבוי וייצוא</h2>
+        <p className={styles.note}>
+          הורדת קובץ JSON אחד עם כל המחברת: המתכונים על הרכיבים, השלבים, ההערות
+          ויומן הניסויים, חומרי הגלם והמחירים, תוכניות הייצור וההעדפות. ההערות
+          האישיות נכללות — הקובץ נשמר אצלכם בלבד ואינו נשלח לשום מקום. תמונות
+          אינן נכללות. ייבוא חזרה מהקובץ עדיין אינו זמין.
+        </p>
+        <button
+          type="button"
+          className={styles.secondary}
+          disabled={backupBusy}
+          onClick={() => void onBackup()}
+        >
+          {backupBusy ? 'מכין את הגיבוי…' : 'הורדת גיבוי (JSON)'}
+        </button>
+        {backupStatus && (
+          <p className={backupStatus.ok ? styles.ok : styles.error} role="status">
+            {backupStatus.text}
+          </p>
+        )}
       </section>
 
       {/* ── §4 reset onboarding ────────────────────────────────────────── */}

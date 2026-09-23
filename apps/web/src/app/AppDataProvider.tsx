@@ -19,7 +19,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { Calibration, MeasurementPrefs, Recipe } from '@recipe-notebook/engine';
+import type { Calibration, MeasurementPrefs, Recipe, RecipeTrial } from '@recipe-notebook/engine';
 import type { CatalogItem } from '../features/pricing/catalog.js';
 import type {
   PurchaseInput,
@@ -93,6 +93,12 @@ export interface AppData {
   saveRecipe(recipe: Recipe, options?: SaveOptions): Promise<Recipe>;
   /** Removes a recipe. Throws on failure, for the same reason. */
   deleteRecipe(id: string): Promise<void>;
+  /**
+   * Replaces one recipe's trial log (spec stage 3ב, A-6) and patches the
+   * recipe in the list, so the page shows the log as the server stored it.
+   * Throws on failure — the card keeps the text and says so.
+   */
+  saveTrials(recipeId: string, trials: readonly RecipeTrial[]): Promise<RecipeTrial[]>;
   /** The version history for one recipe, newest first (§9). */
   listVersions(recipeId: string): Promise<StoredVersion[]>;
   /**
@@ -416,6 +422,15 @@ export function AppDataProvider({
     [repo],
   );
 
+  const saveTrials = useCallback(
+    async (recipeId: string, trials: readonly RecipeTrial[]): Promise<RecipeTrial[]> => {
+      const saved = await repo.saveTrials(recipeId, trials);
+      setRecipes((list) => list.map((r) => (r.id === recipeId ? { ...r, trials: saved } : r)));
+      return saved;
+    },
+    [repo],
+  );
+
   const listVersions = useCallback(
     (recipeId: string) => repo.listVersions(recipeId),
     [repo],
@@ -551,6 +566,7 @@ export function AppDataProvider({
       fetchRecipe,
       saveRecipe,
       deleteRecipe,
+      saveTrials,
       listVersions,
       restoreVersion,
       recipesUsing,
@@ -596,6 +612,7 @@ export function AppDataProvider({
       fetchRecipe,
       saveRecipe,
       deleteRecipe,
+      saveTrials,
       listVersions,
       restoreVersion,
       recipesUsing,

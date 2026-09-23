@@ -13,7 +13,7 @@
 // `capabilities` lets a screen say the honest thing instead of failing silently:
 // a save button knows whether saving is possible right now.
 
-import type { Calibration, MeasurementPrefs, Recipe } from '@recipe-notebook/engine';
+import type { Calibration, MeasurementPrefs, Recipe, RecipeTrial } from '@recipe-notebook/engine';
 import type { CatalogItem } from '../features/pricing/catalog.js';
 import type {
   PurchaseInput,
@@ -124,6 +124,16 @@ export interface RecipeRepository {
    * eventually forgets to take.
    */
   saveRecipe(recipe: Recipe, options?: SaveOptions): Promise<Recipe>;
+
+  /**
+   * Replaces the trial log of one recipe (spec 5.1 / stage 3ב, A-6).
+   *
+   * Its own call rather than a field of `saveRecipe`: `save_recipe` does not
+   * take trials, and a trial is a RECORD of a bake, not part of the formula —
+   * it is not versioned (versionDiff.ts) and not copied by duplication
+   * (duplicate.ts). Returns the log as stored, with ids, newest first.
+   */
+  saveTrials(recipeId: string, trials: readonly RecipeTrial[]): Promise<RecipeTrial[]>;
 
   /** The version history, newest first (§9). */
   listVersions(recipeId: string): Promise<StoredVersion[]>;
