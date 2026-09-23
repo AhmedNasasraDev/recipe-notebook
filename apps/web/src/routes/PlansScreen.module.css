@@ -97,6 +97,10 @@
 }
 
 .itemName {
+  /* The row's name is its link: the whole 44px row is the target (spec §3.4). */
+  display: flex;
+  align-items: center;
+  min-height: var(--hit-min);
   font-size: var(--fs-body);
   font-weight: var(--fw-title);
   color: var(--c-ink);

@@ -141,6 +141,40 @@ a {
 }
 a:hover {
   color: var(--c-green-ink);
+  text-decoration-thickness: 2px;
+}
+
+/*
+  KEYBOARD FOCUS IS ALWAYS VISIBLE (spec §3.4).
+
+  Most controls already draw their own ring; the ones that did not fell back
+  to the browser's thin default, and a few reset it away. This is the floor:
+  a 2px ring in the action green, offset so it never merges with a border,
+  on every focusable thing. A component rule that draws a stronger ring wins
+  by specificity; nothing can fall below this one.
+*/
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--c-green);
+  outline-offset: 2px;
+}
+
+/*
+  A TAP TARGET IS 44px BOTH WAYS (spec §3.4).
+
+  Heights come from the tokens; widths came from the label, so "ביטול" on a
+  phone measured 39px wide. A button is never narrower than the target. A
+  checkbox stays the 24px box its own stylesheet gives it (WCAG 2.5.8's floor
+  for the drawn control); its LABEL is the target, and every label around one
+  is already sized to the row.
+*/
+button {
+  min-width: var(--hit-min);
 }
 
 ul,

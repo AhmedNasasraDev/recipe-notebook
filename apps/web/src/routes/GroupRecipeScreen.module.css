@@ -156,7 +156,7 @@
 .primary,
 .secondary {
   justify-self: start;
-  min-height: 40px;
+  min-height: var(--hit-min);
   padding: 8px 16px;
   border-radius: var(--r-control);
   font: inherit;

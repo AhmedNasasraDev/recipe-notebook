@@ -55,38 +55,52 @@ const contrast = (a: string, b: string): number => {
  * changing the product's colours — a decision for the designer, not a test.
  */
 const SPEC_PAIRS: ReadonlySet<string> = new Set([
-  '--c-amber-bg/--c-amber', // 3.81:1 — the warning banner, as specified
-  '--c-paper/--c-muted', // 4.33:1 — secondary text on a card
-  '--c-app-bg/--c-muted', // 4.32:1 — secondary text on a screen
-  '--c-neutral-bg/--c-muted', // 3.87:1
-  '--c-white/--c-muted', // 4.47:1 — the active tab label
-  '--c-paper/--c-sand', // 2.14:1 — §16 step numerals, from the prototype
+  /*
+    Spec §3.1 (23.09.2026) names the grey (#6e7a73) and the amber (#a56a0e)
+    and allows no new colours. As small text on the spec's own paper they
+    measure 4.32:1 and 4.34:1 — AA for large text, a hair under AA for body
+    text. Reported in SPEC-STAGE-4 as a decision for Ahmed; not this test's
+    to override.
+  */
+  '--c-amber-bg/--c-amber', // 3.66:1 — the warning banner, spec colours
+  '--c-paper/--c-muted', // 4.32:1 — secondary text on paper
+  '--c-app-bg/--c-muted', // 3.76:1 — secondary text on the workspace
+  '--c-neutral-bg/--c-muted', // 3.78:1
+  '--c-white/--c-muted', // 4.32:1 — the active tab label
+  '--c-paper/--c-sand', // step numerals, from the prototype
   '--c-outer-bg/--c-muted', // label and order sheets
+  '--c-recipe-paper/--c-muted', // 4.33:1 — secondary text on the recipe page
+  '--c-off-bg/--c-muted', // 3.76:1 — a hint beside a shut control
+  '--c-select/--c-muted', // 3.78:1
+  '--c-green-bg/--c-muted', // 3.78:1
+  '--c-ok-bg/--c-muted', // 3.78:1
 ]);
 
 
 /**
- * THE PALETTE IS A CONTRACT — a different one from §16's, and Ahmed's.
+ * THE PALETTE IS A CONTRACT — spec §3.1's, verbatim.
  *
- * §16's colours were asserted here verbatim for eleven stages under HANDOFF
- * §8 ("do not change the design language without a professional reason"). The
- * reason is now on the record: Ahmed designed the pâtisserie language, approved
- * it on the recipe screen, and then approved rolling it across the application.
- * So the table below is the new one, and the guards that used to keep the new
- * palette OUT of other screens are replaced by guards that keep it UNIFORM.
+ * Eleven named colours (stage 4, 23.09.2026). The table below is the spec's
+ * own list; the two banner tints in tokens.css are the amber and the red laid
+ * over the paper and are asserted as such further down, so a twelfth colour
+ * cannot arrive as a "tint".
  *
- * Everything structural §16 specified is still asserted further down: the
- * tokens every stylesheet uses must exist, the container queries must name a
- * real container, the hit target stays 44px, and every background/text pair
- * has to measure 4.5:1.
+ * Everything structural is still asserted below: the tokens every stylesheet
+ * uses must exist, the container queries must name a real container, the hit
+ * target stays 44px, and every background/text pair is measured.
  */
 const PALETTE: readonly [string, string][] = [
-  ['שמנת בהירה', '#f7f5ef'],
-  ['כרטיסים ומשטחים', '#fffefa'],
-  ['ירוק מרווה', '#496451'],
-  ['פחם חם', '#292d29'],
-  ['מסגרות', '#ded8cc'],
-  ['רקע בחירה', '#e7ede4'],
+  ['משטח עבודה', '#e9ece8'],
+  ['נייר ממשק', '#fbfbf9'],
+  ['נייר מתכון', '#fdfbf6'],
+  ['דיו', '#171a18'],
+  ['אפור', '#6e7a73'],
+  ['קווים', '#cdd4ce'],
+  ['ירוק', '#1e6b4c'],
+  ['ירוק רך', '#e2efe8'],
+  ['ענבר', '#a56a0e'],
+  ['אדום', '#9e362c'],
+  ['שוליים חמים', '#c4a99b'],
 ];
 
 describe('the design system is one palette, in one place', () => {
@@ -95,6 +109,23 @@ describe('the design system is one palette, in one place', () => {
       expect(tokens.toLowerCase()).toContain(hex);
     });
   }
+
+  it('declares no colour the spec does not name, tints included', () => {
+    const named = new Set(PALETTE.map(([, hex]) => hex));
+    const mix = (a: string, b: string, t: number): string =>
+      '#' +
+      [0, 2, 4]
+        .map((i) => Math.round(parseInt(a.slice(i + 1, i + 3), 16) * t + parseInt(b.slice(i + 1, i + 3), 16) * (1 - t)))
+        .map((n) => n.toString(16).padStart(2, '0'))
+        .join('');
+    // The two banner fills: amber at 14% and red at 12% over the paper.
+    named.add(mix('#a56a0e', '#fbfbf9', 0.14));
+    named.add(mix('#9e362c', '#fbfbf9', 0.12));
+    const strangers = [...tokens.toLowerCase().matchAll(/#[0-9a-f]{6}\b/g)]
+      .map((m) => m[0])
+      .filter((hex) => !named.has(hex));
+    expect([...new Set(strangers)]).toEqual([]);
+  });
 
   it('binds the names every stylesheet reads to that palette', () => {
     for (const [token, source] of [
@@ -128,32 +159,37 @@ describe('the design system is one palette, in one place', () => {
     expect(hexOf('--c-amber')).not.toBe(hexOf('--c-red'));
   });
 
-  it('declares ONE Hebrew face, and serves it from this project', () => {
+  it('declares the two faces of spec §3.2, and serves both from this project', () => {
     /*
-      Ahmed's decision: Heebo for the whole interface, headings included. Both
-      of the family names the rules use hold it, so a heading differs by size
-      and weight and never by a change of voice — and the two faces it
-      replaced must be gone, not merely unused.
+      Heebo for the interface, Frank Ruhl Libre for headings and the recipe
+      page (stage 4, with approval to bundle the second face). The one they
+      replaced earlier must be gone, not merely unused.
     */
     expect(tokens).toMatch(/--font-body:\s*'Heebo'/);
-    expect(tokens).toMatch(/--font-display:\s*'Heebo'/);
-    expect(tokens).not.toContain('Frank Ruhl Libre');
+    expect(tokens).toMatch(/--font-display:\s*'Frank Ruhl Libre'/);
     expect(tokens).not.toContain('Assistant');
 
     /*
       A `font-family` declaration is not a font. These are the @font-face rules
-      that make the two faces real, pointing at files inside the repository —
+      that make the faces real, pointing at files inside the repository —
       the app must not depend on a third-party host being reachable, which in
       this project's own audit environment it is not.
     */
     const faces = readFileSync(join(HERE, 'fonts.css'), 'utf8');
-    for (const file of ['heebo-hebrew.woff2', 'heebo-latin.woff2']) {
+    for (const file of [
+      'heebo-hebrew.woff2',
+      'heebo-latin.woff2',
+      'frank-ruhl-libre-hebrew.woff2',
+      'frank-ruhl-libre-latin.woff2',
+    ]) {
       expect(faces).toContain(file);
       expect(existsSync(join(HERE, 'fonts', file))).toBe(true);
     }
+    expect(faces).not.toContain('fonts.gstatic.com');
     // The weights the hierarchy uses — 400 body, 500 quantities, 600 headings
-    // — all come from the one variable file, so its range has to cover them.
+    // — come from one variable file per face, so each range has to cover them.
     expect(faces).toMatch(/font-weight:\s*400 700/);
+    expect(faces).toMatch(/font-weight:\s*300 900/);
     // The Hebrew subsets have to cover the Hebrew block, or a Hebrew page
     // silently falls back while the CSS looks correct.
     expect(faces).toContain('U+0590-05FF');
@@ -161,7 +197,9 @@ describe('the design system is one palette, in one place', () => {
     expect(faces).toContain('U+20AA');
     expect(faces).toContain('font-display: swap');
     // OFL 1.1 requires the notice to travel with the files.
-    expect(existsSync(join(HERE, 'fonts', 'OFL.txt'))).toBe(true);
+    const ofl = readFileSync(join(HERE, 'fonts', 'OFL.txt'), 'utf8');
+    expect(ofl).toContain('Heebo');
+    expect(ofl).toContain('Frank Ruhl Libre');
   });
 
   it('nothing loads a font from a third party any more', () => {
@@ -376,15 +414,22 @@ describe('the palette, measured', () => {
     expect(contrast(surface(), text())).toBeGreaterThanOrEqual(7);
   });
 
-  it('the secondary ink reaches AA on every surface it is used on', () => {
-    for (const bg of [base(), surface(), select(), pastry('--c-outer-bg')]) {
-      expect(contrast(bg, soft())).toBeGreaterThanOrEqual(4.5);
-    }
+  it('the secondary ink is the spec grey, measured — 4.3 on paper, 3.8 on the workspace', () => {
+    /*
+      Spec §3.1's grey on the spec's paper is 4.32:1: AA for large text, just
+      under the 4.5 body-text line. The floor here is the measured value, so
+      the number cannot drift DOWN unnoticed; raising it is a palette decision
+      recorded as open in SPEC-STAGE-4.
+    */
+    expect(contrast(surface(), soft())).toBeGreaterThanOrEqual(4.3);
+    expect(contrast(pastry('--c-recipe-paper'), soft())).toBeGreaterThanOrEqual(4.3);
+    expect(contrast(base(), soft())).toBeGreaterThanOrEqual(3.7);
+    expect(contrast(select(), soft())).toBeGreaterThanOrEqual(3.7);
+    expect(contrast(pastry('--c-outer-bg'), soft())).toBeGreaterThanOrEqual(3.7);
   });
 
-  it('the selection fill carries the text, the secondary ink and the green', () => {
+  it('the selection fill carries the text and the green', () => {
     expect(contrast(select(), text())).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(select(), soft())).toBeGreaterThanOrEqual(4.5);
     expect(contrast(select(), accent())).toBeGreaterThanOrEqual(4.5);
   });
 
@@ -395,10 +440,9 @@ describe('the palette, measured', () => {
     expect(contrast(accent(), surface())).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('the meaning colours reach AA on the surfaces they appear on', () => {
+  it('the meaning colours reach AA on the surfaces they appear on — the amber measured', () => {
     for (const [ink, bg] of [
       ['--c-ok', '--c-ok-bg'],
-      ['--c-amber', '--c-amber-bg'],
       ['--c-red', '--c-red-bg'],
     ] as const) {
       expect(contrast(pastry(bg), pastry(ink)), `${ink} on ${bg}`).toBeGreaterThanOrEqual(4.5);
@@ -407,6 +451,12 @@ describe('the palette, measured', () => {
         `${ink} on the app background`,
       ).toBeGreaterThanOrEqual(4.5);
     }
+    // Spec §3.1's amber: 4.34 on paper, 3.66 on its own banner, 3.78 on the
+    // workspace — large-text AA everywhere, body-text AA nowhere. Held at the
+    // measured values (see SPEC_PAIRS) until the palette decision.
+    expect(contrast(surface(), pastry('--c-amber'))).toBeGreaterThanOrEqual(4.3);
+    expect(contrast(pastry('--c-amber-bg'), pastry('--c-amber'))).toBeGreaterThanOrEqual(3.6);
+    expect(contrast(base(), pastry('--c-amber'))).toBeGreaterThanOrEqual(3.7);
   });
 
   it('Cook Mode is light now, and every pairing on it measures', () => {
@@ -418,7 +468,8 @@ describe('the palette, measured', () => {
     */
     const bg = pastry('--c-cook-bg');
     expect(contrast(bg, pastry('--c-cook-text'))).toBeGreaterThanOrEqual(7);
-    expect(contrast(bg, pastry('--c-cook-muted'))).toBeGreaterThanOrEqual(4.5);
+    // The spec grey on the workspace, 3.76 — the open palette decision again.
+    expect(contrast(bg, pastry('--c-cook-muted'))).toBeGreaterThanOrEqual(3.7);
     // A filled control there: the action green with the surface on it.
     expect(contrast(bg, pastry('--c-cook-accent'))).toBeGreaterThanOrEqual(4.5);
     expect(
@@ -431,7 +482,7 @@ describe('the palette, measured', () => {
   });
 
   it('the border colour is never asked to be text', () => {
-    // #ded8cc is 1.30:1 on the page. It draws edges and fills shapes.
+    // #cdd4ce is 1.46:1 on the workspace. It draws edges and fills shapes.
     expect(contrast(base(), pastry('--c-border'))).toBeLessThan(3);
   });
 

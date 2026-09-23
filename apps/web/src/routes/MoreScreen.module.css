@@ -146,8 +146,8 @@
    not move (QA 22.09.2026, acceptance finding 24). */
 .inlineLink {
   display: inline-block;
-  padding: 10px 6px;
-  margin: -10px -6px;
+  padding: 13px 6px;
+  margin: -13px -6px;
   color: var(--c-green);
   text-decoration: underline;
   text-underline-offset: 3px;

@@ -463,3 +463,14 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* A link inside a sentence, with a 44px tap target that does not move the
+   line (spec §3.4): padding for the finger, negative margin for the layout. */
+.inlineLink {
+  display: inline-block;
+  padding: 12px 6px;
+  margin: -12px -6px;
+  color: var(--c-green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

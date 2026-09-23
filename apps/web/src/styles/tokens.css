@@ -3,11 +3,12 @@
  *
  * WHERE THIS CAME FROM
  *
- * §16 was the handoff's palette; it was replaced once by the cream-and-
- * chocolate language, and this is Ahmed's updated decision: a pale cream page,
- * a deep sage green for the things you press, warm charcoal text, and one
- * Hebrew face — Heebo — for the whole interface, headings included. The
- * chocolate palette and the serif/sans pair it came with are gone.
+ * Spec §3.1 (SPEC.pdf, "דף אפיון — תיקון באגים וייצוב", stage 4, 23.09.2026)
+ * is the palette now, verbatim, and §3.2 the two faces: Heebo for the
+ * interface, Frank Ruhl Libre for headings and the recipe page. Eleven named
+ * colours and no others; the two banner tints below are the amber and the red
+ * laid over the paper at 14% and 12% (see their comment), not colours of
+ * their own.
  *
  * Everything structural is unchanged: the radius scale, the spacing, the 44px
  * hit target, the phone frame, and the provenance colours keyed to the engine.
@@ -18,55 +19,57 @@
  * ───────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* ── the palette ───────────────────────────────────────────────────────── */
-  --c-base: #f7f5ef; /* רקע שמנת בהירה */
-  --c-surface: #fffefa; /* כרטיסים ומשטחים */
-  --c-accent: #496451; /* ירוק מרווה — פעולות, אייקונים, בחירה */
-  --c-text: #292d29; /* פחם חם — טקסט ראשי */
-  --c-border: #ded8cc; /* מסגרות עדינות */
-  --c-select: #e7ede4; /* רקע לבחירה ולאייקונים */
-  /*
-    The secondary ink. Not in Ahmed's five — the palette gives a text colour
-    and a border colour, and a border is far too light to read as text (1.30:1
-    on the page). This is the charcoal lightened until it is clearly secondary
-    and still measured: 5.20:1 on the page, 5.62 on a card, 4.76 on a
-    selection.
-  */
-  --c-muted-ink: #5e6a5f;
+  /* ── the palette — spec §3.1, in its own words ─────────────────────────── */
+  --c-base: #e9ece8; /* משטח עבודה */
+  --c-surface: #fbfbf9; /* נייר ממשק */
+  --c-recipe-paper: #fdfbf6; /* נייר מתכון — the recipe page and its print */
+  --c-text: #171a18; /* דיו */
+  --c-muted-ink: #6e7a73; /* אפור */
+  --c-border: #cdd4ce; /* קווים */
+  --c-accent: #1e6b4c; /* ירוק — פעולות, אייקונים, בחירה */
+  --c-select: #e2efe8; /* ירוק רך — רקע לבחירה ולאייקונים */
+  --c-amber: #a56a0e; /* ענבר — אזהרה, "נתון מערכת" */
+  --c-red: #9e362c; /* אדום — שגיאה, מחיקה, "הערכה גסה" */
+  --c-warm: #c4a99b; /* שוליים חמים — the notebook's margin rule, decoration only */
 
   /* ── the names every stylesheet already reads ──────────────────────────── */
   --c-app-bg: var(--c-base);
   --c-paper: var(--c-surface);
   --c-white: var(--c-surface);
-  --c-outer-bg: #eeece4; /* רקע חוץ — תווית ודף הזמנה */
+  /* The area outside the phone frame, and the label and order sheets: the
+     workspace, which is what §3.1 calls the surface the paper lies on. */
+  --c-outer-bg: var(--c-base);
   --c-line: var(--c-border);
 
   /*
-    `--c-green` is the action colour, and now it really is green again. The
-    name is structural — "the colour of a thing you press" — and what it holds
-    is the sage. Measured: 5.97:1 on the page, 6.45 on a card, and the card
-    colour on top of it 6.45 for a filled button's label.
+    `--c-green` is the action colour. The name is structural — "the colour of
+    a thing you press" — and what it holds is §3.1's green. Measured: 6.21:1
+    on the paper, 5.40 on the workspace, and the paper on top of it 6.21 for
+    a filled button's label. The hover/link shade is the same green: the
+    spec has one green, and a hover is told by the underline.
   */
   --c-green: var(--c-accent);
   --c-green-bg: var(--c-select);
-  --c-green-ink: #3a5141;
+  --c-green-ink: var(--c-accent);
 
   /*
     MEANING KEEPS ITS OWN COLOURS — with one deliberate merge.
 
-    Success is the sage. A second, different green for "correct" beside a green
-    action colour is two greens nobody can tell apart, and the tick mark reads
-    as success from its shape and its place. Warning and error stay their own
-    hues, which is what the distinction is actually for.
+    Success is the green. A second, different green for "correct" beside a
+    green action colour is two greens nobody can tell apart, and the tick
+    mark reads as success from its shape and its place. Warning and error
+    stay their own hues, which is what the distinction is actually for.
+
+    The two banner fills are the amber and the red themselves, laid over the
+    paper (#fbfbf9) at 14% and 12% — `color-mix(in srgb, var(--c-amber) 14%,
+    var(--c-surface))` — written out as hex because tokens.test.ts measures
+    every pairing arithmetically and cannot resolve a color-mix().
   */
   --c-ok: var(--c-accent);
   --c-ok-bg: var(--c-select);
 
-  --c-amber: #8a5c0c; /* ענבר — אזהרה, "נתון מערכת" */
-  --c-amber-bg: #f6ecd8;
-
-  --c-red: #9a3328; /* אדום — שגיאה, "הערכה גסה" */
-  --c-red-bg: #f7e4e0;
+  --c-amber-bg: #efe7d8;
+  --c-red-bg: #f0e3e0;
 
   --c-ink: var(--c-text);
   --c-muted: var(--c-muted-ink);
@@ -93,14 +96,14 @@
 
   /* ── typography ───────────────────────────────────────────────────────── */
   /*
-    ONE FACE. Heebo, served from this project (fonts.css). `--font-display`
-    stays as a name because a hundred rules use it; it holds the same family,
-    so a heading differs from body text by size and weight — 600 for headings,
-    500 for quantities and actions, 400 for everything read at length — and
-    never by a change of voice.
+    TWO FACES, both served from this project (fonts.css). Spec §3.2: Heebo
+    for the interface — controls, lists, the working text — and Frank Ruhl
+    Libre for headings and for the recipe page, which is meant to read like
+    a page of a notebook rather than a screen. `--font-display` is the serif;
+    every heading rule already reads it.
   */
   --font-body: 'Heebo', 'Arial Hebrew', system-ui, sans-serif;
-  --font-display: 'Heebo', 'Arial Hebrew', system-ui, sans-serif;
+  --font-display: 'Frank Ruhl Libre', 'Heebo', 'Arial Hebrew', serif;
 
   --fs-label: 12px;
   --fs-meta: 12px;
@@ -142,11 +145,13 @@
     which on this light page computes to 1.6:1–2.9:1 — the label of a control
     that decides something becomes unreadable in a lit kitchen. The state is
     carried by a flat neutral fill and the secondary ink instead, never by the
-    accent and never by transparency: #5e6a5f on #eceae2 measures 4.71:1
-    (asserted in tokens.test.ts).
+    accent and never by transparency. Spec §3.1 has no disabled shade and no
+    new colours: the fill is the workspace (#e9ece8) and the label is the ink,
+    14.7:1 (asserted in tokens.test.ts) — the state is told by the flat fill
+    and the missing border, never by a faded label.
   */
-  --c-off-bg: #eceae2;
-  --c-off-ink: var(--c-muted-ink);
+  --c-off-bg: var(--c-base);
+  --c-off-ink: var(--c-text);
 
   /* ── radius ───────────────────────────────────────────────────────────────
      TWO STEPS, AND ONE OF THEM IS FOR CONTROLS.
@@ -188,9 +193,13 @@
   --pad-card: 16px;
 
   /* ── interaction ──────────────────────────────────────────────────────── */
-  /* §15: hit targets ≥ 44px. Non-negotiable — this is a kitchen app. */
+  /* §15 and spec §3.4: hit targets ≥ 44px. Non-negotiable — this is a
+     kitchen app. `--hit-compact` was 40px for controls that sit in rows; the
+     spec makes no such allowance (stage 1 counted 71 targets under 44px on a
+     phone), so the name is kept for the ~35 rules that read it and it
+     resolves to the same 44. */
   --hit-min: 44px;
-  --hit-compact: 40px;
+  --hit-compact: 44px;
   /* §9: how tall the chat's one-line composer may grow before it scrolls
      inside itself — about four lines, after which the conversation above it
      matters more than seeing the whole draft at once. */

@@ -70,6 +70,7 @@
 
 .input {
   width: 100%;
+  min-height: var(--hit-min);
   padding: 8px 10px;
   border: 1px solid var(--c-line);
   border-radius: var(--r-control);
@@ -89,7 +90,7 @@
 .secondary {
   display: inline-grid;
   place-items: center;
-  min-height: 40px;
+  min-height: var(--hit-min);
   padding: 8px 16px;
   border: 1px solid var(--c-line);
   border-radius: var(--r-control);

@@ -11,7 +11,21 @@
   flex-direction: column;
   gap: var(--gap-between-groups);
   padding: 12px var(--pad-card) 32px;
-  background: var(--c-app-bg);
+  /*
+    Spec §3.1/§3.3 (stage 4): the recipe page is a page of a notebook — its
+    own paper (נייר מתכון) and the book face for what is read on it. The
+    controls on the page stay in the interface face: a button is not part of
+    the page, whatever page it sits on.
+  */
+  background: var(--c-recipe-paper);
+  font-family: var(--font-display);
+}
+.page button,
+.page input,
+.page select,
+.page textarea,
+.page summary {
+  font-family: var(--font-body);
 }
 
 /*
@@ -1324,7 +1338,7 @@
 }
 .panSelect,
 .panInput {
-  min-height: 40px;
+  min-height: var(--hit-min);
   padding: 8px 10px;
   border: 1px solid var(--c-line);
   border-radius: var(--r-control);

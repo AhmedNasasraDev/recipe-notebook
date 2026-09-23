@@ -196,7 +196,7 @@
   cursor: pointer;
   border-radius: var(--r-control);
   /* 44px of touch target: these are the primary actions of the screen. */
-  min-height: 40px;
+  min-height: var(--hit-min);
   padding: 8px 16px;
 }
 

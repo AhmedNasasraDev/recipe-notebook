@@ -321,7 +321,7 @@ export function OrderScreen() {
           <p className={`${styles.note} noprint`} role="status">
             העלות בדף חלקית: אין מחיר ל{calc.unpricedNames.join(' · ')}. הכמויות
             והמשקלים מדויקים, והמחיר הוא סכום של הרכיבים שיש להם מחיר בלבד.{' '}
-            <Link to="/ingredients">להזין מחיר במרכז חומרי הגלם</Link>
+            <Link to="/ingredients" className={styles.inlineLink}>להזין מחיר במרכז חומרי הגלם</Link>
           </p>
         )}
 

@@ -419,7 +419,7 @@
 }
 
 .send {
-  min-height: 40px;
+  min-height: var(--hit-min);
   padding: 8px 18px;
   border: 1px solid var(--c-green);
   border-radius: var(--r-control);
