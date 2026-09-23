@@ -302,3 +302,20 @@ describe('spec 5.1 backup and export (stage 3ב, A-5)', () => {
     }
   });
 });
+
+describe('Personal Settings, stage 1', () => {
+  it('links to the new profile screen, named so it is not read as the cooking profile below it', async () => {
+    show();
+    const link = await screen.findByRole('link', { name: /פרטים אישיים/ });
+    expect(link).toHaveAttribute('href', '/settings/profile');
+    // The heading directly under it is the pre-existing "פרופיל" (home/pro/
+    // study) — the two must stay visibly different labels on one page.
+    expect(screen.getByRole('heading', { name: 'פרופיל' })).toBeInTheDocument();
+  });
+
+  it('no longer draws the name-and-picture card here — it moved to /settings/profile', async () => {
+    show();
+    await screen.findByLabelText('יחידות מדידה');
+    expect(screen.queryByLabelText('איך אני מוצג בקבוצות')).not.toBeInTheDocument();
+  });
+});

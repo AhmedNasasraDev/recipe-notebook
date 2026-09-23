@@ -23,8 +23,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BackControl } from '../components/BackLink.js';
 import { PROFILES, UNIT_GROUPS, unit } from '@recipe-notebook/engine';
 import { useAppData } from '../app/AppDataProvider.js';
-import { IdentityCard } from '../features/groups/IdentityCard.js';
 import { useAuth } from '../auth/AuthProvider.js';
+import { ChevronIcon, ICON_STROKE, ProfileIcon } from '../shell/Icons.js';
 import {
   readCookTextSize,
   writeCookTextSize,
@@ -192,6 +192,29 @@ export function SettingsScreen() {
         <h1 className={styles.title}>הגדרות</h1>
       </header>
 
+      {/*
+        Personal Settings, stage 1 (23.09.2026). The first of what will become
+        several category screens (שפה, אבטחה, התראות, ...), added one stage at
+        a time — see the saved plan. Named "פרטים אישיים" rather than "פרופיל"
+        on purpose: the section right below it is ALREADY called "פרופיל" (the
+        home/pro/study cooking level), and the two must not be confused on the
+        same page.
+      */}
+      <nav className={styles.menu} aria-label="קטגוריות הגדרות">
+        <Link to="/settings/profile" className={styles.entry}>
+          <span className={styles.entryIcon} aria-hidden="true">
+            <ProfileIcon width={ICON_STROKE.menu} />
+          </span>
+          <span className={styles.entryText}>
+            <span className={styles.entryTitle}>פרטים אישיים</span>
+            <span className={styles.entryBody}>שם, תמונה, טלפון ומייל</span>
+          </span>
+          <span className={styles.entryChevron} aria-hidden="true">
+            <ChevronIcon />
+          </span>
+        </Link>
+      </nav>
+
       {/* ── §3 profile ─────────────────────────────────────────────────── */}
       <section className={styles.card} aria-label="פרופיל">
         <h2 className={styles.cardTitle}>פרופיל</h2>
@@ -217,12 +240,9 @@ export function SettingsScreen() {
 
       {/* ── §4 step 2: the unit list ───────────────────────────────────── */}
       {/*
-        §10.1 — the name and picture a group sees. Here rather than on a group
-        screen because they belong to the ACCOUNT: they are the same in every
-        group, and a person who is in no group yet still needs somewhere to set
-        them before they join one.
+        §10.1's name-and-picture card moved to /settings/profile (Personal
+        Settings stage 1) — it belongs beside first/last name now, not here.
       */}
-      <IdentityCard />
 
       <section className={styles.card} aria-label="יחידות מדידה">
         <h2 className={styles.cardTitle}>יחידות מדידה</h2>

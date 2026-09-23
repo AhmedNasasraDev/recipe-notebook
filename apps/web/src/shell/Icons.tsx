@@ -123,6 +123,7 @@ import {
   Tag,
   Thermometer,
   Trash2,
+  User,
   Users,
   Wheat,
   X,
@@ -283,6 +284,9 @@ export const SearchIcon = inlineGlyph(Search);
 
 /** הגדרות. */
 export const SettingsIcon = inlineGlyph(Settings);
+
+/** פרופיל — אדם יחיד, לא Users (שהוא כבר "חברי הקבוצה"). */
+export const ProfileIcon = inlineGlyph(User);
 
 /* ── categories, on the home screen and the notebook cards ───────────────
    These label a category whose NAME is already on screen beside them, so the

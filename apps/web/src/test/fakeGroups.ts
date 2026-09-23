@@ -59,7 +59,12 @@ export interface FakeGroupOptions {
   messages?: readonly ChatMessage[];
   /** the caller's read marker per group */
   lastRead?: Readonly<Record<string, number>>;
-  identity?: { displayName: string; avatarPath: string | null };
+  identity?: {
+    displayName: string;
+    avatarPath: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+  };
   itemNotes?: Readonly<Record<string, string>>;
   /** signed avatar URLs a test wants to exist, keyed by path */
   avatarUrls?: Readonly<Record<string, string>>;
@@ -112,7 +117,11 @@ export function createFakeGroups(
   let messages: ChatMessage[] = [...(opts.messages ?? [])];
   const lastRead: Record<string, number> = { ...(opts.lastRead ?? {}) };
   const itemNotes: Record<string, string> = { ...(opts.itemNotes ?? {}) };
-  let identity = opts.identity ?? { displayName: '', avatarPath: null };
+  let identity = {
+    firstName: null as string | null,
+    lastName: null as string | null,
+    ...(opts.identity ?? { displayName: '', avatarPath: null }),
+  };
   let nextSeq = messages.reduce((max, m) => Math.max(max, m.seq), 0) + 1;
   let created = 0;
 
@@ -685,6 +694,10 @@ export function createFakeGroups(
 
     async saveDisplayName(name) {
       identity = { ...identity, displayName: name.trim() };
+    },
+
+    async saveProfileNames(firstName, lastName) {
+      identity = { ...identity, firstName: firstName.trim(), lastName: lastName.trim() };
     },
 
     async setAvatar() {

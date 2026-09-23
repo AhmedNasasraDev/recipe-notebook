@@ -948,13 +948,15 @@ export function createSupabaseGroups({
     async getIdentity() {
       const { data, error } = await client
         .from('profiles')
-        .select('display_name, avatar_path')
+        .select('display_name, avatar_path, first_name, last_name')
         .eq('user_id', userId)
         .maybeSingle();
       if (error) throw new GroupRepositoryError('טעינת הפרופיל נכשלה', error);
       return {
         displayName: data?.display_name ?? '',
         avatarPath: data?.avatar_path ?? null,
+        firstName: data?.first_name ?? null,
+        lastName: data?.last_name ?? null,
       };
     },
 
@@ -967,6 +969,23 @@ export function createSupabaseGroups({
         .select('user_id');
       if (error) throw new GroupRepositoryError('שמירת השם נכשלה', error);
       expectOne(data, 'שמירת השם');
+    },
+
+    /*
+      Personal Settings stage 1 (migration 0041). Does not touch
+      display_name in this call — the database's own trigger derives it from
+      the two once both are non-blank, the same way `touched_at` and the
+      group ranks are derived in the database rather than trusted from here.
+    */
+    async saveProfileNames(firstName, lastName) {
+      requireOnline('הפרופיל');
+      const { data, error } = await client
+        .from('profiles')
+        .update({ first_name: firstName.trim(), last_name: lastName.trim() })
+        .eq('user_id', userId)
+        .select('user_id');
+      if (error) throw new GroupRepositoryError('שמירת הפרופיל נכשלה', error);
+      expectOne(data, 'שמירת הפרופיל');
     },
 
     async setAvatar(file) {

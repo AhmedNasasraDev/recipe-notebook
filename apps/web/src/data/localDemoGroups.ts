@@ -181,9 +181,12 @@ export function createLocalDemoGroups(): GroupRepository & IdentityRepository {
     },
 
     async getIdentity() {
-      return { displayName: '', avatarPath: null };
+      return { displayName: '', avatarPath: null, firstName: null, lastName: null };
     },
     async saveDisplayName() {
+      throw new WriteNotAllowedError(NO_IDENTITY);
+    },
+    async saveProfileNames() {
       throw new WriteNotAllowedError(NO_IDENTITY);
     },
     async setAvatar() {

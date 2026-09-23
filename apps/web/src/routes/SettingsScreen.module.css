@@ -27,6 +27,79 @@
   border-block-end: 1px solid var(--c-line);
 }
 
+/* ── the category menu (Personal Settings, stage 1) ──────────────────────
+   Same card-row language as MoreScreen's four cards — a settings category
+   is the same kind of thing a menu entry there is. */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-in-group);
+  padding: 16px 20px;
+  border-block-end: 1px solid var(--c-line);
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  padding: 14px var(--pad-card);
+  border: 1px solid color-mix(in srgb, var(--c-line) 50%, transparent);
+  border-radius: var(--r-card-lg);
+  background: var(--c-paper);
+  color: var(--c-ink);
+  text-decoration: none;
+}
+
+.entry:hover {
+  background: color-mix(in srgb, var(--c-select) 60%, var(--c-paper));
+}
+
+.entry:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 2px;
+}
+
+.entryIcon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--r-card);
+  background: var(--c-select);
+  color: var(--c-ink);
+}
+
+.entryText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.entryTitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-body-lg);
+  font-weight: var(--fw-title);
+  color: var(--c-ink);
+  line-height: 1.3;
+}
+
+.entryBody {
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+  line-height: 1.5;
+}
+
+.entryChevron {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--c-muted);
+}
+
 .cardTitle {
   font-family: var(--font-body);
   font-size: var(--fs-secondary);

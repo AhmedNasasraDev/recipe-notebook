@@ -1,0 +1,159 @@
+/* Personal Settings, stage 1 — /settings/profile. Same tokens and the same
+   card language as SettingsScreen and IdentityCard, so the screen this one
+   was split out of does not look like it changed language halfway. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 20px;
+  border-block-end: 1px solid var(--c-line);
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: var(--fs-screen-title);
+  color: var(--c-ink);
+}
+
+.card {
+  padding: 16px 20px;
+  border-block-end: 1px solid var(--c-line);
+}
+
+.cardTitle {
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.note {
+  margin-block-start: 8px;
+  font-size: var(--fs-meta-lg);
+  color: var(--c-muted);
+  line-height: 1.7;
+}
+
+.hint {
+  margin-block-start: 10px;
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  background: var(--c-select);
+  color: var(--c-ink);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+
+.warn {
+  margin-block-start: 10px;
+  padding: 9px 11px;
+  border-radius: var(--r-card);
+  background: var(--c-amber-bg);
+  color: var(--c-ink);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+
+.problem {
+  margin-block-start: 10px;
+  padding: 8px 10px;
+  border-radius: var(--r-card);
+  background: var(--c-red-bg);
+  color: var(--c-red);
+  font-size: var(--fs-meta-lg);
+  line-height: 1.6;
+}
+
+.fields {
+  margin-block-start: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-label);
+  color: var(--c-muted);
+}
+
+.input {
+  min-height: var(--hit-min);
+  padding: 8px 11px;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-control);
+  background: var(--c-white);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+}
+.input:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+}
+
+.actions {
+  margin-block-start: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.primary {
+  min-height: var(--hit-min);
+  padding: 9px 18px;
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--c-green);
+  color: var(--c-white);
+  font-family: var(--font-body);
+  font-size: var(--fs-secondary);
+  font-weight: 600;
+  cursor: pointer;
+}
+.primary:disabled {
+  background: var(--c-off-bg);
+  border-color: var(--c-line);
+  color: var(--c-off-ink);
+  cursor: default;
+}
+
+/* ── phone / email, view-only for this stage ─────────────────────────────── */
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--hit-min);
+  padding-block: 6px;
+  border-block-end: 1px solid color-mix(in srgb, var(--c-line) 55%, transparent);
+}
+.row:last-of-type {
+  border-block-end: 0;
+}
+
+.rowLabel {
+  font-size: var(--fs-secondary);
+  color: var(--c-muted);
+}
+
+.rowValue {
+  font-size: var(--fs-body);
+  color: var(--c-ink);
+}
+
+.rowValueMuted {
+  font-size: var(--fs-body);
+  color: var(--c-muted);
+}

@@ -542,8 +542,25 @@ export interface ChatSubscription {
  * email address.
  */
 export interface IdentityRepository {
-  getIdentity(): Promise<{ displayName: string; avatarPath: string | null }>;
+  getIdentity(): Promise<{
+    displayName: string;
+    avatarPath: string | null;
+    /*
+      Personal Settings stage 1 (migration 0041). null on every account that
+      has not yet filled in the profile screen's name form — including every
+      account that predates it. See `saveProfileNames`.
+    */
+    firstName: string | null;
+    lastName: string | null;
+  }>;
   saveDisplayName(name: string): Promise<void>;
+  /**
+   * Saves the account's first and last name. The database derives
+   * `display_name` from the two once both are non-blank (migration 0041) —
+   * this does not touch `display_name` itself, and an account that has a
+   * `display_name` from before keeps it until this is called.
+   */
+  saveProfileNames(firstName: string, lastName: string): Promise<void>;
   /** Converts to WebP in the browser, uploads, and returns the stored path. */
   setAvatar(file: File | Blob): Promise<string>;
   removeAvatar(): Promise<void>;

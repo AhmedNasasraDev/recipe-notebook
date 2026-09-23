@@ -68,6 +68,14 @@ export type ProfileRow = {
   display_name: string;
   /** `{user_id}/{uuid}.webp` in the `avatars` bucket. null = no picture. */
   avatar_path: string | null;
+  /*
+    Personal Settings stage 1 (migration 0041). null on every account that
+    predates the profile screen, or has visited it but not filled the form
+    yet. Filling both in derives `display_name` — see the migration's own
+    comment for why that is a trigger and not application code.
+  */
+  first_name: string | null;
+  last_name: string | null;
   created_at: string;
   updated_at: string;
 };

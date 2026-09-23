@@ -76,6 +76,10 @@ export function parentOf(pathname: string): string | null {
   /* Everything reached from "עוד". */
   if (['/ingredients', '/plans', '/tools', '/settings', '/stock'].includes(p)) return '/more';
 
+  /* Personal Settings, stage 1: every category screen belongs to the
+     settings list, not to "עוד" directly. */
+  if (/^\/settings\/[^/]+$/.test(p)) return '/settings';
+
   /*
     An invitation is opened from outside the application — an email, a message
     — so there is nothing of ours behind it and no parent it came from. Home is

@@ -19,6 +19,7 @@ import { OrderScreen } from './routes/OrderScreen.js';
 import { PasteScreen } from './routes/PasteScreen.js';
 import { HomeScreen } from './routes/HomeScreen.js';
 import { SettingsScreen } from './routes/SettingsScreen.js';
+import { SettingsProfileScreen } from './routes/SettingsProfileScreen.js';
 import { ToolsScreen } from './routes/ToolsScreen.js';
 import { GroupsScreen } from './routes/GroupsScreen.js';
 import { GroupScreen } from './routes/GroupScreen.js';
@@ -84,6 +85,8 @@ export function App() {
                     "עוד" since stage 2; until now the paths had no route and
                     fell through the catch-all to the notebook. */}
                 <Route path="/settings" element={<SettingsScreen />} />
+                {/* Personal Settings, stage 1: the first category screen. */}
+                <Route path="/settings/profile" element={<SettingsProfileScreen />} />
                 <Route path="/tools" element={<ToolsScreen />} />
               </Route>
               {/*
