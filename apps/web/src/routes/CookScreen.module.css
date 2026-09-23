@@ -100,7 +100,16 @@
 .segDone,
 .segNow {
   flex: 1;
-  /* A 44px target with an 8px bar inside it: the bar is thin, the tap is not. */
+  /* A 44px target with an 8px bar inside it: the bar is thin, the tap is not.
+     Height only — global.css's `button { min-width: var(--hit-min) }` (spec
+     §3.4's 44px-wide floor for a standalone button) does not fit a row of N
+     segments sharing one continuous bar: at 28 steps that floor alone asks
+     for 1,232px, wider than any phone, which is the real cause of a
+     23.09.2026 real-device report (content cut off at the screen's edge,
+     confirmed by a screenshot of this exact bar touching the left edge with
+     no padding). `min-width: 0` here is the override, restoring the plain
+     `flex: 1` shrink the row was written for. */
+  min-width: 0;
   min-height: var(--hit-min);
   padding: 0;
   border: 0;
