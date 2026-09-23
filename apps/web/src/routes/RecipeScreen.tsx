@@ -1238,7 +1238,7 @@ export function RecipeScreen() {
         present, labelled, and not competing.
       */}
       {/*
-        ── "פרטים מקצועיים" ───────────────────────────────────────────────
+        ── "נתוני ייצור ועלויות" ───────────────────────────────────────────────
 
         Everything a professional needs and a cook standing at a bowl does not:
         the food cost, the yield and the loss, the baker's formula, the
@@ -1251,7 +1251,7 @@ export function RecipeScreen() {
         open={showPro}
         onToggle={(e) => setShowPro(e.currentTarget.open)}
       >
-        <summary className={styles.proSummary}>פרטים מקצועיים</summary>
+        <summary className={styles.proSummary}>נתוני ייצור ועלויות</summary>
         {showPro && (
         <div className={styles.proBody}>
           {/*
@@ -1280,7 +1280,7 @@ export function RecipeScreen() {
           />
 
         {/* ── §13 production data ─────────────────────────────────────────
-            Inside "פרטים מקצועיים" now, and no longer behind a second button of
+            Inside "נתוני ייצור ועלויות" now, and no longer behind a second button of
             its own: a disclosure inside a disclosure made the user open two
             things to read one number. */}
         <section className={styles.card}>

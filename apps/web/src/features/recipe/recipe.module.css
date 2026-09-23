@@ -1528,12 +1528,13 @@
   text-decoration: none;
 }
 
-/* ── UX pass: the two disclosures ────────────────────────────────────────
-   "עוד פעולות" holds what is occasional (print, duplicate, delete) and
-   "פרטים מקצועיים" holds what is professional (food cost, yield and loss, the
-   formula, allergens, versions). Both are <details>: the browser's own
-   disclosure, so the keyboard and the screen reader already know it, and the
-   summary says what is inside rather than "עוד". */
+/* ── the one disclosure (spec §3.3, stage 5) ───────────────────────────────
+   "עוד פעולות" moved into the ⋮ menu (RecipeMenu.tsx, stage 5a). What is left
+   is "נתוני ייצור ועלויות" — every production and cost figure (food cost,
+   yield and loss, the formula, allergens, versions, the trial log) behind
+   ONE button, exactly as §3.3 asks: not scattered on the page. A <details>:
+   the browser's own disclosure, so the keyboard and the screen reader
+   already know it, and the summary says what is inside. */
 /* One column: `.page` pads its own sides, so nothing inside adds a second
    inset — which is what used to make the cook button and these panels
    narrower than the cards above them. */
@@ -1759,7 +1760,8 @@
 }
 
 /* ── the trial log (spec 5.1; stage 3ב, A-6) ───────────────────────────────
-   Inside "פרטים מקצועיים", styled like the other production blocks there. */
+   Inside "נתוני ייצור ועלויות" (spec §3.3, stage 5), styled like the other
+   production blocks there. */
 .trialCard {
   background: var(--c-paper);
   border: 1px solid var(--c-line);

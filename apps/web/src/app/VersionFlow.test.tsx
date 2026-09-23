@@ -90,7 +90,7 @@ describe('requirements 1 and 2 — a version is taken before an update', () => {
     // A "V1" describing a recipe that did not exist a moment ago would be a
     // fiction, and it would put an empty state in the history.
     expect(db['recipe_versions']).toHaveLength(0);
-    await user.click(await screen.findByText('פרטים מקצועיים'));
+    await user.click(await screen.findByText('נתוני ייצור ועלויות'));
     expect(await screen.findByText(/אין עוד היסטוריה/)).toBeInTheDocument();
   }, 30_000);
 
@@ -187,7 +187,7 @@ describe('requirements 1 and 2 — a version is taken before an update', () => {
 });
 
 /*
-  UX PASS: the version history moved INSIDE "פרטים מקצועיים".
+  UX PASS: the version history moved INSIDE "נתוני ייצור ועלויות".
 
   It is not a thing a cook standing at a bowl reads, so it sits with the food
   cost and the formula in the one collapsed panel, and the panel renders its
@@ -195,7 +195,7 @@ describe('requirements 1 and 2 — a version is taken before an update', () => {
   first — which is also what a user now does.
 */
 async function openPro(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByText('פרטים מקצועיים'));
+  await user.click(screen.getByText('נתוני ייצור ועלויות'));
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -405,7 +405,7 @@ describe('requirements 11-17 — linking a sub-recipe from the editor', () => {
     expect(filling).toHaveTextContent("150 גר'");
 
     // 600 g flour + 150 g of ganache = 750 g, from the one engine.
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     const yieldRow = (await screen.findByText('תשואה תאורטית')).closest('div')!;
     expect(yieldRow).toHaveTextContent("750 גר'");
 

@@ -229,7 +229,7 @@ describe('requirements E and F — the recipe reports its full cost and profit',
 
     render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const panel = await screen.findByLabelText('עלות ורווחיות');
     // 250 g of butter at ₪36/kg = ₪9, plus ₪2 packaging and ₪10 labour = ₪21
@@ -248,7 +248,7 @@ describe('requirements E and F — the recipe reports its full cost and profit',
 
     render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const perUnit = await screen.findByLabelText('לפי יחידה');
     // two units: ₪10.5 cost, ₪20 price, ₪9.5 profit each
@@ -271,7 +271,7 @@ describe('requirements E and F — the recipe reports its full cost and profit',
 
     render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const panel = await screen.findByLabelText('עלות ורווחיות');
     expect(within(panel).getByLabelText('עלות כוללת')).toHaveTextContent('—');
@@ -289,7 +289,7 @@ describe('requirements E and F — the recipe reports its full cost and profit',
 
     render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const note = await screen.findByLabelText('מה לא הוזן בעלות');
     expect(note).toHaveTextContent('עבודה');
@@ -309,7 +309,7 @@ describe('requirement G — a target price is labelled as one', () => {
 
     render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const block = await screen.findByLabelText('מחיר מחושב לפי יעד');
     // ₪9 of ingredients at a 30% target: ₪30
@@ -397,7 +397,7 @@ describe('requirement G — a target that was never set is not "0%" (QA 22.09.20
 
     render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const block = await screen.findByLabelText('מחיר מחושב לפי יעד');
     expect(block).toHaveTextContent('לפי יעד פוד קוסט (לא הוגדר יעד)');

@@ -1,0 +1,13 @@
+label.exists: 1
+label.oldGone: 0
+outside.beforeOpen: ["12 יחידות","100 גר' ליחידה","2 שע' 12 דק'","נתונים חלקיים — חסרים נתונים עבור 2 רכיבים. סך המשקל, העלות והמחיר מחושבים מ-6 רכיבים בלבד ואינם מלאים.","938 גר'","12","8.2","12","500 גר'","10 גר'","60 גר'","15 גר'","4 יח'","100 מ\"ל","103 גר'","1 כפית","במקור 1 כפית","250 גר'","2 רכיבים לא נכנסו לסך המשקל ולעלות, כי אין להם נתון צפיפות אמין.","1","9 דקות","2","מוסיפים 4 ביצים ו-100 מ\"ל חלב ולשים 8 דקות.","8 דקות","3","מוסיפים 250 גרם חמאה בהדרגה ולשים עד שהבצק חלק.","4","90 דקות","5","אופים 25 דקות ב-180 מעלות.","180°C","25 דקות"]
+inside.hasFoodCost: true
+inside.hasYieldLoss: true
+inside.hasFormula: true
+inside.hasAllergens: true
+inside.hasVersions: true
+inside.hasTrialLog: true
+ganache.noHydration: true
+ganache.noFormula: true
+ganache.hasFoodCost: true
+desk.label: 1

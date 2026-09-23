@@ -184,7 +184,7 @@ describe('§3 progressive disclosure', () => {
     await screen.findByRole('heading', { name: 'בריוש נאנטר' });
 
     expect(screen.queryByText('עלות ותמחור')).not.toBeInTheDocument();
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     expect(screen.getByText('תשואה ופחת')).toBeInTheDocument();
     expect(screen.getByText('עלות ותמחור')).toBeInTheDocument();
     // §13: baker's formula appears only when there is flour
@@ -202,7 +202,7 @@ describe('§3 progressive disclosure', () => {
       }),
     });
     await screen.findByRole('heading', { name: 'בריוש נאנטר' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     expect(screen.getByText('תשואה ופחת')).toBeInTheDocument();
     expect(screen.queryByText('עלות ותמחור')).not.toBeInTheDocument();
   });
@@ -276,7 +276,7 @@ describe('requirement 8 — a partial calculation is never shown as a whole one'
     const user = userEvent.setup();
     renderRecipe('weighed', { recipes: [ALL_WEIGHED] });
     await screen.findByRole('heading', { name: ALL_WEIGHED.name! });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     expect(screen.queryByText('חלקי')).not.toBeInTheDocument();
   });
 
@@ -293,7 +293,7 @@ describe('requirement 8 — a partial calculation is never shown as a whole one'
     const user = userEvent.setup();
     renderRecipe('cupcake', { recipes: [CUP_CAKE] });
     await screen.findByRole('heading', { name: CUP_CAKE.name! });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const costRow = screen.getByText('עלות חומרי גלם').closest('div')!;
     expect(within(costRow).getByText('חלקי')).toBeInTheDocument();
@@ -305,7 +305,7 @@ describe('requirement 8 — a partial calculation is never shown as a whole one'
     const user = userEvent.setup();
     renderRecipe('cupcake', { recipes: [CUP_CAKE] });
     await screen.findByRole('heading', { name: CUP_CAKE.name! });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     const fcRow = screen.getByText('יעד פוד קוסט').closest('div')!;
     expect(within(fcRow).queryByText('חלקי')).not.toBeInTheDocument();
   });
@@ -322,7 +322,7 @@ describe('requirement 8 — a partial calculation is never shown as a whole one'
     const user = userEvent.setup();
     renderRecipe('nothing', { recipes: [NONE_WEIGHED] });
     await screen.findByRole('heading', { name: NONE_WEIGHED.name! });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     // A cost of ₪0.00 would read as "this recipe is free", which is the exact
     // failure mode requirement 8 exists to prevent.
@@ -380,7 +380,7 @@ describe('a fully weighed recipe with no prices has no cost, not a cost of zero'
     const user = userEvent.setup();
     renderRecipe('unpriced', { recipes: [UNPRICED] });
     await screen.findByRole('heading', { name: UNPRICED.name! });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const costRow = screen.getByText('עלות חומרי גלם').closest('div')!;
     expect(within(costRow).getByText('—')).toBeInTheDocument();
@@ -391,7 +391,7 @@ describe('a fully weighed recipe with no prices has no cost, not a cost of zero'
     const user = userEvent.setup();
     renderRecipe('unpriced', { recipes: [UNPRICED] });
     await screen.findByRole('heading', { name: UNPRICED.name! });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const notice = screen.getByLabelText('שלמות התמחור');
     expect(notice).toHaveTextContent('לא הוזנו מחירים לאף רכיב');
@@ -404,7 +404,7 @@ describe('a fully weighed recipe with no prices has no cost, not a cost of zero'
     await screen.findByRole('heading', { name: UNPRICED.name! });
     // The mass axis is independent: it must NOT be dragged down with the cost.
     expect(screen.queryByLabelText('שלמות החישוב')).not.toBeInTheDocument();
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     const yieldRow = screen.getByText('תשואה תאורטית').closest('div')!;
     expect(within(yieldRow).getByText('1 ק"ג')).toBeInTheDocument();
   });
@@ -415,7 +415,7 @@ describe('a partly priced recipe says so and marks the cost', () => {
     const user = userEvent.setup();
     renderRecipe('halfpriced', { recipes: [HALF_PRICED] });
     await screen.findByRole('heading', { name: HALF_PRICED.name! });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const notice = screen.getByLabelText('שלמות התמחור');
     expect(notice).toHaveTextContent('רכיב אחד');
@@ -427,7 +427,7 @@ describe('a partly priced recipe says so and marks the cost', () => {
     const user = userEvent.setup();
     renderRecipe('halfpriced', { recipes: [HALF_PRICED] });
     await screen.findByRole('heading', { name: HALF_PRICED.name! });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const costRow = screen.getByText('עלות חומרי גלם').closest('div')!;
     expect(within(costRow).getByText(/₪/)).toBeInTheDocument();
@@ -440,7 +440,7 @@ describe('an explicit price of zero is a price', () => {
     const user = userEvent.setup();
     renderRecipe('weighed', { recipes: [ALL_WEIGHED] });
     await screen.findByRole('heading', { name: ALL_WEIGHED.name! });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     expect(screen.queryByLabelText('שלמות התמחור')).not.toBeInTheDocument();
     expect(screen.queryByText('חלקי')).not.toBeInTheDocument();
   });
@@ -505,7 +505,7 @@ describe('stage-11: פחת is a measurement, and says so when it is missing', ()
     const user = userEvent.setup();
     renderRecipe(recipe.id, { recipes: [recipe] });
     await screen.findByRole('heading', { name: recipe.name as string });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
   };
 
   it('says the batch was not weighed instead of printing a loss of zero', async () => {
@@ -618,7 +618,7 @@ describe('stage-11: the page follows a price change without being remounted', ()
 
     // 1 kg of rye at ₪4/kg.
     await screen.findByRole('heading', { name: 'לחם שיפון' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     // `getAllBy`: ₪4 is both the batch cost and the cost per kilo here, one
     // kilo being the whole recipe.
     // Two decimals since stage 3 — the money figures print agorot now.
@@ -1104,7 +1104,7 @@ describe('comparing a version against the live recipe (QA 22.09.2026, acceptance
       }),
     });
     await screen.findByText('בריוש');
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     await user.click(await screen.findByRole('button', { name: 'השוואת גרסה 1 לגרסה הנוכחית' }));
     const dialog = await screen.findByRole('dialog');
     expect(dialog).toHaveTextContent('אין הבדל בין שתי הגרסאות האלה');
@@ -1119,7 +1119,7 @@ describe('the trial log lives in the professional details (spec 5.1, stage 3ב A
     trials: [{ id: 't1', date: '2026-09-20', note: 'קרום כהה מדי' }],
   };
 
-  it('shows the recipe\'s entries behind "פרטים מקצועיים", and a new one after saving', async () => {
+  it('shows the recipe\'s entries behind "נתוני ייצור ועלויות", and a new one after saving', async () => {
     const user = userEvent.setup();
     const saved: RecipeTrial[][] = [];
     renderRoute(<RecipeScreen />, {
@@ -1134,7 +1134,7 @@ describe('the trial log lives in the professional details (spec 5.1, stage 3ב A
     });
     await screen.findByRole('heading', { name: LOGGED.name! });
     expect(screen.queryByLabelText('יומן ניסויים')).not.toBeInTheDocument();
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     const log = await screen.findByLabelText('יומן ניסויים');
     expect(log).toHaveTextContent('קרום כהה מדי');
 

@@ -100,7 +100,7 @@ describe('requirement 2 — the central price reaches the recipe', () => {
 
     render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     // 250 g of butter at ₪44.50/kg = ₪11.125, which the app-wide money
     // formatter shows as ₪11.1. The recipe row itself carries no price.
@@ -138,7 +138,7 @@ describe('requirement 2 — the central price reaches the recipe', () => {
     // 250 g at ₪36/kg = ₪9
     render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     expect(await screen.findByLabelText('פוד קוסט')).toHaveTextContent('₪9');
   }, 40_000);
 
@@ -183,7 +183,7 @@ describe('requirement 4 — food cost on the recipe page', () => {
 
     render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const panel = await screen.findByLabelText('פוד קוסט');
     expect(panel).toHaveTextContent('עלות חומרי הגלם');
@@ -198,7 +198,7 @@ describe('requirement 4 — food cost on the recipe page', () => {
 
     render(<AppUnderTest client={p.client} route="/recipe/cookies" />);
     await screen.findByRole('heading', { name: 'עוגיות' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const panel = await screen.findByLabelText('פוד קוסט');
     expect(within(panel).getByLabelText('אחוז פוד קוסט')).toHaveTextContent('—');
@@ -222,7 +222,7 @@ describe('requirement 4 — food cost on the recipe page', () => {
 
     render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     const panel = await screen.findByLabelText('פוד קוסט');
     expect(within(panel).getByLabelText('אחוז פוד קוסט')).toHaveTextContent('—');
@@ -242,6 +242,8 @@ describe('requirement 4 — food cost on the recipe page', () => {
     // The sale price lives on the summary stage, behind the editor's
     // "תשואה ותמחור" disclosure.
     await toStage(user, 4);
+    // The editor's own step-4 heading is unchanged (RecipeEditScreen, not
+    // the recipe page — spec §3.3 is about "עמוד המתכון").
     await user.click(screen.getByText('פרטים מקצועיים'));
     await user.type(screen.getByLabelText('מחיר מכירה'), '20');
     await user.click(screen.getByRole('button', { name: 'שמירת השינויים' }));
@@ -253,7 +255,7 @@ describe('requirement 4 — food cost on the recipe page', () => {
 
     render(<AppUnderTest client={p.client} route="/recipe/cookies" />);
     await screen.findByRole('heading', { name: 'עוגיות' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     // 100 g at ₪44.50/kg = ₪4.45 against ₪20 = 22.3%
     expect(
       within(await screen.findByLabelText('פוד קוסט')).getByLabelText('אחוז פוד קוסט'),
@@ -334,7 +336,7 @@ describe('requirement 6 — one account cannot see or infer another\'s prices', 
 
     render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
 
     // A's ₪44.50/kg on 250 g = ₪11.1. B's ₪125/kg would have been ₪31.3.
     const panel = await screen.findByLabelText('פוד קוסט');
@@ -388,7 +390,7 @@ describe('a version keeps its historical meaning after a price change', () => {
     // 3. the LIVE recipe follows the new price...
     view = render(<AppUnderTest client={p.client} route="/recipe/brioche" />);
     await screen.findByRole('heading', { name: 'בריוש' });
-    await user.click(screen.getByText('פרטים מקצועיים'));
+    await user.click(screen.getByText('נתוני ייצור ועלויות'));
     // 260 g at ₪89/kg = ₪23.14
     expect(await screen.findByLabelText('פוד קוסט')).toHaveTextContent('₪23.1');
 
