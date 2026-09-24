@@ -16,3 +16,7 @@ figma/dist/
 
 # Viewing exports (MHTML screen documentation): built output, not source.
 exports/
+
+# The Supabase CLI's own local cache (e.g. its version check marker) — not
+# project state, never committed.
+supabase/.temp/
