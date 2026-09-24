@@ -949,6 +949,34 @@
   padding-block: 10px 14px;
   padding-inline: max(14px, calc((100% - 860px) / 2));
   gap: var(--gap-in-group);
+  /*
+    BUG FIX (real-device report: the mise en place list cut off after a few
+    rows in fullscreen, on Android Chrome and iPhone Safari, and nothing
+    reached the rest — while the exact same screen scrolled fine outside
+    fullscreen).
+
+    The browser's own Fullscreen API is the cause, not anything in this
+    file: entering real fullscreen makes THIS element `position: fixed`,
+    sized to the screen, by the browser's own default stylesheet — and
+    while an element is fullscreen, the document itself stops scrolling.
+    `.wrap` never declared its own `overflow-y`, so it defaulted to
+    `visible` — content taller than the fixed box painted past its bottom
+    edge instead of scrolling into it, and with the document locked there
+    was nowhere left to reach it. This reproduces from a plain click (no
+    real device needed): Chromium grants real fullscreen from a genuine
+    user gesture even headless, and the same computed styles came back —
+    `position: fixed`, a height pinned to the viewport, `overflow-y:
+    visible`.
+
+    The fix is one property, on this class only: once this element BECOMES
+    the fixed, screen-sized box, it must supply its own scrollport, since
+    the document can no longer supply one for it. Outside focus mode
+    `.wrap` is untouched — normal document scroll still does the work, as
+    it always did.
+  */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────

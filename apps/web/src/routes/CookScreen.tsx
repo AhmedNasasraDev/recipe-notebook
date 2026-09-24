@@ -669,16 +669,16 @@ export function CookScreen() {
               The button is not shut any more — Ahmed approved the change
               explicitly: "אפשר לעבור להכנה גם בלי לסמן את כל הרכיבים, עם
               חיווי ברור כמה נותרו. אין לסמן אותם אוטומטית." The count above
-              states the fact, this line states how many are left and that
-              nothing is ticked for you, and `aria-describedby` carries it to
-              anyone who reaches the button by keyboard or screen reader
-              instead of seeing the line under it.
+              already states how many are left, so this line's only job is
+              the one fact the count does not carry — that proceeding now is
+              fine — in one short sentence, per the approved text-tone guide.
+              `aria-describedby` still carries it to anyone who reaches the
+              button by keyboard or screen reader instead of seeing the line
+              under it.
             */}
             {pending > 0 && (
               <p className={styles.gateNote} id={gateNoteId}>
-                נותרו <span className="ltr">{pending}</span>{' '}
-                {pending === 1 ? 'רכיב לסימון' : 'רכיבים לסימון'}. אפשר לעבור
-                להכנה גם עכשיו — הם לא יסומנו אוטומטית, והסימון ממתין כאן.
+                אפשר להמשיך גם בלי לסמן הכול.
               </p>
             )}
             <button

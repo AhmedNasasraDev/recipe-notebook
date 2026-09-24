@@ -500,7 +500,7 @@ describe('§7 Mise en place — the checklist, and the way through it', () => {
     expect(screen.getByText('1 ק"ג')).toBeInTheDocument();
     // Nothing is ticked at the new scale, and the button says so.
     expect(screen.getByRole('button', { name: 'מעבר להכנה' })).toBeEnabled();
-    expect(screen.getByText(/נותרו/)).toHaveTextContent('נותרו 5');
+    expect(screen.getByText('אפשר להמשיך גם בלי לסמן הכול.')).toBeInTheDocument();
   });
 
   it('remembers a tick, and remembers taking it back', async () => {
@@ -551,7 +551,7 @@ describe('§7 Mise en place — the checklist, and the way through it', () => {
     );
     const gate = screen.getByRole('button', { name: 'מעבר להכנה' });
     expect(gate).toBeEnabled();
-    expect(screen.getByText(/נותרו/)).toHaveTextContent('רכיב לסימון');
+    expect(screen.getByText('אפשר להמשיך גם בלי לסמן הכול.')).toBeInTheDocument();
     // The stage has not finished, and the screen does not pretend it has.
     expect(screen.queryByText(/Mise en place הושלם/)).not.toBeInTheDocument();
     expect(screen.queryByText('להקציף חמאה וסוכר')).not.toBeInTheDocument();
@@ -615,20 +615,24 @@ describe('§7 Mise en place — the checklist, and the way through it', () => {
     await screen.findByRole('heading', { name: 'הכנת חומרי גלם' });
 
     const gate = screen.getByRole('button', { name: 'מעבר להכנה' });
-    const note = screen.getByText(/נותרו/);
+    const note = screen.getByText('אפשר להמשיך גם בלי לסמן הכול.');
     // The line is not merely NEXT to the button; it is attached to it, so a
-    // cook who reaches it by keyboard or screen reader hears what is left
-    // before they press.
+    // cook who reaches it by keyboard or screen reader hears it before they
+    // press — the count itself is carried by the status line, out loud on
+    // every tick, which is what "counts... out loud" checks below.
     expect(gate.getAttribute('aria-describedby')).toBe(note.getAttribute('id'));
-    expect(note).toHaveTextContent('נותרו 5');
+    expect(screen.getByRole('status')).toHaveTextContent('0 מתוך 5');
 
     const boxes = screen.getAllByRole('checkbox');
     await user.click(boxes[0]!);
-    await waitFor(() => expect(screen.getByText(/נותרו/)).toHaveTextContent('נותרו 4'));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('1 מתוך 5'));
+    expect(screen.getByText('אפשר להמשיך גם בלי לסמן הכול.')).toBeInTheDocument();
 
     for (const box of boxes.slice(1)) await user.click(box);
     await waitFor(() =>
-      expect(screen.queryByText(/נותרו/)).not.toBeInTheDocument(),
+      expect(
+        screen.queryByText('אפשר להמשיך גם בלי לסמן הכול.'),
+      ).not.toBeInTheDocument(),
     );
     const done = screen.getByRole('button', { name: 'הכול מוכן — מתחילים בהכנה' });
     expect(done).not.toHaveAttribute('aria-describedby');
@@ -670,7 +674,7 @@ describe('§7 Mise en place — the checklist, and the way through it', () => {
     );
     // The label and the count both come back; the way through stays open.
     expect(screen.getByRole('button', { name: 'מעבר להכנה' })).toBeEnabled();
-    expect(screen.getByText(/נותרו/)).toHaveTextContent('נותרו 1');
+    expect(screen.getByText('אפשר להמשיך גם בלי לסמן הכול.')).toBeInTheDocument();
     expect(screen.queryByText(/Mise en place הושלם/)).not.toBeInTheDocument();
   });
 
@@ -883,6 +887,28 @@ describe('§7 Mise en place — the checklist, and the way through it', () => {
     // Still in Cook Mode, on the same step, with the same marks.
     expect(screen.getByRole('navigation', { name: 'שלבי ההכנה' })).toBeInTheDocument();
     expect(screen.getByRole('status').textContent).toBe(before);
+  });
+
+  /*
+    THE FULLSCREEN SCROLL TRAP
+
+    Real-device report: in fullscreen, the weighing list cut off after a few
+    rows and the rest could not be reached, on both Android Chrome and iPhone
+    Safari — while the same screen scrolled fine outside fullscreen. Cause:
+    entering real fullscreen makes `.focus` (this element) `position: fixed`,
+    sized to the screen, by the browser's own default stylesheet, and the
+    document itself stops scrolling while an element is fullscreen. Without
+    its own `overflow-y`, content taller than that fixed box painted past its
+    bottom edge with nowhere left to reach it. jsdom has no layout, so this
+    pins the rule the way `styles/tokens.test.ts` pins tokens; that the list
+    and the gate are both reachable in real fullscreen is measured in a
+    browser by `artifact/scripts/fullscreen.mjs`.
+  */
+  it('lets the focused mode scroll its own content once it becomes the fixed, screen-sized box', () => {
+    const here = path.dirname(fileURLToPath(import.meta.url));
+    const css = readFileSync(path.join(here, 'CookScreen.module.css'), 'utf8');
+
+    expect(css).toMatch(/\.focus\s*\{[^}]*overflow-y:\s*auto/s);
   });
 
   /* ── the fade that covered the last card ───────────────────────────────── */
